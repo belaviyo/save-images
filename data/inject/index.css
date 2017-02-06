@@ -1,0 +1,75 @@
+html,
+body {
+  height: 100%;
+}
+body {
+  font-family: "Helvetica Neue",Helvetica,sans-serif;
+  font-size: 12px;
+  background-color: #f0f0f0;
+  user-select: none;
+  margin: 0 10px;
+}
+table {}
+td {}
+
+h2 {
+  font-size: 100%;
+}
+
+input {
+  outline: none;
+}
+input[type=number] {
+  width: 70px;
+}
+input[type=number],
+input[type=text] {
+  text-indent: 5px;
+}
+label {
+  display: inline-flex;
+  align-items: center;
+}
+input[type=button] {
+  margin: 0 5px;
+  width: 60px;
+}
+
+.group {
+  box-shadow: inset 0px 0px 0 1px #fff;
+  border: solid 1px #dbe3e7;
+  padding: 5px;
+  margin: 15px 5px 5px 5px;
+}
+.group>h1,
+.group>h2 {
+  margin-top: -14px;
+  padding: 0;
+  background-color: #f0f0f0;
+  display: table-caption;
+  white-space: nowrap;
+  padding: 0 3px;
+}
+
+.indent {
+  padding-left: 10px;
+}
+
+[hbox] {
+  display: flex;
+  flex-direction: row;
+}
+[vbox] {
+  display: flex;
+  flex-direction: column;
+}
+[pack=end] {
+  justify-content: flex-end;
+}
+[pack=center] {
+  justify-content: center;
+}
+
+[flex="1"] {
+  flex: 1;
+}

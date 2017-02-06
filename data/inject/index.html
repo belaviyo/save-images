@@ -1,0 +1,141 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" href="index.css">
+  </head>
+  <body vbox pack=center>
+    <div class="group">
+      <h2>Statistics</h2>
+      Total: <span id="total-number">-</span>, Processed: <span id="processed-number">-</span>, Will be saved: <span id="save-number">-</span>
+    </div>
+
+    <div hbox>
+      <div class="group">
+        <h2><label><input type="checkbox" id="group-size"> File Size</label></h2>
+        <table>
+          <tr>
+            <td>Min</td>
+            <td><input type="number" value="4000" id="size-min"></td>
+            <td>bytes</td>
+          </tr>
+          <tr>
+            <td>Max</td>
+            <td><input type="number" value="0" id="size-max"></td>
+            <td>bytes</td>
+          </tr>
+        </table>
+
+        <div class="group">
+          <h2>If unknown</h2>
+          <table>
+            <tr>
+              <td><input type="radio" name="size" id="unknown-size-skip"></td>
+              <td><label for="unknown-size-skip">Skip</label></td>
+            </tr>
+            <tr>
+              <td><input type="radio" name="size" id="unknown-size-save" checked="true"></td>
+              <td><label for="unknown-size-save">Save</label></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="group">
+        <h2><label><input type="checkbox" id="group-dimension">Dimensions (pixels)</label></h2>
+        <table>
+          <tr>
+            <td>Min width</td>
+            <td><input type="number" value="200" id="dimension-width-min"></td>
+          </tr>
+          <tr>
+            <td>Max width</td>
+            <td><input type="number" value="0" id="dimension-width-max"></td>
+          </tr>
+          <tr>
+            <td>Min height</td>
+            <td><input type="number" value="200" id="dimension-height-min"></td>
+          </tr>
+          <tr>
+            <td>Max height</td>
+            <td><input type="number" value="0" id="dimension-height-max"></td>
+          </tr>
+        </table>
+
+        <div class="group">
+          <h2>If unknown</h2>
+          <table>
+            <tr>
+              <td><input type="radio" name="dimension" id="unknown-dimension-skip"></td>
+              <td><label for="unknown-dimension-skip">Skip</label></td>
+            </tr>
+            <tr>
+              <td><input type="radio" name="dimension" id="unknown-dimension-save" checked=true></td>
+              <td><label for="unknown-dimension-save">Save</label></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="group">
+        <h2><label><input type="checkbox" id="group-type" checked="true">Image Types</label></h2>
+        <table>
+          <tr>
+            <td><input type="radio" name="type" id="type-all" checked=true></td>
+            <td><label for="type-all">All images</label></td>
+          </tr>
+          <tr>
+            <td><input type="radio" name="type" id="type-selection"></td>
+            <td><label for="type-selection">Selection</label></td>
+          </tr>
+        </table>
+        <table class="indent">
+          <tr>
+            <td><input type="checkbox" id="type-jpeg"></td>
+            <td><label for="type-jpeg">JPG/JPEG images</label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="type-png"></td>
+            <td><label for="type-png">PNG images</label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="type-gif"></td>
+            <td><label for="type-gif">GIF images</label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="type-bmp"></td>
+            <td><label for="type-bmp">BMP images</label></td>
+          </tr>
+        </table>
+        <table>
+          <tr>
+            <td><input type="checkbox" id="no-type" checked="true"></td>
+            <td><label for="no-type">If no extension, save as JPG</label></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <div class="group">
+      <h2>Regular Expressions</h2>
+      <table width="100%">
+        <tr>
+          <td><input type="checkbox" id="group-regexp"></td>
+          <td><label for="group-regexp">Regular expression based on images URL (only matching images will be saved)</label></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td hbox><input type="text" id="regexp-input" flex=1 placeholder=".*"></td>
+        </tr>
+      </table>
+    </div>
+    <table width="100%">
+      <tr>
+        <td><input type="checkbox" id="group-origin"></td>
+        <td><label for="group-origin">Only save images from the same domain/server as the selected tab's URL</label></td>
+      </tr>
+    </table>
+    <p hbox pack=end>
+      <input type="button" value="OK" data-cmd="save">
+      <input type="button" value="Cancel" data-cmd="close">
+    </p>
+    <script src="index.js"></script>
+  </body>
+</html>

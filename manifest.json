@@ -1,0 +1,39 @@
+{
+  "manifest_version": 2,
+  "version": "0.1.0",
+  "name": "Save All Images",
+  "description": "a customizable extension to save the images from the current tab page",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "contextMenus",
+    "notifications",
+    "<all_urls>",
+    "downloads"
+  ],
+  "background": {
+    "persistent": false,
+    "scripts":[
+      "background.js"
+    ]
+  },
+  "browser_action": {
+    "default_icon": {
+      "16": "data/icons/16.png",
+      "32": "data/icons/32.png",
+      "64": "data/icons/64.png"
+    }
+  },
+  "icons": {
+    "16": "data/icons/16.png",
+    "32": "data/icons/32.png",
+    "64": "data/icons/64.png",
+    "128": "data/icons/128.png",
+    "256": "data/icons/256.png",
+    "512": "data/icons/512.png"
+  },
+  "web_accessible_resources": [
+    "data/inject/*"
+  ],
+  "homepage_url": "http://add0n.com/save-images.html"
+}
