@@ -8,6 +8,17 @@ chrome.browserAction.onClicked.addListener((tab) => {
   });
 });
 
+var downloads = {};
+chrome.downloads.onDeterminingFilename.addListener((d, response) => {
+  let obj = downloads[d.id];
+  if (obj) {
+    response({
+      filename: obj.custom + '/' + d.filename
+    });
+  }
+  delete downloads[d.id];
+});
+
 chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.cmd === 'image-data') {
     // data URI
@@ -87,13 +98,13 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
             let url = URL.createObjectURL(blob);
             chrome.downloads.download({
               url
-            });
+            }, id => downloads[id] = request);
           });
       }
       else {
         chrome.downloads.download({
           url: img.src
-        });
+        }, id => downloads[id] = request);
       }
     });
   }

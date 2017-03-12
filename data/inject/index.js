@@ -13,7 +13,8 @@ var elements = {
     dimension: document.getElementById('group-dimension'),
     type: document.getElementById('group-type'),
     regexp: document.getElementById('group-regexp'),
-    origin: document.getElementById('group-origin')
+    origin: document.getElementById('group-origin'),
+    directory: document.getElementById('custom-directory')
   },
   size: {
     min: document.getElementById('size-min'),
@@ -174,7 +175,10 @@ chrome.runtime.onMessage.addListener(request => {
 });
 chrome.runtime.sendMessage({
   cmd: 'get-images'
-}, result => domain = result.domain);
+}, result => {
+  domain = result.domain;
+  elements.group.directory.value = domain;
+});
 
 // commands
 document.addEventListener('click', e => {
@@ -182,6 +186,7 @@ document.addEventListener('click', e => {
   if (cmd === 'save') {
     chrome.runtime.sendMessage({
       cmd: 'save-images',
+      custom: elements.group.directory.value.replace(/[\\\\/:*?\"<>|]/g, '_'),
       images: filtered()
     });
   }

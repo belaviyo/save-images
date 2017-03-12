@@ -66,3 +66,7 @@ legend {
 [flex="1"] {
   flex: 1;
 }
+
+#custom-directory {
+  width: 50%;
+}
