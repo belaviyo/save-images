@@ -9,10 +9,7 @@ chrome.browserAction.onClicked.addListener((tab) => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
-  if (request.cmd === 'get-hostname') {
-    response((new URL(sender.tab.url)).hostname);
-  }
-  else if (request.cmd === 'image-data') {
+  if (request.cmd === 'image-data') {
     // data URI
     if (request.src.startsWith('data:')) {
       let size = null;
@@ -59,6 +56,9 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     return true;
   }
   else if (request.cmd === 'get-images') {
+    response({
+      domain: new URL(sender.tab.url).hostname
+    });
     chrome.tabs.executeScript(sender.tab.id, {
       code: `
         chrome.runtime.sendMessage({

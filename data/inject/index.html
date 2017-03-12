@@ -5,14 +5,14 @@
     <link rel="stylesheet" href="index.css">
   </head>
   <body vbox pack=center>
-    <div class="group">
-      <h2>Statistics</h2>
+    <fieldset>
+      <legend>Statistics</legend>
       Total: <span id="total-number">-</span>, Processed: <span id="processed-number">-</span>, Will be saved: <span id="save-number">-</span>
-    </div>
+    </fieldset>
 
     <div hbox>
-      <div class="group">
-        <h2><label><input type="checkbox" id="group-size"> File Size</label></h2>
+      <fieldset flex=1>
+        <legend><label><input type="checkbox" id="group-size"> File Size</label></legend>
         <table>
           <tr>
             <td>Min</td>
@@ -26,8 +26,8 @@
           </tr>
         </table>
 
-        <div class="group">
-          <h2>If unknown</h2>
+        <fieldset>
+          <legend>If unknown</legend>
           <table>
             <tr>
               <td><input type="radio" name="size" id="unknown-size-skip"></td>
@@ -38,10 +38,11 @@
               <td><label for="unknown-size-save">Save</label></td>
             </tr>
           </table>
-        </div>
-      </div>
-      <div class="group">
-        <h2><label><input type="checkbox" id="group-dimension">Dimensions (pixels)</label></h2>
+        </fieldset>
+      </fieldset>
+
+      <fieldset flex=1>
+        <legend><label><input type="checkbox" id="group-dimension">Dimensions (pixels)</label></legend>
         <table>
           <tr>
             <td>Min width</td>
@@ -61,8 +62,8 @@
           </tr>
         </table>
 
-        <div class="group">
-          <h2>If unknown</h2>
+        <fieldset>
+          <legend>If unknown</legend>
           <table>
             <tr>
               <td><input type="radio" name="dimension" id="unknown-dimension-skip"></td>
@@ -73,10 +74,11 @@
               <td><label for="unknown-dimension-save">Save</label></td>
             </tr>
           </table>
-        </div>
-      </div>
-      <div class="group">
-        <h2><label><input type="checkbox" id="group-type" checked="true">Image Types</label></h2>
+        </fieldset>
+      </fieldset>
+
+      <fieldset flex=1>
+        <legend><label><input type="checkbox" id="group-type" checked="true">Image Types</label></legend>
         <table>
           <tr>
             <td><input type="radio" name="type" id="type-all" checked=true></td>
@@ -111,10 +113,10 @@
             <td><label for="no-type">If no extension, save as JPG</label></td>
           </tr>
         </table>
-      </div>
+      </fieldset>
     </div>
-    <div class="group">
-      <h2>Regular Expressions</h2>
+    <fieldset>
+      <legend>Regular Expressions</legend>
       <table width="100%">
         <tr>
           <td><input type="checkbox" id="group-regexp"></td>
@@ -125,7 +127,8 @@
           <td hbox><input type="text" id="regexp-input" flex=1 placeholder=".*"></td>
         </tr>
       </table>
-    </div>
+    </fieldset>
+
     <table width="100%">
       <tr>
         <td><input type="checkbox" id="group-origin"></td>

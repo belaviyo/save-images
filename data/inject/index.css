@@ -35,20 +35,13 @@ input[type=button] {
   width: 60px;
 }
 
-.group {
+fieldset {
   box-shadow: inset 0px 0px 0 1px #fff;
   border: solid 1px #dbe3e7;
-  padding: 5px;
-  margin: 15px 5px 5px 5px;
+  margin: 5px 0;
 }
-.group>h1,
-.group>h2 {
-  margin-top: -14px;
-  padding: 0;
-  background-color: #f0f0f0;
-  display: table-caption;
-  white-space: nowrap;
-  padding: 0 3px;
+legend {
+  font-weight: bold;
 }
 
 .indent {

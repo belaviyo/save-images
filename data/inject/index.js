@@ -1,6 +1,6 @@
 'use strict';
 
-var domain = document.location.search.split('hostname=')[1];
+var domain;
 
 var elements = {
   counter: {
@@ -138,7 +138,7 @@ function filtered () {
   .filter(img => {
     if (elements.group.origin.checked) {
       let hostname = (new URL(img.src)).hostname;
-      return domain.startsWith(hostname) || hostname.startsWith(domain);
+      return domain.endsWith(hostname) || hostname.endsWith(domain);
     }
     else {
       return true;
@@ -174,7 +174,7 @@ chrome.runtime.onMessage.addListener(request => {
 });
 chrome.runtime.sendMessage({
   cmd: 'get-images'
-});
+}, result => domain = result.domain);
 
 // commands
 document.addEventListener('click', e => {
