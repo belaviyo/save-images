@@ -1,8 +1,13 @@
 'use strict';
 
-var iframe;
-iframe = document.createElement('iframe');
-iframe.setAttribute('style', `
+// remove the old iframe
+try {
+  window.iframe.parentNode.removeChild(window.iframe);
+}
+catch (e) {}
+
+window.iframe = document.createElement('iframe');
+window.iframe.setAttribute('style', `
   border: none;
   position: fixed;
   top: 0;
@@ -17,12 +22,12 @@ iframe.setAttribute('style', `
   z-index: 10000000000;
   box-shadow: 0 0 0 10000px rgba(0, 0, 0, 0.3);
 `);
-iframe.src = chrome.runtime.getURL('data/inject/index.html');
-document.body.appendChild(iframe);
+window.iframe.src = chrome.runtime.getURL('data/inject/index.html');
+document.body.appendChild(window.iframe);
 
-(function (callback) {
+(callback => {
   document.addEventListener('click', e => {
-    if (e.target !== iframe) {
+    if (e.target !== window.iframe) {
       callback();
     }
   });
@@ -31,9 +36,9 @@ document.body.appendChild(iframe);
       callback();
     }
   });
-})(function () {
-  if (iframe) {
-    iframe.parentNode.removeChild(iframe);
-    iframe = null;
+})(() => {
+  if (window.iframe) {
+    window.iframe.parentNode.removeChild(window.iframe);
+    window.iframe = null;
   }
 });

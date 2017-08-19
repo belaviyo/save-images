@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "version": "0.1.0",
-  "name": "Save All Images",
-  "description": "a customizable extension to save the images from the current tab page",
+  "version": "0.2.0.1",
+  "name": "Download all Images",
+  "description": "a customizable extension to save selected images from the current tab page",
   "permissions": [
     "storage",
     "activeTab",
@@ -14,7 +14,9 @@
   "background": {
     "persistent": false,
     "scripts":[
-      "background.js"
+      "background.js",
+      "jszip.js",
+      "save-images.js"
     ]
   },
   "browser_action": {
@@ -33,7 +35,12 @@
     "512": "data/icons/512.png"
   },
   "web_accessible_resources": [
-    "data/inject/*"
+    "data/inject/index.html"
   ],
-  "homepage_url": "http://add0n.com/save-images.html"
+  "homepage_url": "http://add0n.com/save-images.html",
+  "applications": {
+    "gecko": {
+      "id": "{32af1358-428a-446d-873e-5f8eb5f2a72e}"
+    }
+  }
 }

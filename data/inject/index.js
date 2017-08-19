@@ -37,7 +37,8 @@ var elements = {
     bmp: document.getElementById('type-bmp'),
     gif: document.getElementById('type-gif'),
     png: document.getElementById('type-png'),
-    all: document.getElementById('type-all')
+    all: document.getElementById('type-all'),
+    noType: document.getElementById('no-type'),
   },
   regexp: {
     input: document.getElementById('regexp-input')
@@ -47,16 +48,16 @@ var elements = {
 var images = {};
 var processed = 0;
 
-function filtered () {
+function filtered() {
   return Object.values(images)
   // size
   .filter(img => {
     if (elements.group.size.checked) {
       if (img.size) {
-        if (+elements.size.min.value && +elements.size.min.value > img.size) {
+        if (Number(elements.size.min.value) && Number(elements.size.min.value) > img.size) {
           return false;
         }
-        if (+elements.size.max.value && +elements.size.max.value < img.size) {
+        if (Number(elements.size.max.value) && Number(elements.size.max.value) < img.size) {
           return false;
         }
         return true;
@@ -73,18 +74,18 @@ function filtered () {
   .filter(img => {
     if (elements.group.dimension.checked) {
       if (img.width) {
-        if (+elements.dimension.width.min.value && +elements.dimension.width.min.value > img.width) {
+        if (Number(elements.dimension.width.min.value) && Number(elements.dimension.width.min.value) > img.width) {
           return false;
         }
-        if (+elements.dimension.width.max.value && +elements.dimension.width.max.value < img.width) {
+        if (Number(elements.dimension.width.max.value) && Number(elements.dimension.width.max.value) < img.width) {
           return false;
         }
       }
       if (img.height) {
-        if (+elements.dimension.height.min.value && +elements.dimension.height.min.value > img.height) {
+        if (Number(elements.dimension.height.min.value) && Number(elements.dimension.height.min.value) > img.height) {
           return false;
         }
-        if (+elements.dimension.height.max.value && +elements.dimension.height.max.value < img.height) {
+        if (Number(elements.dimension.height.max.value) && Number(elements.dimension.height.max.value) < img.height) {
           return false;
         }
       }
@@ -128,7 +129,7 @@ function filtered () {
   // regexp
   .filter(img => {
     if (elements.group.regexp.checked) {
-      let r = new RegExp(elements.regexp.input.value);
+      const r = new RegExp(elements.regexp.input.value);
       return r.test(img.src);
     }
     else {
@@ -138,7 +139,7 @@ function filtered () {
   //origin
   .filter(img => {
     if (elements.group.origin.checked) {
-      let hostname = (new URL(img.src)).hostname;
+      const hostname = (new URL(img.src)).hostname;
       return domain.endsWith(hostname) || hostname.endsWith(domain);
     }
     else {
@@ -147,8 +148,8 @@ function filtered () {
   });
 }
 
-function update () {
-  let index = elements.counter.save.textContent = filtered().length;
+function update() {
+  const index = elements.counter.save.textContent = filtered().length;
   document.querySelector('[data-cmd=save]').disabled = index === 0;
 }
 
@@ -177,18 +178,36 @@ chrome.runtime.sendMessage({
   cmd: 'get-images'
 }, result => {
   domain = result.domain;
-  elements.group.directory.value = domain;
+  if (result.diSupport) {
+    elements.group.directory.value = domain;
+  }
+  else {
+    elements.group.directory.disabled = true;
+  }
 });
 
 // commands
 document.addEventListener('click', e => {
-  let cmd = e.target.dataset.cmd;
+  const cmd = e.target.dataset.cmd;
   if (cmd === 'save') {
-    chrome.runtime.sendMessage({
-      cmd: 'save-images',
-      custom: elements.group.directory.value.replace(/[\\\\/:*?\"<>|]/g, '_'),
-      images: filtered()
-    });
+    const images = filtered();
+    const save = () => {
+      chrome.runtime.sendMessage({
+        cmd: 'save-images',
+        custom: elements.group.directory.value.replace(/[\\\\/:*?"<>|]/g, '_'),
+        addJPG: elements.type.noType.checked,
+        images
+      });
+    };
+
+    if (images.length > 30) {
+      if (window.confirm(`Are you sure you want to download "${images.length}" images?`)) {
+        save();
+      }
+    }
+    else {
+      save();
+    }
   }
   else if (cmd === 'close') {
     chrome.runtime.sendMessage({
