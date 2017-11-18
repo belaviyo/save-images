@@ -7,7 +7,12 @@
   <body vbox pack=center>
     <fieldset>
       <legend>Statistics</legend>
-      Total: <span id="total-number">-</span>, Processed: <span id="processed-number">-</span>, Will be saved: <span id="save-number">-</span>
+      <div hbox>
+        Total:&nbsp;<span id="total-number">-</span>,
+        Processed:&nbsp;<span id="processed-number">-</span>,
+        Will be saved:&nbsp;<span id="save-number">-</span>
+        <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
+      </div>
     </fieldset>
 
     <div hbox>
@@ -142,14 +147,20 @@
       </colgroup>
       <tr>
         <td>Save in</td>
-        <td><input type="text" id="custom-directory" placeholder="custom directory relative to the default download directory"></td>
+        <td hbox pack=center>
+          <input type="text" id="custom-directory" placeholder="custom directory relative to the default download directory" flex="1">
+          <label><input type="checkbox" id="open-save-dialog"> Open save dialog</label>
+        </td>
       </tr>
     </table>
 
-    <p hbox pack=end>
-      <input type="button" value="OK" data-cmd="save">
-      <input type="button" value="Cancel" data-cmd="close">
+    <p hbox>
+      <input type="button" value="Reset" data-cmd="reset" title="Reset settings to the default">
+      <span flex="1"></span>
+      <input type="button" value="Save" data-cmd="save" title="Save selected iamges">
+      <input type="button" value="Cancel" data-cmd="close" title="Close this window">
     </p>
+    <script src="persist.js"></script>
     <script src="index.js"></script>
   </body>
 </html>

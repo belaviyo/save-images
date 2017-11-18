@@ -1,4 +1,13 @@
-/* globals JSZip */
+/* Copyright (C) 2014-2017 Joe Ertaba
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ * Home: http://add0n.com/save-images.html
+ * GitHub: https://github.com/belaviyo/save-images/ */
+
+/* globals JSZip, onClicked */
 'use strict';
 
 window.count = 0;
@@ -66,12 +75,13 @@ var download = (() => {
       tabId: tab.id,
       text: jobs.length ? String(jobs.length) : ''
     });
+    chrome.tabs.sendMessage(tab.id, {
+      cmd: 'progress',
+      value: jobs.length
+    });
     const url = jobs.shift();
     if (url) {
-      download({url}).then(one, e => {
-        console.log(e);
-        one();
-      });
+      download({url}).then(one, () => one());
     }
     else {
       zip.generateAsync({type: 'blob'})
@@ -86,8 +96,11 @@ var download = (() => {
           url,
           filename: request.custom ? request.custom + '/' + filename : filename,
           conflictAction: 'uniquify',
-          saveAs: false
+          saveAs: request.saveAs
         }, () => {
+          chrome.tabs.sendMessage(tab.id, {
+            cmd: 'close-me'
+          });
           window.setTimeout(() => URL.revokeObjectURL(url), 10000);
         });
       });
@@ -217,5 +230,8 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     chrome.tabs.sendMessage(sender.tab.id, {
       cmd: 'close-me'
     });
+  }
+  if (request.cmd === 'reload-me') {
+    onClicked(sender.tab);
   }
 });

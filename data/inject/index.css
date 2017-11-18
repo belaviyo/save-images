@@ -43,6 +43,12 @@ fieldset {
 legend {
   font-weight: bold;
 }
+progress {
+  margin-left: 10px;
+}
+progress[data-visible=false] {
+  display: none;
+}
 
 .indent {
   padding-left: 10px;

@@ -1,3 +1,12 @@
+/* Copyright (C) 2014-2017 Joe Ertaba
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ * Home: http://add0n.com/save-images.html
+ * GitHub: https://github.com/belaviyo/save-images/ */
+
 'use strict';
 
 var domain;
@@ -6,7 +15,8 @@ var elements = {
   counter: {
     processed: document.getElementById('processed-number'),
     save: document.getElementById('save-number'),
-    total: document.getElementById('total-number')
+    total: document.getElementById('total-number'),
+    progress: document.getElementById('progress')
   },
   group: {
     size: document.getElementById('group-size'),
@@ -14,7 +24,10 @@ var elements = {
     type: document.getElementById('group-type'),
     regexp: document.getElementById('group-regexp'),
     origin: document.getElementById('group-origin'),
-    directory: document.getElementById('custom-directory')
+  },
+  save: {
+    directory: document.getElementById('custom-directory'),
+    dialog: document.getElementById('open-save-dialog')
   },
   size: {
     min: document.getElementById('size-min'),
@@ -154,7 +167,11 @@ function update() {
 }
 
 chrome.runtime.onMessage.addListener(request => {
-  if (request.cmd === 'found-images') {
+  if (request.cmd === 'progress') {
+    elements.counter.progress.dataset.visible = true;
+    elements.counter.progress.value = elements.counter.progress.max - request.value;
+  }
+  else if (request.cmd === 'found-images') {
     request.images.forEach(img => {
       if (!images[img.src]) {
         images[img.src] = img;
@@ -179,24 +196,28 @@ chrome.runtime.sendMessage({
 }, result => {
   domain = result.domain;
   if (result.diSupport) {
-    elements.group.directory.value = domain;
+    elements.save.directory.value = domain;
   }
   else {
-    elements.group.directory.disabled = true;
+    elements.save.directory.disabled = true;
   }
 });
 
 // commands
-document.addEventListener('click', e => {
-  const cmd = e.target.dataset.cmd;
+document.addEventListener('click', ({target}) => {
+  const cmd = target.dataset.cmd;
   if (cmd === 'save') {
+    target.disabled = true;
     const images = filtered();
     const save = () => {
+      elements.counter.progress.value = 0;
+      elements.counter.progress.max = images.length;
       chrome.runtime.sendMessage({
         cmd: 'save-images',
-        custom: elements.group.directory.value.replace(/[\\\\/:*?"<>|]/g, '_'),
+        custom: elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_'),
         addJPG: elements.type.noType.checked,
-        images
+        images,
+        saveAs: elements.save.dialog.checked
       });
     };
 
