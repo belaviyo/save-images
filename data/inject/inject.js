@@ -24,7 +24,7 @@ window.iframe.setAttribute('style', `
   left: 0;
   right: 0;
   width: 550px;
-  height: 500px;
+  height: 510px;
   max-width: 80%;
   margin: auto;
   background-color: #f0f0f0;

@@ -10,6 +10,7 @@
 'use strict';
 
 var domain;
+var port = chrome.runtime.connect({name: 'parser'});
 
 var elements = {
   counter: {
@@ -55,6 +56,10 @@ var elements = {
   },
   regexp: {
     input: document.getElementById('regexp-input')
+  },
+  deep: {
+    level: document.getElementById('deep-level'),
+    stat: document.getElementById('deep-stat')
   }
 };
 
@@ -166,33 +171,47 @@ function update() {
   document.querySelector('[data-cmd=save]').disabled = index === 0;
 }
 
-chrome.runtime.onMessage.addListener(request => {
+chrome.runtime.onMessage.addListener((request, sender) => {
   if (request.cmd === 'progress') {
     elements.counter.progress.dataset.visible = true;
     elements.counter.progress.value = elements.counter.progress.max - request.value;
   }
   else if (request.cmd === 'found-images') {
+    if (sender.tab) {
+      // prevent duplication
+      return;
+    }
     request.images.forEach(img => {
       if (!images[img.src]) {
         images[img.src] = img;
-
-        chrome.runtime.sendMessage({
-          cmd: 'image-data',
-          src: img.src
-        }, response => {
+        if (!img.type) {
+          chrome.runtime.sendMessage({
+            cmd: 'image-data',
+            src: img.src
+          }, response => {
+            images[img.src] = Object.assign(images[img.src], response);
+            processed += 1;
+            elements.counter.processed.textContent = processed;
+            update();
+          });
+        }
+        else {
           processed += 1;
-          images[img.src] = Object.assign(images[img.src], response);
           elements.counter.processed.textContent = processed;
           update();
-        });
+        }
       }
     });
     elements.counter.total.textContent = Object.keys(images).length;
     update();
   }
+  else if (request.cmd === 'found-links') {
+    port.postMessage(request);
+  }
 });
-chrome.runtime.sendMessage({
-  cmd: 'get-images'
+var search = () => chrome.runtime.sendMessage({
+  cmd: 'get-images',
+  deep: Number(elements.deep.level.value)
 }, result => {
   domain = result.domain;
   if (result.diSupport) {
@@ -202,6 +221,8 @@ chrome.runtime.sendMessage({
     elements.save.directory.disabled = true;
   }
 });
+document.addEventListener('DOMContentLoaded', search);
+elements.deep.level.addEventListener('change', search);
 
 // commands
 document.addEventListener('click', ({target}) => {
@@ -235,6 +256,16 @@ document.addEventListener('click', ({target}) => {
       cmd: 'close-me'
     });
   }
+  else if (cmd === 'restart') {
+    window.location.reload();
+  }
 });
 // update counter
 document.addEventListener('change', update);
+
+// port
+port.onMessage.addListener(request => {
+  if (request.cmd === 'count') {
+    elements.deep.stat.textContent = request.count;
+  }
+});
