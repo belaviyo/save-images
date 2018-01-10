@@ -15,6 +15,8 @@ try {
 }
 catch (e) {}
 
+var isLinux = /Linux/.test(window.navigator.platform);
+
 window.iframe = document.createElement('iframe');
 window.iframe.setAttribute('style', `
   border: none;
@@ -23,8 +25,8 @@ window.iframe.setAttribute('style', `
   bottom: 0;
   left: 0;
   right: 0;
-  width: 550px;
-  height: 510px;
+  width: ${isLinux ? 580 : 550}px;
+  height: ${isLinux ? 600 : 530}px;
   max-width: 80%;
   margin: auto;
   background-color: #f0f0f0;

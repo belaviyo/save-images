@@ -11,13 +11,17 @@
         <div hbox>
           Total:&nbsp;<span id="total-number">-</span>,
           Processed:&nbsp;<span id="processed-number">-</span>,
-          Will be saved:&nbsp;<span id="save-number">-</span>
+          Will be saved:&nbsp;<span id="save-number">-</span>&nbsp;
           <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
         </div>
       </fieldset>
-      <fieldset>
+      <fieldset title="0: do not extract linked images (fast)&#013;1: Extract linked images (slow)&#013;2: Extract linked images and parse destination HTML documents (too slow)">
         <legend title="number of HTML links waiting to be parsed">Deep Search (<span id="deep-stat">0</span>)</legend>
-        <label>Level&nbsp;<input type="number" value="1" id="deep-level" min="0" max="2" title="0: do not extract linked images (fast)&#013;1: Extract linked images (slow)&#013;2: Extract linked images and parse destination HTML documents (too slow)"></label>
+        <label>
+          Level&nbsp;
+          <progress id="deep-progress" value="0" max="100" data-visible=false></progress>&nbsp;
+          <input type="number" value="1" id="deep-level" min="0" max="2">
+        </label>
       </fieldset>
 
     </div>
@@ -161,7 +165,7 @@
       </tr>
     </table>
 
-    <p hbox>
+    <p hbox flex="1" pack="center" align="end">
       <input type="button" value="Reset" data-cmd="reset" title="Reset settings to the default">
       <input type="button" value="Restart" data-cmd="restart" title="Restart image collection">
       <span flex="1"></span>

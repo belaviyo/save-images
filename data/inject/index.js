@@ -59,7 +59,8 @@ var elements = {
   },
   deep: {
     level: document.getElementById('deep-level'),
-    stat: document.getElementById('deep-stat')
+    stat: document.getElementById('deep-stat'),
+    progress: document.getElementById('deep-progress')
   }
 };
 
@@ -264,8 +265,13 @@ document.addEventListener('click', ({target}) => {
 document.addEventListener('change', update);
 
 // port
+let count = 0;
 port.onMessage.addListener(request => {
   if (request.cmd === 'count') {
+    count = Math.max(request.count, count);
     elements.deep.stat.textContent = request.count;
+    elements.deep.progress.value = request.count;
+    elements.deep.progress.max = count;
+    elements.deep.progress.dataset.visible = request.count !== 0;
   }
 });

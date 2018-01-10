@@ -1,5 +1,4 @@
-html,
-body {
+html {
   height: 100%;
 }
 body {
@@ -7,7 +6,8 @@ body {
   font-size: 12px;
   background-color: #f0f0f0;
   user-select: none;
-  margin: 0 10px;
+  margin: 10px;
+  height: calc(100% - 20px);
 }
 table {}
 td {}
@@ -32,7 +32,8 @@ label {
 }
 input[type=button] {
   margin: 0 5px;
-  width: 60px;
+  width: 80px;
+  padding: 0;
 }
 
 fieldset {
@@ -42,9 +43,6 @@ fieldset {
 }
 legend {
   font-weight: bold;
-}
-progress {
-  margin-left: 10px;
 }
 progress[data-visible=false] {
   display: none;
@@ -61,6 +59,12 @@ progress[data-visible=false] {
 [vbox] {
   display: flex;
   flex-direction: column;
+}
+[align=end] {
+  align-items: flex-end;
+}
+[align=center] {
+  align-items: center;
 }
 [pack=end] {
   justify-content: flex-end;
