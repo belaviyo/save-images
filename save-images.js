@@ -22,19 +22,18 @@ var download = (() => {
   let request;
 
   function download(obj) {
-    return fetch(obj.url).then(response => {
+    return fetch(obj.src).then(response => {
       if (response.ok) {
         const disposition = response.headers.get('Content-Disposition');
-        let name;
-        if (disposition) {
+        let name = obj.filename;
+        if (disposition && !name) {
           const tmp = /filename=([^;]*)/.exec(disposition);
           if (tmp && tmp.length) {
             name = tmp[1].replace(/["']$/, '').replace(/^["']/, '');
           }
         }
         if (!name) {
-          const type = response.headers.get('Content-Type');
-          const url = obj.url.replace(/\/$/, '');
+          const url = obj.src.replace(/\/$/, '');
           const tmp = /(title|filename)=([^&]+)/.exec(url);
           if (tmp && tmp.length) {
             name = tmp[2];
@@ -43,16 +42,18 @@ var download = (() => {
             name = url.substring(url.lastIndexOf('/') + 1);
           }
           name = decodeURIComponent(name.split('?')[0].split('&')[0]) || 'image';
-          if (name.indexOf('.') === -1) {
-            if (type) {
-              name += '.' + type.split('/').pop().split(/[+;]/).shift();
-            }
-            else if (request.addJPG) {
-              name += '.jpg';
-            }
-          }
         }
         name = name.slice(-20);
+        if (name.indexOf('.') === -1) {
+          const type = response.headers.get('Content-Type');
+          if (type) {
+            name += '.' + type.split('/').pop().split(/[+;]/).shift();
+          }
+        }
+        if (request.addJPG && name.indexOf('.') === -1) {
+          name += '.jpg';
+        }
+
         if (name in indices) {
           const index = name.lastIndexOf('.') || name.length;
           const tmp = name.substr(0, index) + ' - ' + indices[name] + name.substr(index);
@@ -79,9 +80,9 @@ var download = (() => {
       cmd: 'progress',
       value: jobs.length
     });
-    const url = jobs.shift();
-    if (url) {
-      download({url}).then(one, () => one());
+    const job = jobs.shift();
+    if (job) {
+      download(job).then(one, () => one());
     }
     else {
       zip.generateAsync({type: 'blob'})
@@ -110,7 +111,7 @@ var download = (() => {
   return (_request, _tab) => {
     request = _request;
     tab = _tab;
-    jobs = request.images.map(i => i.src);
+    jobs = request.images;
     zip = new JSZip();
     one();
   };

@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  </head>
+  <style type="text/css">
+    html {
+      height: 100%;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+      display: flex;
+      transition-duration: 500ms;
+    }
+    body[data-mode=gallery] {
+      transform: translateX(-100%);
+    }
+    body>div {
+      border: none;
+      min-width: 100%;
+      box-sizing: border-box;
+      height: 100%;
+      display: flex;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    iframe[data-loading=true] {
+      background:  url('loading.gif') center center no-repeat;
+    }
+  </style>
+  <body data-mode=ui>
+    <div><iframe data-loading=true id="ui"></iframe></div>
+    <div><iframe data-loading=false id="gallery"></iframe></div>
+  </body>
+  <script src="selector.js"></script>
+</html>

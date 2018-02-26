@@ -1,0 +1,37 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Image Gallery</title>
+    <link rel="stylesheet" href="index.css">
+  </head>
+
+  <body>
+    <template id="entry">
+      <div class="entry">
+        <span></span>
+        <input type="checkbox" checked="true">
+        <input type="text" placeholder="detect name">
+      </div>
+    </template>
+    <div id="body"></div>
+    <span></span>
+    <div id="toolbar">
+      <input type="button" data-cmd="close">
+      <div style="display: flex">
+        <input type="button" data-cmd="select-all" placeholder="Select All" style="margin-right: -1px">
+        <input type="button" data-cmd="select-none" placeholder="Select None">
+      </div>
+      <input type="button" data-cmd="download" placeholder="Download Selected Images">
+      <div style="display: flex">
+        <input type="button" data-cmd="rename" value="Rename" style="margin-right: -1px">
+        <input type="text" id="pattern" value="image-[#=1]">
+      </div>
+      <span></span>
+      <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
+      <label>
+        <input type="checkbox" id="saveAs">Save Dialog</label>
+    </div>
+    <script src="index.js"></script>
+  </body>
+</html>

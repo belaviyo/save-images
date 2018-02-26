@@ -1,0 +1,117 @@
+html {
+  height: 100%;
+}
+body {
+  font-family: "Helvetica Neue",Helvetica,sans-serif;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+body>span {
+  flex: 1;
+}
+#body {
+  display: flex;
+  flex-flow: wrap;
+  overflow-y: auto;
+  justify-content: center;
+  padding: 10px;
+  background-color: #e7e7e8;
+}
+#toolbar {
+  display: flex;
+  align-items: center;
+  border-top: solid 1px d7d8da;
+  min-height: 42px;
+  padding: 0 10px;
+}
+#toolbar input {
+  margin-right: 3px;
+  box-sizing: border-box;
+}
+#toolbar>span {
+  flex: 1;
+}
+.entry {
+  width: 140px;
+  height: 140px;
+  background-color: #fff;
+  margin: 2px;
+  position: relative;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: solid 1px #d7d8da;
+}
+.entry input[type=checkbox] {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+.entry input[type=text] {
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  left: 0;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: none;
+  box-sizing: border-box;
+  padding: 5px;
+  outline: none;
+  text-indent: 5px;
+}
+.entry span {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 2px;
+  font-size: 80%;
+}
+.entry span:empty {
+  display: none;
+}
+
+[data-visible=false] {
+  display: none;
+}
+
+input[type=button] {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  height: 28px;
+  min-width: 48px;
+  background-color: #fff;
+  cursor: pointer;
+  outline: none;
+}
+input[type=button]:active {
+  background-color: #ccc;
+}
+input:disabled {
+  opacity: 0.3;
+}
+[data-cmd=download] {
+  background: url('download.svg') center center no-repeat;
+  background-size: 12px;
+}
+[data-cmd=select-all] {
+  background: url('select-all.svg') center center no-repeat;
+  background-size: 14px;
+}
+[data-cmd=select-none] {
+  background: url('select-none.svg') center center no-repeat;
+  background-size: 14px;
+}
+[data-cmd=close] {
+  background: url('close.svg') center center no-repeat;
+  background-size: 14px;
+}
+
+::placeholder {
+  color: #fff;
+  opacity: .7;
+}

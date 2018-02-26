@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "version": "0.2.3",
+  "version": "0.3.0",
   "name": "Download all Images",
   "description": "a customizable extension to save selected images from the current tab page",
   "permissions": [
@@ -35,7 +35,9 @@
     "512": "data/icons/512.png"
   },
   "web_accessible_resources": [
-    "data/inject/index.html"
+    "data/inject/selector.html",
+    "data/ui/index.html",
+    "data/gallery/index.html"
   ],
   "homepage_url": "http://add0n.com/save-images.html",
   "applications": {

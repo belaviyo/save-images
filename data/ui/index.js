@@ -67,6 +67,15 @@ var elements = {
 var images = {};
 var processed = 0;
 
+function build() {
+  return {
+    custom: elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_'),
+    addJPG: elements.type.noType.checked,
+    images: filtered(),
+    saveAs: elements.save.dialog.checked
+  };
+}
+
 function filtered() {
   return Object.values(images)
   // size
@@ -170,9 +179,10 @@ function filtered() {
 function update() {
   const index = elements.counter.save.textContent = filtered().length;
   document.querySelector('[data-cmd=save]').disabled = index === 0;
+  document.querySelector('[data-cmd=gallery]').disabled = index === 0;
 }
 
-chrome.runtime.onMessage.addListener((request, sender) => {
+chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.cmd === 'progress') {
     elements.counter.progress.dataset.visible = true;
     elements.counter.progress.value = elements.counter.progress.max - request.value;
@@ -209,6 +219,9 @@ chrome.runtime.onMessage.addListener((request, sender) => {
   else if (request.cmd === 'found-links') {
     port.postMessage(request);
   }
+  else if (request.cmd === 'get-images') {
+    response(build());
+  }
 });
 var search = () => chrome.runtime.sendMessage({
   cmd: 'get-images',
@@ -230,17 +243,13 @@ document.addEventListener('click', ({target}) => {
   const cmd = target.dataset.cmd;
   if (cmd === 'save') {
     target.disabled = true;
-    const images = filtered();
+    const obj = Object.assign(build(), {
+      cmd: 'save-images'
+    });
     const save = () => {
       elements.counter.progress.value = 0;
-      elements.counter.progress.max = images.length;
-      chrome.runtime.sendMessage({
-        cmd: 'save-images',
-        custom: elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_'),
-        addJPG: elements.type.noType.checked,
-        images,
-        saveAs: elements.save.dialog.checked
-      });
+      elements.counter.progress.max = obj.images.length;
+      chrome.runtime.sendMessage(obj);
     };
 
     if (images.length > 30) {
@@ -259,6 +268,9 @@ document.addEventListener('click', ({target}) => {
   }
   else if (cmd === 'restart') {
     window.location.reload();
+  }
+  else if (cmd === 'gallery') {
+    window.parent.to.gallery();
   }
 });
 // update counter

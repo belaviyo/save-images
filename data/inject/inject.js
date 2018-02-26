@@ -25,7 +25,7 @@ window.iframe.setAttribute('style', `
   bottom: 0;
   left: 0;
   right: 0;
-  width: ${isLinux ? 580 : 550}px;
+  width: 600px;
   height: ${isLinux ? 600 : 530}px;
   max-width: 80%;
   margin: auto;
@@ -33,12 +33,12 @@ window.iframe.setAttribute('style', `
   z-index: 10000000000;
   box-shadow: 0 0 0 10000px rgba(0, 0, 0, 0.3);
 `);
-window.iframe.src = chrome.runtime.getURL('data/inject/index.html');
+window.iframe.src = chrome.runtime.getURL('data/inject/selector.html');
 document.body.appendChild(window.iframe);
 
 (callback => {
   document.addEventListener('click', e => {
-    if (e.target !== window.iframe) {
+    if (window.iframe.contains(e.target) === false) {
       callback();
     }
   });
