@@ -202,6 +202,13 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
           }, response => {
             images[img.src] = Object.assign(images[img.src], response);
             processed += 1;
+
+            if (response.type.startsWith('image/') == false) {
+              delete images[img.src];
+              elements.counter.total.textContent = Object.keys(images).length;
+              processed -= 1;
+            }
+
             elements.counter.processed.textContent = processed;
             update();
           });

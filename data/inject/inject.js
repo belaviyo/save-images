@@ -38,7 +38,7 @@ document.body.appendChild(window.iframe);
 
 (callback => {
   document.addEventListener('click', e => {
-    if (window.iframe.contains(e.target) === false) {
+    if (window.iframe && window.iframe.contains(e.target) === false) {
       callback();
     }
   });
