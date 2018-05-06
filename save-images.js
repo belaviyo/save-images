@@ -286,11 +286,15 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
         });
 
         // find background images
+        var r = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi;
         try {
           let images = [...document.querySelectorAll('*')]
             .map(e => window.getComputedStyle(e).backgroundImage)
-            .filter(i => i && i.startsWith('url'))
-            .map(i => i.replace(/^url\(['"]*/, '').replace(/['"]*\)$/, ''));
+            .map(i => {
+              const e = /url\(['"]([^\)]+)["']\)/.exec(i);
+              return e && e.length ? e[1] : null;
+            }).filter((s, i, l) => s && l.indexOf(s) === i);
+
           images = images.map(i => i.startsWith('//') ? document.location.protocol + i : i);
           images = images.map(i => i.startsWith('/') ? document.location.origin + i : i);
           images = images.filter((img, i, l) => l.indexOf(img) === i);
@@ -311,6 +315,17 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
         if (${request.deep > 0}) {
           const links = [...document.querySelectorAll('a')].map(a => a.href)
             .filter(s => s && (s.startsWith('http') || s.startsWith('ftp')))
+          if (links.length) {
+            chrome.runtime.sendMessage({
+              cmd: 'found-links',
+              links,
+              deep: ${request.deep}
+            });
+          }
+        }
+        // find hard-coded links
+        if (${request.deep > 0}) {
+          const links = document.documentElement.innerHTML.match(r) || [];
           if (links.length) {
             chrome.runtime.sendMessage({
               cmd: 'found-links',

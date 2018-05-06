@@ -7,6 +7,7 @@
   </head>
 
   <body>
+    <textarea id="clipboard" style="display: none;"></textarea>
     <template id="entry">
       <div class="entry">
         <span></span>
@@ -19,18 +20,18 @@
     <div id="toolbar">
       <input type="button" data-cmd="close">
       <div style="display: flex">
-        <input type="button" data-cmd="select-all" placeholder="Select All" style="margin-right: -1px">
-        <input type="button" data-cmd="select-none" placeholder="Select None">
+        <input type="button" data-cmd="select-all" title="Select All" style="margin-right: -1px">
+        <input type="button" data-cmd="select-none" title="Select None">
       </div>
-      <input type="button" data-cmd="download" placeholder="Download Selected Images">
+      <input type="button" data-cmd="download" title="Download selected images">
+      <input type="button" data-cmd="copy" title="Copy URLs of the selected images to the clipboard">
       <div style="display: flex">
         <input type="button" data-cmd="rename" value="Rename" style="margin-right: -1px">
         <input type="text" id="pattern" value="image-[#=1]">
       </div>
       <span></span>
       <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
-      <label>
-        <input type="checkbox" id="saveAs">Save Dialog</label>
+      <label><input type="checkbox" id="saveAs">Display save dialog</label>
     </div>
     <script src="index.js"></script>
   </body>

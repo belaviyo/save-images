@@ -9,6 +9,13 @@
 
 'use strict';
 
+const notify = message => chrome.notifications.create({
+  type: 'basic',
+  title: chrome.runtime.getManifest().name,
+  message,
+  iconUrl: '/data/icons/48.png'
+});
+
 const onClicked = tab => {
   chrome.tabs.executeScript(tab.id, {
     file: 'data/inject/inject.js',
@@ -16,16 +23,17 @@ const onClicked = tab => {
     allFrames: false
   }, () => {
     if (chrome.runtime.lastError) {
-      chrome.notifications.create({
-        type: 'basic',
-        title: 'Save All Images',
-        message: 'Cannot collect images on this tab\n\n' + chrome.runtime.lastError.message,
-        iconUrl: '/data/icons/48.png'
-      });
+      notify('Cannot collect images on this tab\n\n' + chrome.runtime.lastError.message);
     }
   });
 };
 chrome.browserAction.onClicked.addListener(onClicked);
+
+chrome.runtime.onMessage.addListener(request => {
+  if (request.method === 'notify') {
+    notify(request.message);
+  }
+});
 
 // FAQs & Feedback
 chrome.storage.local.get({

@@ -4,6 +4,7 @@ var t = document.getElementById('entry');
 var body = document.getElementById('body');
 var download = document.querySelector('[data-cmd=download]');
 var rename = document.querySelector('[data-cmd=rename]');
+var copy = document.querySelector('[data-cmd=copy]');
 var progress = document.getElementById('progress');
 var custom = '';
 var addJPG = true;
@@ -68,8 +69,7 @@ document.addEventListener('click', ({target}) => {
     [...document.querySelectorAll('.entry')].forEach(e => e.querySelector('input[type=checkbox]').checked = false);
     document.dispatchEvent(new Event('change'));
   }
-  else if (cmd === 'download') {
-    progress.dataset.visible = true;
+  else if (cmd === 'download' || cmd === 'copy') {
     const images = [...document.querySelectorAll('.entry :checked')].map(i => {
       const div = i.closest('div');
       const info = div.info;
@@ -78,15 +78,33 @@ document.addEventListener('click', ({target}) => {
         filename
       });
     });
-    progress.max = images.length;
 
-    chrome.runtime.sendMessage({
-      cmd: 'save-images',
-      custom,
-      addJPG,
-      images,
-      saveAs: document.getElementById('saveAs').checked
-    });
+    if (cmd === 'download') {
+      progress.dataset.visible = true;
+      progress.max = images.length;
+
+      chrome.runtime.sendMessage({
+        cmd: 'save-images',
+        custom,
+        addJPG,
+        images,
+        saveAs: document.getElementById('saveAs').checked
+      });
+    }
+    else {
+      const cb = document.getElementById('clipboard');
+      cb.style.display = 'block';
+      cb.value = images.map(o => o.src).join('\n');
+      cb.focus();
+      cb.select();
+      const bol = document.execCommand('copy');
+      cb.style.display = 'none';
+
+      chrome.runtime.sendMessage({
+        method: 'notify',
+        message: bol ? 'Image links are copied to the clipboard' : 'Cannot copy to the clipboard'
+      });
+    }
   }
   else if (cmd === 'close') {
     window.parent.to.ui();
@@ -94,7 +112,7 @@ document.addEventListener('click', ({target}) => {
 });
 
 document.addEventListener('change', () => {
-  rename.disabled = download.disabled = document.querySelector('.entry :checked') === null;
+  copy.disabled = rename.disabled = download.disabled = document.querySelector('.entry :checked') === null;
 });
 
 chrome.runtime.onMessage.addListener(request => {

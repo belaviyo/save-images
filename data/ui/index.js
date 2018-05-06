@@ -179,6 +179,7 @@ function filtered() {
 function update() {
   const index = elements.counter.save.textContent = filtered().length;
   document.querySelector('[data-cmd=save]').disabled = index === 0;
+  document.querySelector('[data-cmd=copy]').disabled = index === 0;
   document.querySelector('[data-cmd=gallery]').disabled = index === 0;
 }
 
@@ -203,7 +204,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
             images[img.src] = Object.assign(images[img.src], response);
             processed += 1;
 
-            if (response.type.startsWith('image/') == false) {
+            if (response.type.startsWith('image/') === false) {
               delete images[img.src];
               elements.counter.total.textContent = Object.keys(images).length;
               processed -= 1;
@@ -267,6 +268,20 @@ document.addEventListener('click', ({target}) => {
     else {
       save();
     }
+  }
+  else if (cmd === 'copy') {
+    const cb = document.getElementById('clipboard');
+    cb.style.display = 'block';
+    cb.value = Object.keys(images).join('\n');
+    cb.focus();
+    cb.select();
+    const bol = document.execCommand('copy');
+    cb.style.display = 'none';
+
+    chrome.runtime.sendMessage({
+      method: 'notify',
+      message: bol ? 'Image links are copied to the clipboard' : 'Cannot copy to the clipboard'
+    });
   }
   else if (cmd === 'close') {
     chrome.runtime.sendMessage({

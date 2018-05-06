@@ -25,7 +25,7 @@ window.iframe.setAttribute('style', `
   bottom: 0;
   left: 0;
   right: 0;
-  width: 600px;
+  width: 650px;
   height: ${isLinux ? 600 : 530}px;
   max-width: 80%;
   margin: auto;

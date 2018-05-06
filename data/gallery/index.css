@@ -110,6 +110,10 @@ input:disabled {
   background: url('close.svg') center center no-repeat;
   background-size: 14px;
 }
+[data-cmd=copy] {
+  background: url('copy.svg') center center no-repeat;
+  background-size: 16px;
+}
 
 ::placeholder {
   color: #fff;

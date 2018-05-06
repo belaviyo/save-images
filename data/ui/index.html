@@ -6,6 +6,7 @@
   </head>
   <body vbox pack=center>
     <div hbox>
+      <textarea id="clipboard" style="display: none;"></textarea>
       <fieldset flex=1>
         <legend>Statistics</legend>
         <div hbox>
@@ -165,10 +166,11 @@
     </table>
 
     <p hbox flex="1" pack="center" align="end">
-      <input type="button" value="Reset" data-cmd="reset" title="Reset settings to the default">
+      <input type="button" value="Reset" data-cmd="reset" title="Reset settings to the default values">
       <input type="button" value="Restart" data-cmd="restart" title="Restart image collection">
       <input type="button" value="Gallery" data-cmd="gallery" title="Open selected images in gallery mode">
       <span flex="1"></span>
+      <input type="button" value="Copy" data-cmd="copy" title="Copy selected images to the clipbaord">
       <input type="button" value="Save" data-cmd="save" title="Save selected images">
       <input type="button" value="Cancel" data-cmd="close" title="Close this window">
     </p>
