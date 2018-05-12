@@ -188,6 +188,9 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     elements.counter.progress.dataset.visible = true;
     elements.counter.progress.value = elements.counter.progress.max - request.value;
   }
+  else if (request.cmd === 'build') {
+    response(build());
+  }
   else if (request.cmd === 'found-images') {
     if (sender.tab) {
       // prevent duplication

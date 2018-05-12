@@ -25,9 +25,10 @@ window.iframe.setAttribute('style', `
   bottom: 0;
   left: 0;
   right: 0;
-  width: 650px;
-  height: ${isLinux ? 600 : 530}px;
+  width: 750px;
   max-width: 80%;
+  height: 650px;
+  max-height: 80%;
   margin: auto;
   background-color: #f0f0f0;
   z-index: 10000000000;

@@ -25,24 +25,52 @@ function humanFileSize(bytes) {
 }
 
 {
-  const resp = window.parent.ui.contentWindow.build();
-  custom = resp.custom;
-  addJPG = resp.addJPG;
-  document.getElementById('saveAs').checked = resp.saveAs;
+  const init = resp => {
+    custom = resp.custom;
+    addJPG = resp.addJPG;
+    document.getElementById('saveAs').checked = resp.saveAs;
 
-  Object.values(resp.images).forEach(obj => {
-    const clone = document.importNode(t.content, true);
-    clone.querySelector('div').style['background-image'] = `url("${obj.src}")`;
-    clone.querySelector('div').info = obj;
-    if (obj.size) {
-      clone.querySelector('span').textContent = humanFileSize(obj.size);
-    }
-    body.appendChild(clone);
-  });
+    Object.values(resp.images).forEach(obj => {
+      const clone = document.importNode(t.content, true);
+      clone.querySelector('img').src = obj.src;
+      clone.querySelector('div').info = obj;
+      if (obj.size) {
+        const a = clone.querySelector('a');
+        a.textContent = humanFileSize(obj.size);
+        a.href = obj.src;
+      }
+      body.appendChild(clone);
+    });
+  };
+  if (window.top === window) {
+    document.body.dataset.top = true;
+
+    const id = Number(location.search.split('id=')[1].split('&')[0]);
+    chrome.tabs.sendMessage(id, {
+      cmd: 'build'
+    }, init);
+  }
+  else {
+    const resp = window.parent.ui.contentWindow.build();
+    init(resp);
+  }
 }
 
-document.addEventListener('click', ({target}) => {
+document.addEventListener('click', e => {
+  const {target} = e;
   const cmd = target.dataset.cmd;
+
+  // data URL is not allowed in a new browser tab
+  if (target.href && target.href.startsWith('data:')) {
+    e.preventDefault();
+    fetch(target.href)
+      .then(res => res.blob())
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        target.href = url;
+        target.click();
+      });
+  }
 
   if (cmd === 'rename') {
     const pattern = document.getElementById('pattern').value;
@@ -106,8 +134,20 @@ document.addEventListener('click', ({target}) => {
       });
     }
   }
+  else if (cmd === 'window') {
+    chrome.runtime.sendMessage({
+      method: 'me'
+    }, id => chrome.tabs.create({
+      url: location.href + '?id=' + id
+    }));
+  }
   else if (cmd === 'close') {
-    window.parent.to.ui();
+    if (window.top === window) {
+      window.close();
+    }
+    else {
+      window.parent.to.ui();
+    }
   }
 });
 

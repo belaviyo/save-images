@@ -14,13 +14,16 @@ body>span {
   flex: 1;
 }
 #body {
-  display: flex;
-  flex-flow: wrap;
   overflow-y: auto;
-  justify-content: center;
   padding: 10px;
   background-color: #e7e7e8;
+  height: 100%;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
 }
+
 #toolbar {
   display: flex;
   align-items: center;
@@ -36,14 +39,20 @@ body>span {
   flex: 1;
 }
 .entry {
-  width: 140px;
-  height: 140px;
-  background-color: #fff;
-  margin: 2px;
+  flex: 1 0 152px;
+  height: 152px;
+
+  margin: 4px;
   position: relative;
-  background-repeat: no-repeat;
-  background-position: center;
   border: solid 1px #d7d8da;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: #fff;
+  background-image: linear-gradient(45deg, #fcfcfc 25%, transparent 25%), linear-gradient(-45deg, #fcfcfc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #fcfcfc 75%), linear-gradient(-45deg, transparent 75%, #fcfcfc 75%);
+  background-size: 30px 30px;
+  background-position: 0 0, 0 15px, 15px -15px, -15px 0px;
 }
 .entry input[type=checkbox] {
   position: absolute;
@@ -63,17 +72,22 @@ body>span {
   outline: none;
   text-indent: 5px;
 }
-.entry span {
+.entry a {
   position: absolute;
   top: 5px;
   left: 5px;
   color: #fff;
   background-color: rgba(0, 0, 0, 0.5);
-  padding: 2px;
+  padding: 5px;
   font-size: 80%;
+  text-decoration: none;
 }
-.entry span:empty {
+.entry a:empty {
   display: none;
+}
+.entry img {
+  max-height: 80%;
+  object-fit: contain;
 }
 
 [data-visible=false] {
@@ -113,6 +127,13 @@ input:disabled {
 [data-cmd=copy] {
   background: url('copy.svg') center center no-repeat;
   background-size: 16px;
+}
+[data-cmd=window] {
+  background: url('window.svg') center center no-repeat;
+  background-size: 16px;
+}
+body[data-top=true] [data-cmd=window] {
+  display: none;
 }
 
 ::placeholder {
