@@ -15,27 +15,30 @@ try {
 }
 catch (e) {}
 
-var isLinux = /Linux/.test(window.navigator.platform);
-
 window.iframe = document.createElement('iframe');
-window.iframe.setAttribute('style', `
-  border: none;
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 750px;
-  max-width: 80%;
-  height: 650px;
-  max-height: 80%;
-  margin: auto;
-  background-color: #f0f0f0;
-  z-index: 10000000000;
-  box-shadow: 0 0 0 10000px rgba(0, 0, 0, 0.3);
-`);
-window.iframe.src = chrome.runtime.getURL('data/inject/selector.html');
-document.body.appendChild(window.iframe);
+chrome.storage.local.get({
+  width: 750,
+  height: 650
+}, ({width, height}) => {
+  window.iframe.setAttribute('style', `
+    border: none;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: ${width}px;
+    max-width: 80%;
+    height: ${height}px;
+    max-height: 80%;
+    margin: auto;
+    background-color: #f0f0f0;
+    z-index: 10000000000;
+    box-shadow: 0 0 0 10000px rgba(0, 0, 0, 0.3);
+  `);
+  window.iframe.src = chrome.runtime.getURL('data/inject/selector.html');
+  document.body.appendChild(window.iframe);
+});
 
 (callback => {
   document.addEventListener('click', e => {

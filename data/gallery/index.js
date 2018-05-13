@@ -60,16 +60,18 @@ document.addEventListener('click', e => {
   const {target} = e;
   const cmd = target.dataset.cmd;
 
-  // data URL is not allowed in a new browser tab
+  // data URL is not allowed in a new browser tab (chrome)
   if (target.href && target.href.startsWith('data:')) {
-    e.preventDefault();
-    fetch(target.href)
-      .then(res => res.blob())
-      .then(blob => {
-        const url = URL.createObjectURL(blob);
-        target.href = url;
-        target.click();
-      });
+    if (navigator.userAgent.indexOf('Firefox') === -1) {
+      e.preventDefault();
+      fetch(target.href)
+        .then(res => res.blob())
+        .then(blob => {
+          const url = URL.createObjectURL(blob);
+          target.href = url;
+          target.click();
+        });
+    }
   }
 
   if (cmd === 'rename') {
@@ -136,10 +138,8 @@ document.addEventListener('click', e => {
   }
   else if (cmd === 'window') {
     chrome.runtime.sendMessage({
-      method: 'me'
-    }, id => chrome.tabs.create({
-      url: location.href + '?id=' + id
-    }));
+      method: 'open-me'
+    });
   }
   else if (cmd === 'close') {
     if (window.top === window) {

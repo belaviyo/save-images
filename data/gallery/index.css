@@ -41,7 +41,7 @@ body>span {
 .entry {
   flex: 1 0 152px;
   height: 152px;
-
+  max-width: calc(100% - 10px);
   margin: 4px;
   position: relative;
   border: solid 1px #d7d8da;
@@ -50,9 +50,7 @@ body>span {
   justify-content: center;
 
   background-color: #fff;
-  background-image: linear-gradient(45deg, #fcfcfc 25%, transparent 25%), linear-gradient(-45deg, #fcfcfc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #fcfcfc 75%), linear-gradient(-45deg, transparent 75%, #fcfcfc 75%);
-  background-size: 30px 30px;
-  background-position: 0 0, 0 15px, 15px -15px, -15px 0px;
+  background-image: url('grid.png');
 }
 .entry input[type=checkbox] {
   position: absolute;
@@ -86,7 +84,7 @@ body>span {
   display: none;
 }
 .entry img {
-  max-height: 80%;
+  max-height: 100%;
   object-fit: contain;
 }
 

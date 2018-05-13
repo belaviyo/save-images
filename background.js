@@ -29,12 +29,16 @@ const onClicked = tab => {
 };
 chrome.browserAction.onClicked.addListener(onClicked);
 
-chrome.runtime.onMessage.addListener((request, sender, response) => {
+chrome.runtime.onMessage.addListener((request, sender) => {
   if (request.method === 'notify') {
     notify(request.message);
   }
-  else if (request.method === 'me') {
-    response(sender.tab.id);
+  else if (request.method === 'open-me') {
+    const id = sender.tab.id;
+    chrome.tabs.create({
+      openerTabId: id,
+      url: 'data/gallery/index.html?id=' + id
+    });
   }
 });
 
