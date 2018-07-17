@@ -12,13 +12,17 @@ document.addEventListener('change', ({target}) => {
       }
     }
     else {
-      localStorage.setItem(id, target.value);
+      let value = target.value;
+      if (id === 'timeout') {
+        value = Math.min(Math.max(5, value), 120);
+      }
+      localStorage.setItem(id, value);
     }
   }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-  for (const key in localStorage) {
+  for (const key of Object.keys(localStorage)) {
     const e = document.getElementById(key);
     if (e) {
       if (e.type === 'radio' || e.type === 'checkbox') {
@@ -34,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('click', ({target}) => {
   const cmd = target.dataset.cmd;
   if (cmd === 'reset') {
-    for (const key in localStorage) {
+    for (const key of Object.keys(localStorage)) {
       localStorage.removeItem(key);
     }
     chrome.runtime.sendMessage({

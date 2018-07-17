@@ -10,9 +10,9 @@
       <fieldset flex=1>
         <legend>Statistics</legend>
         <div hbox>
-          Total:&nbsp;<span id="total-number">-</span>,
-          Processed:&nbsp;<span id="processed-number">-</span>,
-          Will be saved:&nbsp;<span id="save-number">-</span>&nbsp;
+          <span class="note">Total:</span>&nbsp;<span id="total-number">-</span>,
+          <span class="note">Processed:</span>&nbsp;<span id="processed-number">-</span>,
+          <span class="note">Will be saved:</span>&nbsp;<span id="save-number">-</span>&nbsp;
           <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
         </div>
       </fieldset>
@@ -105,10 +105,10 @@
             <td><label for="type-selection">Selection</label></td>
           </tr>
         </table>
-        <table class="indent">
+        <table class="indent" id="image-types">
           <tr>
             <td><input type="checkbox" id="type-jpeg"></td>
-            <td><label for="type-jpeg">JPG/JPEG images</label></td>
+            <td><label for="type-jpeg">JP(E)G images</label></td>
           </tr>
           <tr>
             <td><input type="checkbox" id="type-png"></td>
@@ -121,6 +121,10 @@
           <tr>
             <td><input type="checkbox" id="type-bmp"></td>
             <td><label for="type-bmp">BMP images</label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="type-webp"></td>
+            <td><label for="type-webp">WebP images</label></td>
           </tr>
         </table>
         <table>
@@ -151,19 +155,50 @@
         <td><label for="group-origin">Only save images from the same domain/server as the selected tab's URL</label></td>
       </tr>
     </table>
-    <table width="100%">
-      <colgroup>
-        <col width=50></col>
-        <col></col>
-      </colgroup>
-      <tr>
-        <td>Save in</td>
-        <td hbox pack=center>
-          <input type="text" id="custom-directory" placeholder="custom directory relative to the default download directory" flex="1">
-          <label><input type="checkbox" id="open-save-dialog"> Open save dialog</label>
-        </td>
-      </tr>
-    </table>
+    <fieldset flex=1>
+      <legend>Save in</legend>
+      <table width=100%>
+        <colgroup>
+          <col width=24>
+          <col width="100">
+          <col>
+        </colgroup>
+        <tbody>
+          <tr title="Show browser's save dialog to choose the destination directory">
+            <td><input type="checkbox" id="open-save-dialog"></td>
+            <td><label for="open-save-dialog">Save dialog</label></td>
+            <td align=right title="number of seconds a request can take before automatically being terminated (a number between 5 to 120 seconds)"><input type="number" id="timeout" min="5" max="120" value=10> seconds</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>Format</td>
+            <td>
+              <div hbox>
+                <input type="text" id="format" value="[title] - [date] [time].zip" placeholder="[title] - [date] [time].zip" flex="1">
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>ZIP filename</td>
+            <td>
+              <div hbox>
+                <input type="text" id="filename" placeholder="Filename" flex="1">
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>Directory</td>
+            <td>
+              <div hbox>
+                <input type="text" id="custom-directory" placeholder="custom directory relative to the default download directory" flex="1">
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </fieldset>
 
     <p hbox flex="1" pack="center" align="end">
       <input type="button" value="Reset" data-cmd="reset" title="Reset settings to the default values">

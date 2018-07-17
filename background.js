@@ -46,7 +46,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
 chrome.storage.local.get({
   'version': null,
   'faqs': true,
-  'last-update': 0,
+  'last-update': 0
 }, prefs => {
   const version = chrome.runtime.getManifest().version;
 

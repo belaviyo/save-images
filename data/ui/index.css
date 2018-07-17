@@ -59,6 +59,9 @@ progress[data-visible=false] {
 .indent {
   padding-left: 10px;
 }
+.note {
+  color: #7d7d7d;
+}
 
 [hbox] {
   display: flex;

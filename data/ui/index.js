@@ -28,6 +28,8 @@ var elements = {
   },
   save: {
     directory: document.getElementById('custom-directory'),
+    format: document.getElementById('format'),
+    filename: document.getElementById('filename'),
     dialog: document.getElementById('open-save-dialog')
   },
   size: {
@@ -51,8 +53,9 @@ var elements = {
     bmp: document.getElementById('type-bmp'),
     gif: document.getElementById('type-gif'),
     png: document.getElementById('type-png'),
+    webp: document.getElementById('type-webp'),
     all: document.getElementById('type-all'),
-    noType: document.getElementById('no-type'),
+    noType: document.getElementById('no-type')
   },
   regexp: {
     input: document.getElementById('regexp-input')
@@ -67,9 +70,19 @@ var elements = {
 var images = {};
 var processed = 0;
 
+function validate(name) {
+  name.replace(/\.zip$/, '');
+  return name.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/]/gi, '-') + '.zip';
+}
+
 function build() {
+  const custom = elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_');
+  let filename = elements.save.filename.value;
+  filename = custom ? custom + '/' + filename : filename;
+  filename = validate(filename);
+
   return {
-    custom: elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_'),
+    filename,
     addJPG: elements.type.noType.checked,
     images: filtered(),
     saveAs: elements.save.dialog.checked
@@ -141,6 +154,9 @@ function filtered() {
           return true;
         }
         if (img.type === 'image/bmp' && elements.type.bmp.checked) {
+          return true;
+        }
+        if (img.type === 'image/webp' && elements.type.webp.checked) {
           return true;
         }
         if (img.type === 'image/gif' && elements.type.gif.checked) {
@@ -234,6 +250,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     response(build());
   }
 });
+
 var search = () => chrome.runtime.sendMessage({
   cmd: 'get-images',
   deep: Number(elements.deep.level.value)
@@ -245,8 +262,15 @@ var search = () => chrome.runtime.sendMessage({
   else {
     elements.save.directory.disabled = true;
   }
+  // filename
+  const time = new Date();
+  elements.save.filename.value = (elements.save.format.value || elements.save.format.placeholder)
+    .replace('[title]', validate(result.title))
+    .replace('[date]', time.toLocaleDateString())
+    .replace('[time]', time.toLocaleTimeString());
 });
 document.addEventListener('DOMContentLoaded', search);
+
 elements.deep.level.addEventListener('change', search);
 
 // commands
@@ -312,3 +336,13 @@ port.onMessage.addListener(request => {
     elements.deep.progress.dataset.visible = request.count !== 0;
   }
 });
+
+// image types
+{
+  const root = document.getElementById('image-types');
+  root.addEventListener('change', () => {
+    document.getElementById(
+      root.querySelector(':checked') ? 'type-selection' : 'type-all'
+    ).checked = true;
+  });
+}

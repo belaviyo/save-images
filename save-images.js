@@ -7,16 +7,23 @@
  * Home: http://add0n.com/save-images.html
  * GitHub: https://github.com/belaviyo/save-images/ */
 
-/* globals JSZip, onClicked */
+/* globals JSZip, onClicked, notify */
 'use strict';
 
 window.count = 0;
 // Firefox does not support chrome.downloads.onDeterminingFilename yet
 const diSupport = Boolean(chrome.downloads.onDeterminingFilename);
 
+function timeout() {
+  return Number(localStorage.getItem('timeout') || 10) * 1000;
+}
+
+var downloads = {};
+
 function Download() {
   this.zip = new JSZip();
   this.indices = {};
+  this.abort = false;
 }
 Download.prototype.init = function(request, tab) {
   this.request = request;
@@ -25,8 +32,22 @@ Download.prototype.init = function(request, tab) {
 
   this.one();
 };
+Download.prototype.terminate = function() {
+  if (this.abort === false) {
+    notify(`Image downloading is canceled for "${this.tab.title}". Do not close the panel if you want to keep downloading`);
+  }
+  chrome.browserAction.setBadgeText({
+    tabId: this.tab.id,
+    text: ''
+  });
+  this.abort = true;
+  this.jobs = [];
+};
 Download.prototype.one = function() {
-  const {id, title} = this.tab;
+  if (this.abort) {
+    return;
+  }
+  const {id} = this.tab;
   const jobs = this.jobs;
   const request = this.request;
 
@@ -51,21 +72,17 @@ Download.prototype.one = function() {
   else {
     this.zip.generateAsync({type: 'blob'})
     .then(content => {
-      const time = new Date();
-      let filename = title + ' ' + time.toLocaleDateString() + ' ' + time.toLocaleTimeString();
-      filename = filename
-        .replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/]/gi, '-');
-      filename += '.zip';
       const url = URL.createObjectURL(content);
       chrome.downloads.download({
         url,
-        filename: request.custom ? request.custom + '/' + filename : filename,
+        filename: request.filename,
         conflictAction: 'uniquify',
         saveAs: request.saveAs
       }, () => {
         chrome.tabs.sendMessage(id, {
           cmd: 'close-me'
         });
+        delete downloads[id];
         window.setTimeout(() => URL.revokeObjectURL(url), 10000);
       });
     });
@@ -77,6 +94,10 @@ Download.prototype.download = function(obj) {
 
     const request = this.request;
     const indices = this.indices;
+
+    if (this.abort) {
+      return;
+    }
 
     fetch(obj.src).then(response => {
       window.clearTimeout(id);
@@ -131,14 +152,16 @@ Download.prototype.download = function(obj) {
 chrome.runtime.onConnect.addListener(port => {
   let links = [];
   let cache = {};
+  let abort = false;
   port.onDisconnect.addListener(() => {
     links = [];
     cache = {};
+    abort = true;
   });
   const analyze = (url, level) => new Promise(resolve => {
     const req = new XMLHttpRequest();
     req.open('HEAD', url);
-    req.timeout = 10000;
+    req.timeout = timeout();
     req.onload = () => {
       const type = req.getResponseHeader('content-type') || '';
       if (type.startsWith('image/')) {
@@ -154,7 +177,7 @@ chrome.runtime.onConnect.addListener(port => {
         const req = new XMLHttpRequest();
         req.open('GET', url);
         req.responseType = 'document';
-        req.timeout = 10000;
+        req.timeout = timeout();
         req.onload = () => {
           const imgs = [...req.response.images].map(img => ({
             width: img.width,
@@ -176,7 +199,7 @@ chrome.runtime.onConnect.addListener(port => {
   let active = false;
 
   const batch = level => {
-    if (active) {
+    if (active || abort) {
       return;
     }
     port.postMessage({
@@ -239,7 +262,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     else {
       const req = new window.XMLHttpRequest();
       req.open('HEAD', request.src);
-      req.timeout = 10000;
+      req.timeout = timeout();
       req.onload = () => {
         let type = req.getResponseHeader('content-type') || '';
         if (!type) {
@@ -274,7 +297,8 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   else if (request.cmd === 'get-images') {
     response({
       domain: new URL(sender.tab.url).hostname,
-      diSupport
+      diSupport,
+      title: sender.tab.title
     });
     chrome.tabs.executeScript(sender.tab.id, {
       code: String.raw`
@@ -349,14 +373,19 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     chrome.tabs.sendMessage(sender.tab.id, request);
   }
   else if (request.cmd === 'save-images') {
-    chrome.notifications.create(null, {
-      type: 'basic',
-      iconUrl: '/data/icons/48.png',
-      title: 'Save all Images',
-      message: 'Saving ' + request.images.length + ' images'
-    });
-    const download = new Download();
-    download.init(request, sender.tab);
+    notify('Saving ' + request.images.length + ' images');
+
+    if (downloads[sender.tab.id]) {
+      downloads[sender.tab.id].terminate();
+    }
+    downloads[sender.tab.id] = new Download();
+    downloads[sender.tab.id].init(request, sender.tab);
+  }
+  else if (request.cmd === 'abort-downloading') {
+    const download = downloads[sender.tab.id];
+    if (download) {
+      download.terminate();
+    }
   }
   //
   if (request.cmd === 'close-me') {
