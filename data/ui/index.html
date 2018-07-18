@@ -4,14 +4,14 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" href="index.css">
   </head>
-  <body vbox pack=center>
+  <body>
     <div hbox>
       <textarea id="clipboard" style="display: none;"></textarea>
       <fieldset flex=1>
         <legend>Statistics</legend>
         <div hbox>
-          <span class="note">Total:</span>&nbsp;<span id="total-number">-</span>,
-          <span class="note">Processed:</span>&nbsp;<span id="processed-number">-</span>,
+          <span class="note">Total:</span>&nbsp;<span id="total-number">-</span>,&nbsp;
+          <span class="note">Processed:</span>&nbsp;<span id="processed-number">-</span>,&nbsp;
           <span class="note">Will be saved:</span>&nbsp;<span id="save-number">-</span>&nbsp;
           <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
         </div>
@@ -155,7 +155,7 @@
         <td><label for="group-origin">Only save images from the same domain/server as the selected tab's URL</label></td>
       </tr>
     </table>
-    <fieldset flex=1>
+    <fieldset style="margin-bottom: 55px">
       <legend>Save in</legend>
       <table width=100%>
         <colgroup>
@@ -200,7 +200,7 @@
       </table>
     </fieldset>
 
-    <p hbox flex="1" pack="center" align="end">
+    <footer hbox pack="center" align="end">
       <input type="button" value="Reset" data-cmd="reset" title="Reset settings to the default values">
       <input type="button" value="Restart" data-cmd="restart" title="Restart image collection">
       <input type="button" value="Gallery" data-cmd="gallery" title="Open selected images in gallery mode">
@@ -208,7 +208,7 @@
       <input type="button" value="Copy" data-cmd="copy" title="Copy selected images to the clipbaord">
       <input type="button" value="Save" data-cmd="save" title="Save selected images">
       <input type="button" value="Cancel" data-cmd="close" title="Close this window">
-    </p>
+    </footer>
     <script src="persist.js"></script>
     <script src="index.js"></script>
   </body>

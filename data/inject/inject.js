@@ -30,7 +30,7 @@ chrome.storage.local.get({
     width: ${width}px;
     max-width: 80%;
     height: ${height}px;
-    max-height: 80%;
+    max-height: 90%;
     margin: auto;
     background-color: #f0f0f0;
     z-index: 10000000000;

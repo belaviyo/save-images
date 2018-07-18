@@ -9,11 +9,16 @@ body {
   margin: 10px;
   height: calc(100% - 20px);
 }
-table {}
-td {}
 
 h2 {
   font-size: 100%;
+}
+footer {
+  padding: 15px 0;
+  position: fixed;
+  bottom: 0;
+  width: calc(100% - 20px);
+  background-color: #f0f0f0;
 }
 
 input {
