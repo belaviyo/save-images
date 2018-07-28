@@ -34,7 +34,8 @@ Download.prototype.init = function(request, tab) {
 };
 Download.prototype.terminate = function() {
   if (this.abort === false) {
-    notify(`Image downloading is canceled for "${this.tab.title}". Do not close the panel if you want to keep downloading`);
+    notify(`Image downloading is canceled for "${this.tab.title}". 
+Do not close the panel if you want to keep downloading`);
   }
   chrome.browserAction.setBadgeText({
     tabId: this.tab.id,
@@ -153,11 +154,16 @@ chrome.runtime.onConnect.addListener(port => {
   let links = [];
   let cache = {};
   let abort = false;
-  port.onDisconnect.addListener(() => {
+  const aborting = () => {
     links = [];
     cache = {};
     abort = true;
-  });
+    port.postMessage({
+      cmd: 'count',
+      count: 0
+    });
+  };
+  port.onDisconnect.addListener(aborting);
   const analyze = (url, level) => new Promise(resolve => {
     const req = new XMLHttpRequest();
     req.open('HEAD', url);
@@ -239,6 +245,9 @@ chrome.runtime.onConnect.addListener(port => {
       });
       links.push(...request.links);
       batch(request.deep);
+    }
+    else if (request.cmd === 'stop') {
+      aborting();
     }
   });
 });
@@ -351,7 +360,9 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
         }
         // find hard-coded links
         if (${request.deep > 0}) {
-          const links = document.documentElement.innerHTML.match(r) || [];
+          // decode html special characters; &amp;
+          const links = (document.documentElement.innerHTML.match(r) || [])
+            .map(s => s.replace(/&amp;/g, '&'));
           if (links.length) {
             chrome.runtime.sendMessage({
               cmd: 'found-links',

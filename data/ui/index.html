@@ -135,24 +135,42 @@
         </table>
       </fieldset>
     </div>
-    <fieldset>
-      <legend>Regular Expressions</legend>
-      <table width="100%">
-        <tr>
-          <td><input type="checkbox" id="group-regexp"></td>
-          <td><label for="group-regexp">Regular expression based on images URL (only matching images will be saved)</label></td>
-        </tr>
-        <tr>
-          <td></td>
-          <td hbox><input type="text" id="regexp-input" flex=1 placeholder=".*"></td>
-        </tr>
-      </table>
-    </fieldset>
-
+    <div hbox>
+      <fieldset flex=1>
+        <legend>Regular Expressions</legend>
+        <table width="100%">
+          <tr>
+            <td><input type="checkbox" id="group-regexp"></td>
+            <td><label for="group-regexp">Regular expression based on images URL (only matching images will be saved)</label></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td hbox><input type="text" id="regexp-input" flex=1 placeholder="e.g.: .*"></td>
+          </tr>
+        </table>
+      </fieldset>
+      <fieldset flex=1>
+        <legend>Blacklisted keywords</legend>
+        <table width="100%">
+          <tr>
+            <td><input type="checkbox" id="group-blacklist"></td>
+            <td><label for="group-blacklist">Comma-separated list of keywords to exclude (matching images will NOT be saved)</label></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td hbox><input type="text" id="blacklist-input" flex=1 placeholder="e.g.: word1, word2"></td>
+          </tr>
+        </table>
+      </fieldset>
+    </div>
     <table width="100%">
       <tr>
         <td><input type="checkbox" id="group-origin"></td>
         <td><label for="group-origin">Only save images from the same domain/server as the selected tab's URL</label></td>
+      </tr>
+      <tr>
+        <td><input type="checkbox" id="group-identical" checked="true"></td>
+        <td><label for="group-identical">Try to exclude identical images</label></td>
       </tr>
     </table>
     <fieldset style="margin-bottom: 55px">
@@ -203,6 +221,7 @@
     <footer hbox pack="center" align="end">
       <input type="button" value="Reset" data-cmd="reset" title="Reset settings to the default values">
       <input type="button" value="Restart" data-cmd="restart" title="Restart image collection">
+      <input type="button" value="Stop" data-cmd="stop" title="Stop searching for more images">
       <input type="button" value="Gallery" data-cmd="gallery" title="Open selected images in gallery mode">
       <span flex="1"></span>
       <input type="button" value="Copy" data-cmd="copy" title="Copy selected images to the clipbaord">

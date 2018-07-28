@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener('click', ({target}) => {
   const cmd = target.dataset.cmd;
-  if (cmd === 'reset') {
+  if (cmd === 'reset' && window.confirm('Are you sure you want to reset all the settings to the defaults?')) {
     for (const key of Object.keys(localStorage)) {
       localStorage.removeItem(key);
     }

@@ -24,7 +24,9 @@ var elements = {
     dimension: document.getElementById('group-dimension'),
     type: document.getElementById('group-type'),
     regexp: document.getElementById('group-regexp'),
+    blacklist: document.getElementById('group-blacklist'),
     origin: document.getElementById('group-origin'),
+    identical: document.getElementById('group-identical')
   },
   save: {
     directory: document.getElementById('custom-directory'),
@@ -60,6 +62,9 @@ var elements = {
   regexp: {
     input: document.getElementById('regexp-input')
   },
+  blacklist: {
+    input: document.getElementById('blacklist-input')
+  },
   deep: {
     level: document.getElementById('deep-level'),
     stat: document.getElementById('deep-stat'),
@@ -90,8 +95,10 @@ function build() {
 }
 
 function filtered() {
-  return Object.values(images)
-  // size
+  const objs = Object.values(images);
+  const keys = objs.map(o => o.key);
+
+  return objs // size
   .filter(img => {
     if (elements.group.size.checked) {
       if (img.size) {
@@ -180,11 +187,32 @@ function filtered() {
       return true;
     }
   })
-  //origin
+  // blacklist
+  .filter(img => {
+    if (elements.group.blacklist.checked) {
+      const list = elements.blacklist.input.value.split(/\s*,\s*/)
+        .map(k => k.toLowerCase())
+        .filter(a => a);
+      return !list.some(keyword => img.src.toLowerCase().indexOf(keyword) !== -1);
+    }
+    else {
+      return true;
+    }
+  })
+  // origin
   .filter(img => {
     if (elements.group.origin.checked) {
-      const hostname = (new URL(img.src)).hostname;
-      return domain.endsWith(hostname) || hostname.endsWith(domain);
+      const hostname = img.hostname;
+      return domain.endsWith(hostname) || hostname.endsWith(domain) || hostname === 'local';
+    }
+    else {
+      return true;
+    }
+  })
+  // identical
+  .filter((img, index) => {
+    if (elements.group.identical.checked) {
+      return img.size ? keys.indexOf(img.key) === index : true;
     }
     else {
       return true;
@@ -214,6 +242,8 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     }
     request.images.forEach(img => {
       if (!images[img.src]) {
+        img.hostname = (new URL(img.src)).hostname || 'local';
+        img.key = img.size + '-' + img.hostname;
         images[img.src] = img;
         if (!img.type) {
           chrome.runtime.sendMessage({
@@ -221,6 +251,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
             src: img.src
           }, response => {
             images[img.src] = Object.assign(images[img.src], response);
+            img.key = img.size + '-' + img.hostname;
             processed += 1;
 
             if (response.type.startsWith('image/') === false) {
@@ -255,7 +286,7 @@ var search = () => chrome.runtime.sendMessage({
   cmd: 'get-images',
   deep: Number(elements.deep.level.value)
 }, result => {
-  domain = result.domain;
+  domain = result.domain || '';
   if (result.diSupport) {
     elements.save.directory.value = domain;
   }
@@ -321,9 +352,22 @@ document.addEventListener('click', ({target}) => {
   else if (cmd === 'gallery') {
     window.parent.to.gallery();
   }
+  else if (cmd === 'stop') {
+    port.postMessage({
+      cmd: 'stop'
+    });
+  }
 });
 // update counter
 document.addEventListener('change', update);
+{ // wait for .5 seconds before updating
+  let id;
+  const input = () => {
+    window.clearTimeout(id);
+    window.setTimeout(update, 500);
+  };
+  document.addEventListener('input', input);
+}
 
 // port
 let count = 0;
