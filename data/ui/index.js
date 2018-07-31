@@ -76,7 +76,7 @@ var images = {};
 var processed = 0;
 
 function validate(name) {
-  name.replace(/\.zip$/, '');
+  name = name.replace(/\.zip/g, '');
   return name.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/]/gi, '-') + '.zip';
 }
 
@@ -296,7 +296,7 @@ var search = () => chrome.runtime.sendMessage({
   // filename
   const time = new Date();
   elements.save.filename.value = (elements.save.format.value || elements.save.format.placeholder)
-    .replace('[title]', validate(result.title))
+    .replace('[title]', result.title)
     .replace('[date]', time.toLocaleDateString())
     .replace('[time]', time.toLocaleTimeString());
 });

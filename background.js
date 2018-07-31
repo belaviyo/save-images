@@ -52,7 +52,7 @@ chrome.storage.local.get({
 
   if (prefs.version ? (prefs.faqs && prefs.version !== version) : true) {
     const now = Date.now();
-    const doUpdate = (now - prefs['last-update']) / 1000 / 60 / 60 / 24 > 30;
+    const doUpdate = (now - prefs['last-update']) / 1000 / 60 / 60 / 24 > 45;
     chrome.storage.local.set({
       version,
       'last-update': doUpdate ? Date.now() : prefs['last-update']

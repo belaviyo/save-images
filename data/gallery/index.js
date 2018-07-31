@@ -8,6 +8,7 @@ var copy = document.querySelector('[data-cmd=copy]');
 var progress = document.getElementById('progress');
 var custom = '';
 var addJPG = true;
+var filename = '';
 
 function humanFileSize(bytes) {
   const thresh = 1024;
@@ -28,6 +29,7 @@ function humanFileSize(bytes) {
   const init = resp => {
     custom = resp.custom;
     addJPG = resp.addJPG;
+    filename = resp.filename;
     document.getElementById('saveAs').checked = resp.saveAs;
 
     Object.values(resp.images).forEach(obj => {
@@ -117,6 +119,7 @@ document.addEventListener('click', e => {
         cmd: 'save-images',
         custom,
         addJPG,
+        filename,
         images,
         saveAs: document.getElementById('saveAs').checked
       });
