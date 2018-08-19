@@ -9,12 +9,14 @@
 
 'use strict';
 
-const notify = message => chrome.notifications.create({
+const notify = message => chrome.storage.local.get({
+  notify: true
+}, prefs => prefs.notify && chrome.notifications.create({
   type: 'basic',
   title: chrome.runtime.getManifest().name,
   message,
   iconUrl: '/data/icons/48.png'
-});
+}));
 
 const onClicked = tab => {
   chrome.tabs.executeScript(tab.id, {
@@ -57,7 +59,7 @@ chrome.storage.local.get({
       version,
       'last-update': doUpdate ? Date.now() : prefs['last-update']
     }, () => {
-      // do not display the FAQs page if last-update occurred less than 30 days ago.
+      // do not display the FAQs page if last-update occurred less than 45 days ago.
       if (doUpdate) {
         const p = Boolean(prefs.version);
         chrome.tabs.create({

@@ -11,8 +11,6 @@
 'use strict';
 
 window.count = 0;
-// Firefox does not support chrome.downloads.onDeterminingFilename yet
-const diSupport = Boolean(chrome.downloads.onDeterminingFilename);
 
 function timeout() {
   return Number(localStorage.getItem('timeout') || 10) * 1000;
@@ -34,7 +32,7 @@ Download.prototype.init = function(request, tab) {
 };
 Download.prototype.terminate = function() {
   if (this.abort === false) {
-    notify(`Image downloading is canceled for "${this.tab.title}". 
+    notify(`Image downloading is canceled for "${this.tab.title}".
 Do not close the panel if you want to keep downloading`);
   }
   chrome.browserAction.setBadgeText({
@@ -71,6 +69,7 @@ Download.prototype.one = function() {
     ]).then(() => this.one());
   }
   else {
+    console.log(request);
     this.zip.generateAsync({type: 'blob'})
     .then(content => {
       const url = URL.createObjectURL(content);
@@ -306,7 +305,6 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   else if (request.cmd === 'get-images') {
     response({
       domain: new URL(sender.tab.url).hostname,
-      diSupport,
       title: sender.tab.title
     });
     chrome.tabs.executeScript(sender.tab.id, {

@@ -25,14 +25,33 @@
 
 <body>
   <table width=100%>
-    <tr>
-      <td><label for="width">Panel width (in pixels) (min: 650px):</label></td>
-      <td><input id="width" type="number" min="300"></td>
-    </tr>
-    <tr>
-      <td><label for="height">Panel height (in pixels) (min: 500px):</label></td>
-      <td><input id="height" type="number" min="400"></td>
-    </tr>
+    <colgroup>
+      <col width=32>
+      <col>
+      <col>
+    </colgroup>
+    <tbody>
+      <tr>
+        <td></td>
+        <td><label for="width">Panel width (in pixels) (min: 650px):</label></td>
+        <td><input id="width" type="number" min="300"></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td><label for="height">Panel height (in pixels) (min: 500px):</label></td>
+        <td><input id="height" type="number" min="400"></td>
+      </tr>
+      <tr>
+        <td><input type="checkbox" id="notify"></td>
+        <td><label for="notify">Display desktop notification on image saving</label></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><input type="checkbox" id="faqs"></td>
+        <td><label for="faqs">Open FAQs page on updates</label></td>
+        <td></td>
+      </tr>
+    </tbody>
   </table>
 
   <p>
@@ -45,6 +64,6 @@
     <span id="status"></span>
   </p>
   <script src="index.js"></script>
-  <script async src="explore.js"></script>
+  <script async src="matched.js"></script>
 </body>
 </html>

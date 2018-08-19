@@ -83,8 +83,8 @@ function validate(name) {
 function build() {
   const custom = elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_');
   let filename = elements.save.filename.value;
-  filename = custom ? custom + '/' + filename : filename;
   filename = validate(filename);
+  filename = custom ? custom + '/' + filename : filename;
 
   return {
     filename,
@@ -287,12 +287,7 @@ var search = () => chrome.runtime.sendMessage({
   deep: Number(elements.deep.level.value)
 }, result => {
   domain = result.domain || '';
-  if (result.diSupport) {
-    elements.save.directory.value = domain;
-  }
-  else {
-    elements.save.directory.disabled = true;
-  }
+  elements.save.directory.value = domain;
   // filename
   const time = new Date();
   elements.save.filename.value = (elements.save.format.value || elements.save.format.placeholder)

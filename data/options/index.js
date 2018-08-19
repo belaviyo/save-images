@@ -15,7 +15,9 @@ var log = document.getElementById('status');
 function restore() {
   chrome.storage.local.get({
     width: 750,
-    height: 650
+    height: 650,
+    notify: true,
+    faqs: true
   }, prefs => {
     Object.keys(prefs).forEach(name => {
       document.getElementById(name)[typeof prefs[name] === 'boolean' ? 'checked' : 'value'] = prefs[name];
@@ -26,7 +28,9 @@ function restore() {
 function save() {
   const prefs = {
     width: Math.max(650, document.getElementById('width').value),
-    height: Math.max(500, document.getElementById('height').value)
+    height: Math.max(500, document.getElementById('height').value),
+    notify: document.getElementById('notify').checked,
+    faqs: document.getElementById('faqs').checked
   };
 
   chrome.storage.local.set(prefs, () => {
