@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "version": "0.3.8",
+  "version": "0.3.9",
   "name": "Download all Images",
   "short_name": "download-images",
   "description": "a customizable extension to save selected images from the current tab page",
@@ -44,5 +44,11 @@
   "options_ui": {
     "page": "data/options/index.html",
     "chrome_style": true
+  },
+  "applications": {
+    "gecko": {
+      "id": "{32af1358-428a-446d-873e-5f8eb5f2a72e}",
+      "strict_min_version": "52.0"
+    }
   }
 }

@@ -96,9 +96,8 @@ function build() {
 
 function filtered() {
   const objs = Object.values(images);
-  const keys = objs.map(o => o.key);
 
-  return objs // size
+  const rtn = objs // size
   .filter(img => {
     if (elements.group.size.checked) {
       if (img.size) {
@@ -208,9 +207,11 @@ function filtered() {
     else {
       return true;
     }
-  })
-  // identical
-  .filter((img, index) => {
+  });
+
+  const keys = rtn.map(o => o.key);
+
+  return rtn.filter((img, index) => {
     if (elements.group.identical.checked) {
       return img.size ? keys.indexOf(img.key) === index : true;
     }
