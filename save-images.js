@@ -15,6 +15,48 @@ window.count = 0;
 function timeout() {
   return Number(localStorage.getItem('timeout') || 10) * 1000;
 }
+/* guess filename */
+function guess(disposition, type, src, name) {
+  if (!name && disposition) {
+    const tmp = /filename\*=UTF-8''([^;]*)/.exec(disposition);
+    if (tmp && tmp.length) {
+      name = tmp[1].replace(/["']$/, '').replace(/^["']/, '');
+      name = decodeURIComponent(name);
+    }
+  }
+  if (!name && disposition) {
+    const tmp = /filename=([^;]*)/.exec(disposition);
+    if (tmp && tmp.length) {
+      name = tmp[1].replace(/["']$/, '').replace(/^["']/, '');
+    }
+  }
+  if (!name) {
+    const url = src.replace(/\/$/, '');
+    const tmp = /(title|filename)=([^&]+)/.exec(url);
+    if (tmp && tmp.length) {
+      name = tmp[2];
+    }
+    else {
+      name = url.substring(url.lastIndexOf('/') + 1);
+    }
+    try {
+      name = decodeURIComponent(name.split('?')[0].split('&')[0]) || 'image';
+      // make sure name is writable
+      name = name.replace(/[`~!@#$%^&*()_|+\-=?;:'",<>{}[\]\\/]/gi, '-');
+    }
+    catch(e) {}
+  }
+  if (disposition && name) {
+    const arr = [...name].map(v => v.charCodeAt(0)).filter(v => v <= 255);
+    name = (new TextDecoder('UTF-8')).decode(Uint8Array.from(arr));
+  }
+  if (name.indexOf('.') === -1) {
+    if (type) {
+      name += '.' + type.split('/').pop().split(/[+;]/).shift();
+    }
+  }
+  return name;
+}
 
 var downloads = {};
 
@@ -89,7 +131,6 @@ Download.prototype.one = function() {
 };
 Download.prototype.download = function(obj) {
   return new Promise((resolve, reject) => {
-
     const request = this.request;
     const indices = this.indices;
 
@@ -104,40 +145,8 @@ Download.prototype.download = function(obj) {
     req.responseType = 'blob';
     req.onload = () => {
       const disposition = req.getResponseHeader('Content-Disposition');
-      let name = obj.filename;
-      if (disposition && !name) {
-        const tmp = /filename=([^;]*)/.exec(disposition);
-        if (tmp && tmp.length) {
-          name = tmp[1].replace(/["']$/, '').replace(/^["']/, '');
-        }
-      }
-      if (!name) {
-        const url = obj.src.replace(/\/$/, '');
-        const tmp = /(title|filename)=([^&]+)/.exec(url);
-        if (tmp && tmp.length) {
-          name = tmp[2];
-        }
-        else {
-          name = url.substring(url.lastIndexOf('/') + 1);
-        }
-        try {
-          name = decodeURIComponent(name.split('?')[0].split('&')[0]) || 'image';
-          // make sure name is writable
-          name = name.replace(/[`~!@#$%^&*()_|+\-=?;:'",<>{}[\]\\/]/gi, '-');
-        }
-        catch(e) {}
-      }
-      if (disposition && name) {
-        const arr = [...name].map(v => v.charCodeAt(0)).filter(v => v <= 255);
-        name = (new TextDecoder('UTF-8')).decode(Uint8Array.from(arr));
-      }
-      name = name.slice(-30);
-      if (name.indexOf('.') === -1) {
-        const type = req.getResponseHeader('Content-Type');
-        if (type) {
-          name += '.' + type.split('/').pop().split(/[+;]/).shift();
-        }
-      }
+      const type = req.getResponseHeader('Content-Type');
+      let name = guess(disposition, type, obj.src, obj.filename);
       if (request.addJPG && name.indexOf('.') === -1) {
         name += '.jpg';
       }
@@ -150,6 +159,7 @@ Download.prototype.download = function(obj) {
       else {
         indices[name] = 1;
       }
+      name = name.slice(-60);
       this.zip.file(name, req.response);
       resolve();
     };
@@ -186,7 +196,12 @@ chrome.runtime.onConnect.addListener(port => {
           height: 0,
           src: url,
           size: Number(req.getResponseHeader('content-length')),
-          type
+          type,
+          filename: guess(
+            req.getResponseHeader('Content-Disposition'),
+            req.getResponseHeader('Content-Type'),
+            url
+          )
         }]);
       }
       else if (type.startsWith('text/html') && level === 2) {
@@ -266,15 +281,11 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.cmd === 'image-data') {
     // data URI
     if (request.src.startsWith('data:')) {
-      let size = null;
-      try {
-        size = window.atob(request.src.split(',')[1]).length;
-      }
-      catch (e) {}
-
+      const type = request.src.split('data:')[1].split(';')[0];
       return response({
-        type: request.src.split('data:')[1].split(';')[0],
-        size
+        type,
+        size: request.src.split(',')[1].length * 0.7, // approximate size
+        filename: 'image.' + type.split('/')[1].split('+')[0] // image/svg+xml -> svg
       });
     }
     // http/https
@@ -304,11 +315,18 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
         try {
           response({
             size,
-            type
+            type,
+            filename: guess(
+              req.getResponseHeader('Content-Disposition'),
+              req.getResponseHeader('Content-Type'),
+              request.src
+            )
           });
           chrome.runtime.lastError;
         }
-        catch (e) {}
+        catch (e) {
+          console.error(e);
+        }
       };
       req.ontimeout = req.onerror = () => response({});
       req.send();

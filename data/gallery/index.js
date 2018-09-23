@@ -13,7 +13,7 @@ var filename = '';
 function humanFileSize(bytes) {
   const thresh = 1024;
   if (Math.abs(bytes) < thresh) {
-    return bytes + ' B';
+    return bytes.toFixed(1) + ' B';
   }
   const units = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
   let u = -1;
@@ -36,6 +36,7 @@ function humanFileSize(bytes) {
       const clone = document.importNode(t.content, true);
       clone.querySelector('img').src = obj.src;
       clone.querySelector('div').info = obj;
+      clone.querySelector('input[type=text]').value = obj.filename;
       if (obj.size) {
         const a = clone.querySelector('a');
         a.textContent = humanFileSize(obj.size);
@@ -110,7 +111,6 @@ document.addEventListener('click', e => {
         filename
       });
     });
-
     if (cmd === 'download') {
       progress.dataset.visible = true;
       progress.max = images.length;

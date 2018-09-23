@@ -252,7 +252,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
             src: img.src
           }, response => {
             images[img.src] = Object.assign(images[img.src], response);
-            img.key = img.size + '-' + img.hostname;
+            img.key = img.filename + img.size + img.hostname;
             processed += 1;
 
             if (response.type.startsWith('image/') === false) {

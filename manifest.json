@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "version": "0.3.9",
+  "version": "0.4.0",
   "name": "Download all Images",
   "short_name": "download-images",
   "description": "a customizable extension to save selected images from the current tab page",
