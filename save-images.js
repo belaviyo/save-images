@@ -295,7 +295,8 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       req.timeout = timeout();
       req.onload = () => {
         let type = req.getResponseHeader('content-type') || '';
-        if (!type) {
+        // https://github.com/belaviyo/save-images/issues/17
+        if (!type || type.startsWith('image/') === false) {
           if (request.src.indexOf('.png') !== -1) {
             type = 'image/png';
           }
@@ -312,6 +313,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
         }
         catch (e) {}
         // prevent error on usage of disconnected port (when iframe is closed before response is ready)
+
         try {
           response({
             size,
