@@ -28,6 +28,9 @@ var elements = {
     origin: document.getElementById('group-origin'),
     identical: document.getElementById('group-identical')
   },
+  files: {
+    mask: document.getElementById('file-mask')
+  },
   save: {
     directory: document.getElementById('custom-directory'),
     format: document.getElementById('format'),
@@ -83,11 +86,13 @@ function validate(name) {
 function build() {
   const custom = elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_');
   let filename = elements.save.filename.value;
+  let fileMask = elements.file.mask.value;
   filename = validate(filename);
   filename = custom ? custom + '/' + filename : filename;
 
   return {
     filename,
+    fileMask,
     addJPG: elements.type.noType.checked,
     images: filtered(),
     saveAs: elements.save.dialog.checked

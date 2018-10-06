@@ -69,6 +69,8 @@ Download.prototype.init = function(request, tab) {
   this.request = request;
   this.tab = tab;
   this.jobs = request.images;
+  this.length = this.jobs.length;
+  this.jobsIndex = 1;
 
   this.one();
 };
@@ -103,12 +105,15 @@ Download.prototype.one = function() {
   const [j1, j2, j3, j4, j5] = [jobs.shift(), jobs.shift(), jobs.shift(), jobs.shift(), jobs.shift()];
   if (j1) {
     Promise.all([
-      j1 ? this.download(j1).catch(() => {}) : Promise.resolve(),
-      j2 ? this.download(j2).catch(() => {}) : Promise.resolve(),
-      j3 ? this.download(j3).catch(() => {}) : Promise.resolve(),
-      j4 ? this.download(j4).catch(() => {}) : Promise.resolve(),
-      j5 ? this.download(j5).catch(() => {}) : Promise.resolve()
-    ]).then(() => this.one());
+      j1 ? this.download(j1, this.jobsIndex).catch(() => {}) : Promise.resolve(),
+      j2 ? this.download(j2, this.jobsIndex + 1).catch(() => {}) : Promise.resolve(),
+      j3 ? this.download(j3, this.jobsIndex + 2).catch(() => {}) : Promise.resolve(),
+      j4 ? this.download(j4, this.jobsIndex + 3).catch(() => {}) : Promise.resolve(),
+      j5 ? this.download(j5, this.jobsIndex + 4).catch(() => {}) : Promise.resolve()
+    ]).then(() => {
+      this.jobsIndex += 5;
+      this.one()
+    });
   }
   else {
     this.zip.generateAsync({type: 'blob'})
@@ -129,7 +134,7 @@ Download.prototype.one = function() {
     });
   }
 };
-Download.prototype.download = function(obj) {
+Download.prototype.download = function(obj, jobIndex) {
   return new Promise((resolve, reject) => {
     const request = this.request;
     const indices = this.indices;
@@ -147,20 +152,53 @@ Download.prototype.download = function(obj) {
       const disposition = req.getResponseHeader('Content-Disposition');
       const type = req.getResponseHeader('Content-Type');
       let name = guess(disposition, type, obj.src, obj.filename);
-      if (request.addJPG && name.indexOf('.') === -1) {
-        name += '.jpg';
-      }
+      let extension = request.addJPG ? '.jpg' : '';
+
       if (name in indices) {
         const index = name.lastIndexOf('.') || name.length;
-        const tmp = name.substr(0, index) + ' - ' + indices[name] + name.substr(index);
+        const tmp = name.substr(0, index) + ' - ' + indices[name]; 
+        extension = name.substr(index);
         indices[name] += 1;
         name = tmp;
       }
       else {
         indices[name] = 1;
       }
-      name = name.slice(-60);
-      this.zip.file(name, req.response);
+
+      let fileName = name.slice(-60) + extension;
+
+      try {
+        if (this.fileMask && this.fileMask.length > 0) {
+          const fileAttributes = {
+            name,
+            type,
+            disposition,
+            extension,
+            jobIndex,
+            index: indices[name],
+          };
+
+          let fileMask = parentScope.fileMask;
+          // Allow for "[file]-[index][extension]" kind of masks
+          let parametersRegex = /\[([A-z]*)\]/g;
+          let match = parametersRegex.exec(fileMask);
+
+          while (match != null) {
+            // Allow known attributes to be substituted in the mask
+            if (fileAttributes[match[1]]) {
+              let fileMask = fileMask.replace(match[0], match[1]); 
+            }
+
+            match = parametersRegex.exec(fileMask);
+          }
+
+          fileName = fileMask;
+        }
+      } catch (exception) {
+        console.log("It was not possible to parse the file mask due to ", exception); 
+        console.log("Falling back to the default name for the file.");
+      }
+      this.zip.file(fileName, req.response);
       resolve();
     };
     req.send();
