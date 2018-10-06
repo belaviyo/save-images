@@ -151,15 +151,18 @@ Download.prototype.download = function(obj, jobIndex) {
     req.onload = () => {
       const disposition = req.getResponseHeader('Content-Disposition');
       const type = req.getResponseHeader('Content-Type');
-      let name = guess(disposition, type, obj.src, obj.filename);
-      let extension = request.addJPG ? '.jpg' : '';
+      let guessedName = guess(disposition, type, obj.src, obj.filename);
 
+      const index = guessedName.lastIndexOf('.') || guessedName.length;
+      name = guessedName.substr(0, index);
+      let extension = guessedName.substr(index);
+
+      if (extension.length == 0 && request.addJPG) {
+        extension = '.jpg';
+      }
       if (name in indices) {
-        const index = name.lastIndexOf('.') || name.length;
-        const tmp = name.substr(0, index) + ' - ' + indices[name]; 
-        extension = name.substr(index);
+        name += ' - ' + indices[name]; 
         indices[name] += 1;
-        name = tmp;
       }
       else {
         indices[name] = 1;
@@ -168,7 +171,7 @@ Download.prototype.download = function(obj, jobIndex) {
       let fileName = name.slice(-60) + extension;
 
       try {
-        if (this.fileMask && this.fileMask.length > 0) {
+        if (this.request.fileMask && this.request.fileMask.length > 0) {
           const fileAttributes = {
             name,
             type,
@@ -178,26 +181,22 @@ Download.prototype.download = function(obj, jobIndex) {
             index: indices[name],
           };
 
-          let fileMask = parentScope.fileMask;
-          // Allow for "[file]-[index][extension]" kind of masks
-          let parametersRegex = /\[([A-z]*)\]/g;
-          let match = parametersRegex.exec(fileMask);
+          let fileMask = this.request.fileMask;
 
-          while (match != null) {
-            // Allow known attributes to be substituted in the mask
-            if (fileAttributes[match[1]]) {
-              let fileMask = fileMask.replace(match[0], match[1]); 
-            }
-
-            match = parametersRegex.exec(fileMask);
+          for (let [key, value] of Object.entries(fileAttributes)) {
+            // Allow for "[name]-[disposition][extension]" kind of masks, where
+            // the desired replacement is a key in fileAttributes.
+            fileMask = fileMask.replace(`[${key}]`, value);
           }
 
           fileName = fileMask;
         }
-      } catch (exception) {
-        console.log("It was not possible to parse the file mask due to ", exception); 
-        console.log("Falling back to the default name for the file.");
       }
+      catch (exception) {
+        console.error("It was not possible to parse the file mask due to ", exception.message); 
+        console.warn("Falling back to the default name for the file.");
+      }
+
       this.zip.file(fileName, req.response);
       resolve();
     };

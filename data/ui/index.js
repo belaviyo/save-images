@@ -86,7 +86,7 @@ function validate(name) {
 function build() {
   const custom = elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_');
   let filename = elements.save.filename.value;
-  let fileMask = elements.file.mask.value;
+  let fileMask = elements.files.mask.value;
   filename = validate(filename);
   filename = custom ? custom + '/' + filename : filename;
 
