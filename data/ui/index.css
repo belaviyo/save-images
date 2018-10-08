@@ -67,6 +67,36 @@ progress[data-visible=false] {
 .note {
   color: #7d7d7d;
 }
+.list {
+  position: relative;
+}
+.list>span {
+  margin-left: 5px;
+}
+.list ul {
+  display: none;
+  position: absolute;
+  list-style-type: none;
+  text-align: left;
+  margin: 0;
+  padding: 0;
+}
+.list:hover ul {
+  border: solid 1px #dbe3e7;
+  display: block;
+  right: -15px;
+  background-color: #fff;
+  top: 0;
+  transition: tr;
+  transform: translateY(-50%);
+}
+.list li {
+  cursor: pointer;
+  padding: 2px 10px;
+}
+.list li:hover {
+  background-color: #ccc;
+}
 
 [hbox] {
   display: flex;

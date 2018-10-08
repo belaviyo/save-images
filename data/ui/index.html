@@ -136,31 +136,6 @@
       </fieldset>
     </div>
 
-    <fieldset style="margin-bottom: 55px">
-      <legend>File mask</legend>
-      <table width=100%>
-        <colgroup>
-          <col width="100">
-        </colgroup>
-        <tbody>
-          <tr>
-            <td>
-              <p>You can use filemask to rename the output files however you want. You will need to put the desired output inside closed brackets for it to work, e.g.:</p>
-              <code>[attribute1][attribute2] - [attribute3]</code>
-              <p>Available attributes: <b>name</b>, <b>type</b>, <b>disposition</b>, <b>extension</b>, <b>order</b>, <b>index</b>.</p>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <div hbox>
-                <input type="text" id="file-mask" value="" placeholder="[name][extension]" flex="1">
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </fieldset>
-
     <div hbox>
       <fieldset flex=1>
         <legend>Regular Expressions</legend>
@@ -199,6 +174,26 @@
         <td><label for="group-identical">Try to exclude identical images</label></td>
       </tr>
     </table>
+
+    <fieldset>
+      <legend>File Mask</legend>
+      <p>You can use this section to rename the image filenames to the desired format</p>
+      <div hbox>
+        <input type="text" id="file-mask" value="" placeholder="[name][extension]" flex="1"  title="You will need to put the desired keyword inside closed brackets like [name][extension]">
+        <div class="list" hbox align=center>
+          <span>Keywords</span>
+          <ul>
+            <li data-cmd="insert" data-value="[name]">[name]</li>
+            <li data-cmd="insert" data-value="[type]">[type]</li>
+            <li data-cmd="insert" data-value="[disposition]">[disposition]</li>
+            <li data-cmd="insert" data-value="[extension]">[extension]</li>
+            <li data-cmd="insert" data-value="[order]">[order]</li>
+            <li data-cmd="insert" data-value="[index]">[index]</li>
+          </ul>
+        </div>
+      </div>
+    </fieldset>
+
     <fieldset style="margin-bottom: 55px">
       <legend>Save in</legend>
       <table width=100%>

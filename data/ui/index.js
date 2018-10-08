@@ -358,6 +358,16 @@ document.addEventListener('click', ({target}) => {
       cmd: 'stop'
     });
   }
+  else if (cmd === 'insert') {
+    const input = elements.files.mask;
+    var start = input.selectionStart;
+    var end = input.selectionEnd;
+    input.value = input.value.substring(0, start) +
+      target.dataset.value +
+      input.value.substring(end, input.value.length);
+    input.focus();
+    input.selectionStart = input.selectionEnd = end + target.dataset.value.length;
+  }
 });
 // update counter
 document.addEventListener('change', update);
