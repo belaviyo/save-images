@@ -177,7 +177,7 @@ Download.prototype.download = function(obj, jobIndex) {
             type,
             disposition,
             extension,
-            jobIndex,
+            order: jobIndex,
             index: indices[name],
           };
 

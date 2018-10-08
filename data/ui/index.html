@@ -145,8 +145,15 @@
         <tbody>
           <tr>
             <td>
+              <p>You can use filemask to rename the output files however you want. You will need to put the desired output inside closed brackets for it to work, e.g.:</p>
+              <code>[attribute1][attribute2] - [attribute3]</code>
+              <p>Available attributes: <b>name</b>, <b>type</b>, <b>disposition</b>, <b>extension</b>, <b>order</b>, <b>index</b>.</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
               <div hbox>
-                <input type="text" id="file-mask" value="" placeholder="[name] - [jobIndex][extension]" flex="1">
+                <input type="text" id="file-mask" value="" placeholder="[name][extension]" flex="1">
               </div>
             </td>
           </tr>
