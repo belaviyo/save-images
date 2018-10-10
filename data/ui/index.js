@@ -167,17 +167,19 @@ function build() {
 
   filename = custom ? custom + '/' + filename : filename;
 
-  let zip = !elements.group.zip.checked;
   const images = filtered();
-  if (zip === false && images.length > 15) {
-    zip = window.confirm('Downloading more than 15 individual images is not recommended. Should I download them as a ZIP archive?');
-  }
 
   return {
     filename,
     images,
     saveAs: elements.save.dialog.checked,
-    zip
+    get zip() {
+      let zip = !elements.group.zip.checked;
+      if (zip === false && images.length > 15) {
+        zip = window.confirm('Downloading more than 15 images separately is not recommended. Should I download them as a ZIP archive?');
+      }
+      return zip;
+    }
   };
 }
 

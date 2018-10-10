@@ -6,10 +6,7 @@ var download = document.querySelector('[data-cmd=download]');
 var rename = document.querySelector('[data-cmd=rename]');
 var copy = document.querySelector('[data-cmd=copy]');
 var progress = document.getElementById('progress');
-var custom = '';
-var addJPG = true;
-var filename = '';
-
+var resp;
 function humanFileSize(bytes) {
   const thresh = 1024;
   if (Math.abs(bytes) < thresh) {
@@ -26,12 +23,8 @@ function humanFileSize(bytes) {
 }
 
 {
-  const init = resp => {
-    custom = resp.custom;
-    addJPG = resp.addJPG;
-    filename = resp.filename;
-    document.getElementById('saveAs').checked = resp.saveAs;
-
+  const init = r => {
+    resp = r;
     Object.values(resp.images).forEach(obj => {
       const clone = document.importNode(t.content, true);
       clone.querySelector('img').src = obj.src;
@@ -129,11 +122,11 @@ document.addEventListener('click', e => {
 
       chrome.runtime.sendMessage({
         cmd: 'save-images',
-        custom,
-        addJPG,
-        filename,
+        custom: resp.custom,
+        filename: resp.filename,
         images,
-        saveAs: document.getElementById('saveAs').checked
+        saveAs: resp.saveAs,
+        zip: resp.zip
       });
     }
     else {
