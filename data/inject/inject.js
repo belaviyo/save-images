@@ -56,7 +56,7 @@ chrome.storage.local.get({
     window.iframe.remove();
     window.iframe = null;
     chrome.runtime.sendMessage({
-      cmd: 'abort-downloading'
+      cmd: 'stop'
     });
   }
 });

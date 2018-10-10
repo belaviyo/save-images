@@ -37,11 +37,15 @@ function humanFileSize(bytes) {
       clone.querySelector('img').src = obj.src;
       clone.querySelector('div').info = obj;
       clone.querySelector('input[type=text]').value = obj.filename;
-      if (obj.size) {
-        const a = clone.querySelector('a');
-        a.textContent = humanFileSize(obj.size);
-        a.href = obj.src;
+
+      const a = clone.querySelector('a');
+      let title = obj.size ? humanFileSize(obj.size) : '-';
+      if (obj.width && obj.height) {
+        title += ' (' + obj.width + '✕' + obj.height + ')';
       }
+      a.textContent = title;
+      a.href = obj.src;
+
       body.appendChild(clone);
     });
   };
@@ -90,8 +94,16 @@ document.addEventListener('click', e => {
     const entries = [...document.querySelectorAll('.entry :checked')];
     const o = -1 * String(offset + entries.length + 1).length;
     entries.forEach((e, i) => {
-      const name = pattern.replace(/\[#=*\d*\]/, ('000000' + (i + offset)).substr(o));
-      e.closest('div').querySelector('input[type=text]').value = name;
+      const input = e.closest('div').querySelector('input[type=text]');
+      let index = input.value.lastIndexOf('.');
+      if (index === -1) {
+        index = input.value.length;
+      }
+      const extension = (input.value.substr(index) || '').substr(0, 10);
+      const name = pattern
+        .replace(/\[#=*\d*\]/gi, ('000000' + (i + offset)).substr(o))
+        .replace(/\[extension\]/gi, extension);
+      input.value = name;
     });
   }
   else if (cmd === 'select-all') {

@@ -10,9 +10,9 @@
       <fieldset flex=1>
         <legend>Statistics</legend>
         <div hbox>
-          <span class="note">Total:</span>&nbsp;<span id="total-number">-</span>,&nbsp;
-          <span class="note">Processed:</span>&nbsp;<span id="processed-number">-</span>,&nbsp;
-          <span class="note">Will be saved:</span>&nbsp;<span id="save-number">-</span>&nbsp;
+          <span class="note" title="Total number of parsed links (a link might be or might not be an image)">Total:</span>&nbsp;<span id="total-number">-</span>,&nbsp;
+          <span class="note" title="Total number of available images">Images:</span>&nbsp;<span id="images-number">0</span>,&nbsp;
+          <span class="note" title="Total number of images that will be saved based on your filters">Saving:</span>&nbsp;<span id="save-number">0</span>&nbsp;
           <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
         </div>
       </fieldset>
@@ -164,35 +164,39 @@
         </table>
       </fieldset>
     </div>
-    <table width="100%">
-      <tr>
-        <td><input type="checkbox" id="group-origin"></td>
-        <td><label for="group-origin">Only save images from the same domain/server as the selected tab's URL</label></td>
-      </tr>
-      <tr>
-        <td><input type="checkbox" id="group-identical" checked="true"></td>
-        <td><label for="group-identical">Try to exclude identical images</label></td>
-      </tr>
-    </table>
-
-    <fieldset>
-      <legend>File Mask</legend>
-      <p>You can use this section to rename the image filenames to the desired format</p>
-      <div hbox>
-        <input type="text" id="file-mask" value="" placeholder="[name][extension]" flex="1"  title="You will need to put the desired keyword inside closed brackets like [name][extension]">
-        <div class="list" hbox align=center>
-          <span>Keywords</span>
-          <ul>
-            <li data-cmd="insert" data-value="[name]">[name]</li>
-            <li data-cmd="insert" data-value="[type]">[type]</li>
-            <li data-cmd="insert" data-value="[disposition]">[disposition]</li>
-            <li data-cmd="insert" data-value="[extension]">[extension]</li>
-            <li data-cmd="insert" data-value="[order]">[order]</li>
-            <li data-cmd="insert" data-value="[index]">[index]</li>
-          </ul>
+    <div hbox>
+      <fieldset flex=1>
+        <legend>Misc</legend>
+        <table width="100%">
+          <tr>
+            <td><input type="checkbox" id="group-origin"></td>
+            <td><label for="group-origin">Only save images from the same domain/server as the selected tab's URL</label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="group-identical" checked="true"></td>
+            <td><label for="group-identical">Try to exclude identical images</label></td>
+          </tr>
+        </table>
+      </fieldset>
+      <fieldset flex=1>
+        <legend>File Mask</legend>
+        You can use this section to rename the image filenames to the desired format
+        <div hbox style="margin-top: 10px;">
+          <input type="text" id="file-mask" value="" placeholder="[name][extension]" flex="1"  title="You will need to put the desired keyword inside closed brackets like [name][extension]">
+          <div class="list" hbox align=center>
+            <span>Keywords</span>
+            <ul>
+              <li data-cmd="insert" data-value="[name]">[name]</li>
+              <li data-cmd="insert" data-value="[type]">[type]</li>
+              <li data-cmd="insert" data-value="[disposition]">[disposition]</li>
+              <li data-cmd="insert" data-value="[extension]">[extension]</li>
+              <li data-cmd="insert" data-value="[order]">[order]</li>
+              <li data-cmd="insert" data-value="[index]">[index]</li>
+            </ul>
+          </div>
         </div>
-      </div>
-    </fieldset>
+      </fieldset>
+    </div>
 
     <fieldset style="margin-bottom: 55px">
       <legend>Save in</legend>
@@ -214,6 +218,14 @@
             <td>
               <div hbox>
                 <input type="text" id="format" value="[title] - [date] [time].zip" placeholder="[title] - [date] [time].zip" flex="1">
+                <div class="list" hbox align=center>
+                  <span>Keywords</span>
+                  <ul>
+                    <li data-cmd="insert" data-value="[title]">[title]</li>
+                    <li data-cmd="insert" data-value="[date]">[date]</li>
+                    <li data-cmd="insert" data-value="[time]">[time]</li>
+                  </ul>
+                </div>
               </div>
             </td>
           </tr>

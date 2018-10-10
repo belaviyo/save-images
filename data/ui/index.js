@@ -9,12 +9,9 @@
 
 'use strict';
 
-var domain;
-var port = chrome.runtime.connect({name: 'parser'});
-
 var elements = {
   counter: {
-    processed: document.getElementById('processed-number'),
+    images: document.getElementById('images-number'),
     save: document.getElementById('save-number'),
     total: document.getElementById('total-number'),
     progress: document.getElementById('progress')
@@ -75,25 +72,102 @@ var elements = {
   }
 };
 
+var domain;
+var title;
 var images = {};
-var processed = 0;
+var total = 0;
+var indices = {};
 
-function validate(name) {
-  name = name.replace(/\.zip/g, '');
-  return name.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/]/gi, '-') + '.zip';
+/* guess filename */
+function guess(img) {
+  const {disposition, type, src} = img;
+  let name = img.name || '';
+  if (!name && disposition) {
+    const tmp = /filename\*=UTF-8''([^;]*)/.exec(disposition);
+    if (tmp && tmp.length) {
+      name = tmp[1].replace(/["']$/, '').replace(/^["']/, '');
+      name = decodeURIComponent(name);
+    }
+  }
+  if (!name && disposition) {
+    const tmp = /filename=([^;]*)/.exec(disposition);
+    if (tmp && tmp.length) {
+      name = tmp[1].replace(/["']$/, '').replace(/^["']/, '');
+    }
+  }
+  if (!name && src.startsWith('http')) {
+    const url = src.replace(/\/$/, '');
+    const tmp = /(title|filename)=([^&]+)/.exec(url);
+    if (tmp && tmp.length) {
+      name = tmp[2];
+    }
+    else {
+      name = url.substring(url.lastIndexOf('/') + 1);
+    }
+    try {
+      name = decodeURIComponent(name.split('?')[0].split('&')[0]) || 'image';
+      // make sure name is writable
+      name = name.replace(/[`~!@#$%^&*()_|+\-=?;:'",<>{}[\]\\/]/gi, '-');
+    }
+    catch(e) {}
+  }
+  else { // data-url
+    name = 'image';
+  }
+  if (disposition && name) {
+    const arr = [...name].map(v => v.charCodeAt(0)).filter(v => v <= 255);
+    name = (new TextDecoder('UTF-8')).decode(Uint8Array.from(arr));
+  }
+  // extension
+  if (name.indexOf('.') === -1 && type) {
+    name += '.' + type.split('/').pop().split(/[+;]/).shift();
+  }
+  let index = name.lastIndexOf('.');
+  if (index === -1) {
+    index = name.length;
+  }
+  let extension = name.substr(index).substr(0, 10);
+  if (extension.length == 0 && elements.type.noType.checked) {
+    extension = '.jpg';
+  }
+  name = name.substr(0, index);
+
+  if (name in indices) {
+    indices[name] += 1;
+  }
+  else {
+    indices[name] = 1;
+  }
+
+  // apply masking
+  let filename = (elements.files.mask.value || '[name][extension]');
+  filename = filename.split('[extension]').map(str => str
+    .replace(/\[name\]/gi, name + (indices[name] === 1 ? '' : '-' + indices[name]))
+    .replace(/\[type\]/gi, type || '')
+    .replace(/\[disposition\]/gi, disposition || '')
+    .replace(/\[order\]/gi, img.order || 0)
+    .replace(/\[index\]/gi, indices[name])
+    // make sure filename is acceptable
+    .replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/]/gi, '-')
+    // limit length of each section to 60 chars
+    .substr(0, 60)).join(extension);
+
+  return {
+    filename,
+    name
+  };
 }
 
 function build() {
   const custom = elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_');
-  let filename = elements.save.filename.value;
-  let fileMask = elements.files.mask.value;
-  filename = validate(filename);
+  let filename = elements.save.filename.value
+    .replace(/\.zip/g, '')
+    .replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/]/gi, '-') + '.zip';
+
   filename = custom ? custom + '/' + filename : filename;
 
   return {
     filename,
-    fileMask,
-    addJPG: elements.type.noType.checked,
     images: filtered(),
     saveAs: elements.save.dialog.checked
   };
@@ -105,17 +179,18 @@ function filtered() {
   const rtn = objs // size
   .filter(img => {
     if (elements.group.size.checked) {
+      const {min, max, ignore} = elements.size;
       if (img.size) {
-        if (Number(elements.size.min.value) && Number(elements.size.min.value) > img.size) {
+        if (Number(min.value) && Number(min.value) > img.size) {
           return false;
         }
-        if (Number(elements.size.max.value) && Number(elements.size.max.value) < img.size) {
+        if (Number(max.value) && Number(max.value) < img.size) {
           return false;
         }
         return true;
       }
       else {
-        return !elements.size.ignore.checked;
+        return !ignore.checked;
       }
     }
     else {
@@ -125,19 +200,20 @@ function filtered() {
   // dimension
   .filter(img => {
     if (elements.group.dimension.checked) {
+      const {width, height, ignore} = elements.dimension;
       if (img.width) {
-        if (Number(elements.dimension.width.min.value) && Number(elements.dimension.width.min.value) > img.width) {
+        if (Number(width.min.value) && Number(width.min.value) > img.width) {
           return false;
         }
-        if (Number(elements.dimension.width.max.value) && Number(elements.dimension.width.max.value) < img.width) {
+        if (Number(width.max.value) && Number(width.max.value) < img.width) {
           return false;
         }
       }
       if (img.height) {
-        if (Number(elements.dimension.height.min.value) && Number(elements.dimension.height.min.value) > img.height) {
+        if (Number(height.min.value) && Number(height.min.value) > img.height) {
           return false;
         }
-        if (Number(elements.dimension.height.max.value) && Number(elements.dimension.height.max.value) < img.height) {
+        if (Number(height.max.value) && Number(height.max.value) < img.height) {
           return false;
         }
       }
@@ -145,7 +221,7 @@ function filtered() {
         return true;
       }
       else {
-        return !elements.dimension.ignore.checked;
+        return !ignore.checked;
       }
     }
     else {
@@ -158,19 +234,21 @@ function filtered() {
     }
     else {
       if (img.type) {
-        if (img.type === 'image/jpeg' && elements.type.jpeg.checked) {
+        const {jpeg, png, bmp, webp, gif} = elements.type;
+
+        if (img.type === 'image/jpeg' && jpeg.checked) {
           return true;
         }
-        if (img.type === 'image/png' && elements.type.png.checked) {
+        if (img.type === 'image/png' && png.checked) {
           return true;
         }
-        if (img.type === 'image/bmp' && elements.type.bmp.checked) {
+        if (img.type === 'image/bmp' && bmp.checked) {
           return true;
         }
-        if (img.type === 'image/webp' && elements.type.webp.checked) {
+        if (img.type === 'image/webp' && webp.checked) {
           return true;
         }
-        if (img.type === 'image/gif' && elements.type.gif.checked) {
+        if (img.type === 'image/gif' && gif.checked) {
           return true;
         }
 
@@ -227,6 +305,7 @@ function filtered() {
 }
 
 function update() {
+  elements.counter.images.textContent = Object.keys(images).length;
   const index = elements.counter.save.textContent = filtered().length;
   document.querySelector('[data-cmd=save]').disabled = index === 0;
   document.querySelector('[data-cmd=copy]').disabled = index === 0;
@@ -241,65 +320,53 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   else if (request.cmd === 'build') {
     response(build());
   }
-  else if (request.cmd === 'found-images') {
-    if (sender.tab) {
-      // prevent duplication
+  else if (request.cmd === 'images' || request.cmd === 'links') {
+    if (sender.tab) { // prevent duplication
       return;
     }
-    request.images.forEach(img => {
-      if (!images[img.src]) {
+    if (request.cmd === 'images') {
+      request.images.filter(img => img.type.startsWith('image/')).forEach(img => {
+        if (images[img.src]) {
+          return;
+        }
         img.hostname = (new URL(img.src)).hostname || 'local';
-        img.key = img.size + '-' + img.hostname;
+        img.order = Object.keys(images).length + 1;
+        const {filename, name} = guess(img);
+        img.filename = filename;
+        img.key = name + img.size + img.hostname;
         images[img.src] = img;
-        if (!img.type) {
-          chrome.runtime.sendMessage({
-            cmd: 'image-data',
-            src: img.src
-          }, response => {
-            images[img.src] = Object.assign(images[img.src], response);
-            img.key = img.filename + img.size + img.hostname;
-            processed += 1;
-
-            if (response.type.startsWith('image/') === false) {
-              delete images[img.src];
-              elements.counter.total.textContent = Object.keys(images).length;
-              processed -= 1;
-            }
-
-            elements.counter.processed.textContent = processed;
-            update();
-          });
-        }
-        else {
-          processed += 1;
-          elements.counter.processed.textContent = processed;
-          update();
-        }
-      }
-    });
-    elements.counter.total.textContent = Object.keys(images).length;
-    update();
-  }
-  else if (request.cmd === 'found-links') {
-    port.postMessage(request);
-  }
-  else if (request.cmd === 'get-images') {
-    response(build());
+      });
+      elements.counter.progress.value += request.index;
+      elements.counter.progress.dataset.visible = elements.counter.progress.value !== total;
+      update();
+    }
+    else if (request.cmd === 'links') {
+      total += request.length;
+      elements.counter.total.textContent = total;
+      elements.counter.progress.max = total;
+    }
   }
 });
+
+// construct ZIP filename
+var filename = () => {
+  const time = new Date();
+  elements.save.filename.value = (elements.save.format.value || elements.save.format.placeholder)
+    .replace('[title]', title)
+    .replace('[date]', time.toLocaleDateString())
+    .replace('[time]', time.toLocaleTimeString());
+};
+elements.save.format.addEventListener('input', filename);
 
 var search = () => chrome.runtime.sendMessage({
   cmd: 'get-images',
   deep: Number(elements.deep.level.value)
 }, result => {
   domain = result.domain || '';
+  title = result.title || 'unknown';
   elements.save.directory.value = domain;
   // filename
-  const time = new Date();
-  elements.save.filename.value = (elements.save.format.value || elements.save.format.placeholder)
-    .replace('[title]', result.title)
-    .replace('[date]', time.toLocaleDateString())
-    .replace('[time]', time.toLocaleTimeString());
+  filename();
 });
 document.addEventListener('DOMContentLoaded', search);
 
@@ -313,15 +380,18 @@ document.addEventListener('click', ({target}) => {
     const obj = Object.assign(build(), {
       cmd: 'save-images'
     });
+    const len = Object.keys(images).length;
     const save = () => {
       elements.counter.progress.value = 0;
-      elements.counter.progress.max = obj.images.length;
+      elements.counter.progress.max = len;
       chrome.runtime.sendMessage(obj);
     };
-
-    if (images.length > 30) {
-      if (window.confirm(`Are you sure you want to download "${images.length}" images?`)) {
+    if (len > 30) {
+      if (window.confirm(`Are you sure you want to download "${len}" images?`)) {
         save();
+      }
+      else {
+        target.disabled = false;
       }
     }
     else {
@@ -354,12 +424,13 @@ document.addEventListener('click', ({target}) => {
     window.parent.to.gallery();
   }
   else if (cmd === 'stop') {
-    port.postMessage({
+    chrome.runtime.sendMessage({
       cmd: 'stop'
     });
+    elements.counter.progress.dataset.visible = false;
   }
   else if (cmd === 'insert') {
-    const input = elements.files.mask;
+    const input = target.closest('.list').parentNode.querySelector('input');
     var start = input.selectionStart;
     var end = input.selectionEnd;
     input.value = input.value.substring(0, start) +
@@ -367,6 +438,13 @@ document.addEventListener('click', ({target}) => {
       input.value.substring(end, input.value.length);
     input.focus();
     input.selectionStart = input.selectionEnd = end + target.dataset.value.length;
+    // trigger persist.js
+    input.dispatchEvent(new Event('change', {
+      bubbles: true
+    }));
+    input.dispatchEvent(new Event('input', {
+      bubbles: true
+    }));
   }
 });
 // update counter
@@ -379,18 +457,6 @@ document.addEventListener('change', update);
   };
   document.addEventListener('input', input);
 }
-
-// port
-let count = 0;
-port.onMessage.addListener(request => {
-  if (request.cmd === 'count') {
-    count = Math.max(request.count, count);
-    elements.deep.stat.textContent = request.count;
-    elements.deep.progress.value = request.count;
-    elements.deep.progress.max = count;
-    elements.deep.progress.dataset.visible = request.count !== 0;
-  }
-});
 
 // image types
 {

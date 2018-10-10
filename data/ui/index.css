@@ -8,6 +8,12 @@ body {
   user-select: none;
   margin: 10px;
   height: calc(100% - 20px);
+  min-width: 400px;
+}
+@media screen and (max-width: 600px) {
+  body>div[hbox] {
+    flex-direction: column;
+  }
 }
 
 h2 {
@@ -19,6 +25,16 @@ footer {
   bottom: 0;
   width: calc(100% - 20px);
   background-color: #f0f0f0;
+  flex-flow: wrap;
+}
+footer input {
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
+}
+@media screen and (max-width: 600px) {
+  footer span {
+    display: none;
+  }
 }
 
 input {
@@ -80,13 +96,14 @@ progress[data-visible=false] {
   text-align: left;
   margin: 0;
   padding: 0;
+  z-index: 1;
 }
 .list:hover ul {
   border: solid 1px #dbe3e7;
   display: block;
   right: -15px;
   background-color: #fff;
-  top: 0;
+  top: 50%;
   transition: tr;
   transform: translateY(-50%);
 }
