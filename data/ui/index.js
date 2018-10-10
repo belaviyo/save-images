@@ -19,6 +19,7 @@ var elements = {
   group: {
     size: document.getElementById('group-size'),
     dimension: document.getElementById('group-dimension'),
+    zip: document.getElementById('group-zip'),
     type: document.getElementById('group-type'),
     regexp: document.getElementById('group-regexp'),
     blacklist: document.getElementById('group-blacklist'),
@@ -166,10 +167,17 @@ function build() {
 
   filename = custom ? custom + '/' + filename : filename;
 
+  let zip = !elements.group.zip.checked;
+  const images = filtered();
+  if (zip === false && images.length > 15) {
+    zip = window.confirm('Downloading more than 15 individual images is not recommended. Should I download them as a ZIP archive?');
+  }
+
   return {
     filename,
-    images: filtered(),
-    saveAs: elements.save.dialog.checked
+    images,
+    saveAs: elements.save.dialog.checked,
+    zip
   };
 }
 

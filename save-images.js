@@ -70,41 +70,68 @@ Download.prototype.one = function() {
     ]).then(() => this.one());
   }
   else {
-    this.zip.generateAsync({type: 'blob'})
-    .then(content => {
-      const url = URL.createObjectURL(content);
-      chrome.downloads.download({
-        url,
-        filename: request.filename,
-        conflictAction: 'uniquify',
-        saveAs: request.saveAs
-      }, () => {
-        chrome.tabs.sendMessage(id, {
-          cmd: 'close-me'
+    if (request.zip) {
+      this.zip.generateAsync({type: 'blob'})
+      .then(content => {
+        const url = URL.createObjectURL(content);
+        chrome.downloads.download({
+          url,
+          filename: request.filename,
+          conflictAction: 'uniquify',
+          saveAs: request.saveAs
+        }, () => {
+          chrome.tabs.sendMessage(id, {
+            cmd: 'close-me'
+          });
+          delete downloads[id];
+          window.setTimeout(() => URL.revokeObjectURL(url), 10000);
         });
-        delete downloads[id];
-        window.setTimeout(() => URL.revokeObjectURL(url), 10000);
       });
-    });
+    }
+    else {
+      chrome.tabs.sendMessage(id, {
+        cmd: 'close-me'
+      });
+      delete downloads[id];
+    }
   }
 };
 Download.prototype.download = function(obj) {
-  return new Promise((resolve, reject) => {
-    if (this.abort) {
-      return;
-    }
+  const {filename, zip} = this.request;
+  if (zip) {
+    return new Promise((resolve, reject) => {
+      if (this.abort) {
+        return;
+      }
 
-    const req = new XMLHttpRequest(); // do not use fetch API as it cannot get CORS headers
-    req.open('GET', obj.src);
-    req.timeout = timeout();
-    req.onerror = req.ontimeout = reject;
-    req.responseType = 'blob';
-    req.onload = () => {
-      this.zip.file(obj.filename, req.response);
-      resolve();
-    };
-    req.send();
-  });
+      const req = new XMLHttpRequest(); // do not use fetch API as it cannot get CORS headers
+      req.open('GET', obj.src);
+      req.timeout = timeout();
+      req.onerror = req.ontimeout = reject;
+      req.responseType = 'blob';
+      req.onload = () => {
+        this.zip.file(obj.filename, req.response);
+        resolve();
+      };
+      req.send();
+    });
+  }
+  else {
+    return new Promise(resolve => {
+      const path = filename.split('/');
+      path.pop();
+      path.push(obj.filename);
+
+      chrome.downloads.download({
+        url: obj.src,
+        filename: path.join('/'),
+        conflictAction: 'uniquify',
+        saveAs: false
+      }, () => {
+        window.setTimeout(resolve, 3000);
+      });
+    });
+  }
 };
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
