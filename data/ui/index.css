@@ -9,6 +9,9 @@ body {
   margin: 10px;
   height: calc(100% - 20px);
   min-width: 400px;
+  /* fix scrolling issue in Windows */
+  transform: translate3d(0, 0, 0);
+  overscroll-behavior: contain;
 }
 @media screen and (max-width: 600px) {
   body>div[hbox] {
@@ -21,8 +24,6 @@ h2 {
 }
 footer {
   padding: 15px 0;
-  position: fixed;
-  bottom: 0;
   width: calc(100% - 20px);
   background-color: #f0f0f0;
   flex-flow: wrap;

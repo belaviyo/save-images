@@ -142,8 +142,8 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     });
     chrome.tabs.executeScript(sender.tab.id, {
       code: String.raw`
-        var deep = ${request.deep};
-        var timeout = ${timeout()};
+        window.deep = ${request.deep};
+        window.timeout = ${timeout()};
       `,
       runAt: 'document_start',
       allFrames: true,
