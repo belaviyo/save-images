@@ -143,7 +143,6 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     chrome.tabs.executeScript(sender.tab.id, {
       code: String.raw`
         window.deep = ${request.deep};
-        window.timeout = ${timeout()};
       `,
       runAt: 'document_start',
       allFrames: true,
@@ -174,6 +173,41 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     }
     downloads[sender.tab.id] = new Download();
     downloads[sender.tab.id].init(request, sender.tab);
+  }
+  else if (request.cmd === 'xml-head') {
+    // use GET; HEAD is not widely supported
+    const req = new XMLHttpRequest();
+    req.open('GET', request.src);
+    req.timeout = timeout();
+    req.ontimeout = req.onerror = () => response({});
+    req.onreadystatechange = () => {
+      if (req.readyState === req.HEADERS_RECEIVED) {
+        response({
+          type: req.getResponseHeader('content-type') || '',
+          size: req.getResponseHeader('content-length'),
+          disposition: req.getResponseHeader('content-disposition')
+        });
+        req.abort();
+      }
+    };
+    req.send();
+    return true;
+  }
+  else if (request.cmd === 'xml-img') {
+    const req = new XMLHttpRequest();
+    req.open('GET', request.src);
+    req.responseType = 'document';
+    req.timeout = timeout();
+    req.onload = () => response([...req.response.images]
+      .map(img => ({
+        width: img.width,
+        height: img.height,
+        src: img.src,
+        verified: true
+      })));
+    req.ontimeout = req.onerror = () => response([]);
+    req.send();
+    return true;
   }
   //
   if (request.cmd === 'stop' || request.cmd === 'close-me' || request.cmd === 'reload-me') {

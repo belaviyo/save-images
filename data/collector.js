@@ -3,9 +3,6 @@
 if (typeof deep === 'undefined') {
   window.deep = 0;
 }
-if (typeof timeout === 'undefined') {
-  window.timeout = 10000;
-}
 
 var collector = {
   links: {},
@@ -23,7 +20,10 @@ var collector = {
     image.src = src;
   }),
   inspect: img => new Promise((resolve, reject) => {
-    const next = type => {
+    const next = ({type, size, disposition}) => {
+      if (type && type.startsWith('text/html')) {
+        reject(type);
+      }
       // fix the type when possible
       if (img.src.indexOf('.png?') !== -1 || img.src.endsWith('.png')) {
         type = 'image/png';
@@ -46,18 +46,11 @@ var collector = {
       if (!type && img.verified) {
         type = 'image/unknown';
       }
-      if (type.startsWith('image/')) {
-        let size;
-        if (img.src.startsWith('http')) {
-          size = Number(req.getResponseHeader('content-length')) || 0;
-        }
-        else {
-          size = img.src.length;
-        }
+      if (type && type.startsWith('image/')) {
         Object.assign(img, {
-          size,
+          size: img.src.startsWith('http') ? (Number(size) || 0) : img.src.length,
           type,
-          disposition: req.getResponseHeader('content-disposition') || ''
+          disposition: disposition || ''
         });
         if (img.src.startsWith('http')) {
           resolve(img);
@@ -71,14 +64,10 @@ var collector = {
         reject(type);
       }
     };
-    const req = new XMLHttpRequest();
-    req.open('HEAD', img.src);
-    req.timeout = window.timeout;
-    req.ontimeout = req.onerror = req.onload = () => {
-      const type = req.getResponseHeader('content-type') || '';
-      next(type);
-    };
-    req.send();
+    chrome.runtime.sendMessage({
+      cmd: 'xml-head',
+      src: img.src
+    }, next);
   }),
   loop: async() => {
     // get info for single link
@@ -86,31 +75,26 @@ var collector = {
       return collector.inspect(img).then(img => [img]).catch(type => {
         if (type && type.startsWith('text/html') && window.deep === 2) {
           return new Promise(resolve => {
-            const req = new XMLHttpRequest();
-            req.open('GET', img.src);
-            req.responseType = 'document';
-            req.timeout = window.timeout;
-            req.onload = async() => {
-              const images = [...req.response.images]
-                .filter(img => collector.links[img.src] !== true)
-                .map(img => ({
-                  width: img.width,
-                  height: img.height,
-                  src: img.src,
-                  verified: true
-                }));
-              // store
-              images.forEach(img => collector.links[img.src] = true);
-              //
-              let tmp = [];
-              for (let i = 0; collector.active && i < images.length; i += 5) {
-                const slice = images.slice(i, i + 5);
-                await Promise.all(slice.map(analyze)).then(images => tmp.push(...images));
+            chrome.runtime.sendMessage({
+              cmd: 'xml-img',
+              src: img.src
+            }, async images => {
+              images = images.filter(img => collector.links[img.src] !== true);
+              if (images.length) {
+                // store
+                images.forEach(img => collector.links[img.src] = true);
+                //
+                let tmp = [];
+                for (let i = 0; collector.active && i < images.length; i += 5) {
+                  const slice = images.slice(i, i + 5);
+                  await Promise.all(slice.map(analyze)).then(images => tmp.push(...images));
+                }
+                resolve(collector.active ? [].concat([], ...tmp) : []);
               }
-              resolve(collector.active ? [].concat([], ...tmp) : []);
-            };
-            req.ontimeout = req.onerror = () => resolve([]);
-            req.send();
+              else {
+                resolve([]);
+              }
+            });
           });
         }
         else {
@@ -126,7 +110,6 @@ var collector = {
       verified: true // this is an image even if content-type cannot be resolved
     })).filter(img => img.src);
     // find background images; part 2
-    const r = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\\/%?=~_|!:,.;]*[-A-Z0-9+&@#\\/%=~_|])/gi;
     try {
       [...document.querySelectorAll('*')]
         .map(e => window.getComputedStyle(e).backgroundImage)
@@ -152,9 +135,11 @@ var collector = {
     }
     // find hard-coded links; part 4
     if (window.deep > 0) {
+      const r = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\\/%?=~_|!:,.;]*[-A-Z0-9+&@#\\/%=~_|])/gi;
       // decode html special characters; &amp;
       (document.documentElement.innerHTML.match(r) || [])
         .map(s => s.replace(/&amp;/g, '&'))
+        .filter(src => src)
         .forEach(src => images.push({src}));
     }
 

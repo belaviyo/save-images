@@ -22,6 +22,12 @@ body {
 h2 {
   font-size: 100%;
 }
+
+header {
+  top: 0;
+  position: sticky;
+  background-color: #f0f0f0;
+}
 footer {
   padding: 15px 0;
   width: calc(100% - 20px);

@@ -339,14 +339,24 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
         if (images[img.src]) {
           return;
         }
-        img.hostname = (new URL(img.src)).hostname || 'local';
+        try {
+          img.hostname = (new URL(img.src)).hostname;
+        }
+        catch (e) {}
+        img.hostname = img.hostname || 'local';
         img.order = Object.keys(images).length + 1;
         const {filename, name} = guess(img);
         img.filename = filename;
         img.key = name + img.size + img.hostname;
         images[img.src] = img;
       });
-      elements.counter.progress.value += request.index;
+      // we might have more images due to html parsing, so lets update all counters
+      if (request.images.length > request.index) {
+        total += (request.images.length - request.index);
+        elements.counter.total.textContent = total;
+        elements.counter.progress.max = total;
+      }
+      elements.counter.progress.value += Math.max(request.images.length, request.index);
       elements.counter.progress.dataset.visible = elements.counter.progress.value !== total;
       update();
     }
