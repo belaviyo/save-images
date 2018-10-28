@@ -53,6 +53,9 @@ input[type=number] {
 input[type=number],
 input[type=text] {
   text-indent: 5px;
+  border: solid 1px #c5c5c5;
+  background-color: #fff;
+  color: #000;
 }
 label {
   display: inline-flex;

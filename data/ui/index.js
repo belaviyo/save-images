@@ -68,7 +68,6 @@ var elements = {
   },
   deep: {
     level: document.getElementById('deep-level'),
-    stat: document.getElementById('deep-stat'),
     progress: document.getElementById('deep-progress')
   }
 };
@@ -175,7 +174,7 @@ function build() {
     saveAs: elements.save.dialog.checked,
     get zip() {
       let zip = !elements.group.zip.checked;
-      if (zip === false && images.length > 15) {
+      if (zip === false && elements.counter.save.value > 15) {
         zip = window.confirm('Downloading more than 15 images separately is not recommended. Should I download them as a ZIP archive?');
       }
       return zip;
@@ -316,7 +315,8 @@ function filtered() {
 
 function update() {
   elements.counter.images.textContent = Object.keys(images).length;
-  const index = elements.counter.save.textContent = filtered().length;
+  const index = elements.counter.save.value =
+    elements.counter.save.textContent = filtered().length;
   document.querySelector('[data-cmd=save]').disabled = index === 0;
   document.querySelector('[data-cmd=copy]').disabled = index === 0;
   document.querySelector('[data-cmd=gallery]').disabled = index === 0;
@@ -400,7 +400,8 @@ document.addEventListener('click', ({target}) => {
     const obj = Object.assign(build(), {
       cmd: 'save-images'
     });
-    const len = Object.keys(images).length;
+    // length after filtering
+    const len = elements.counter.save.value;
     const save = () => {
       elements.counter.progress.value = 0;
       elements.counter.progress.max = len;
