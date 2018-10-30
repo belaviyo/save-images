@@ -95,31 +95,33 @@ function guess(img) {
       name = tmp[1].replace(/["']$/, '').replace(/^["']/, '');
     }
   }
-  if (!name && src.startsWith('http')) {
-    const url = src.replace(/\/$/, '');
-    const tmp = /(title|filename)=([^&]+)/.exec(url);
-    if (tmp && tmp.length) {
-      name = tmp[2];
+  if (!name) {
+    if (src.startsWith('http')) {
+      const url = src.replace(/\/$/, '');
+      const tmp = /(title|filename)=([^&]+)/.exec(url);
+      if (tmp && tmp.length) {
+        name = tmp[2];
+      }
+      else {
+        name = url.substring(url.lastIndexOf('/') + 1);
+      }
+      try {
+        name = decodeURIComponent(name.split('?')[0].split('&')[0]) || 'image';
+        // make sure name is writable
+        name = name.replace(/[`~!@#$%^&*()_|+\-=?;:'",<>{}[\]\\/]/gi, '-');
+      }
+      catch(e) {}
     }
-    else {
-      name = url.substring(url.lastIndexOf('/') + 1);
+    else { // data-url
+      name = 'image';
     }
-    try {
-      name = decodeURIComponent(name.split('?')[0].split('&')[0]) || 'image';
-      // make sure name is writable
-      name = name.replace(/[`~!@#$%^&*()_|+\-=?;:'",<>{}[\]\\/]/gi, '-');
-    }
-    catch(e) {}
-  }
-  else { // data-url
-    name = 'image';
   }
   if (disposition && name) {
     const arr = [...name].map(v => v.charCodeAt(0)).filter(v => v <= 255);
     name = (new TextDecoder('UTF-8')).decode(Uint8Array.from(arr));
   }
   // extension
-  if (name.indexOf('.') === -1 && type) {
+  if (name.indexOf('.') === -1 && type && type !== 'image/unknown') {
     name += '.' + type.split('/').pop().split(/[+;]/).shift();
   }
   let index = name.lastIndexOf('.');
