@@ -1,9 +1,5 @@
 'use strict';
 
-if (typeof deep === 'undefined') {
-  window.deep = 0;
-}
-
 var collector = {
   links: {},
   active: true,
@@ -69,22 +65,27 @@ var collector = {
       src: img.src
     }, next);
   }),
-  loop: async() => {
+  loop: async regexps => {
     // get info for single link
     const analyze = img => {
       return collector.inspect(img).then(img => [img]).catch(type => {
-        if (type && type.startsWith('text/html') && window.deep === 2) {
+        if (type && type.startsWith('text/html') && window.deep > 1) {
           return new Promise(resolve => {
             chrome.runtime.sendMessage({
               cmd: 'xml-img',
-              src: img.src
+              src: img.src,
+              extractLinks: window.deep === 3
             }, async images => {
               images = images.filter(img => collector.links[img.src] !== true);
+              // limit by regexp
+              if (regexps) {
+                images = images.filter(img => regexps.some(r => r.test(img.src)));
+              }
+
               if (images.length) {
                 // store
                 images.forEach(img => collector.links[img.src] = true);
-                //
-                let tmp = [];
+                const tmp = [];
                 for (let i = 0; collector.active && i < images.length; i += 5) {
                   const slice = images.slice(i, i + 5);
                   await Promise.all(slice.map(analyze)).then(images => tmp.push(...images));
@@ -145,24 +146,46 @@ var collector = {
 
     // filter duplicates
     images = images.filter((s, i, l) => l.indexOf(s) === i);
+    // limit by regexp
+    if (regexps) {
+      images = images.filter(img => regexps.some(r => r.test(img.src)));
+    }
     // store
     images.forEach(key => collector.links[key] = true);
     // notify the total number of links to be parsed
     chrome.runtime.sendMessage({
       cmd: 'links',
+      filters: regexps,
       length: images.length
     });
     // loop
     for (let i = 0; collector.active && i < images.length; i += 5) {
       const slice = images.slice(i, i + 5);
-      await Promise.all(
-        slice.map(analyze)).then(images => collector.active && images.length && chrome.runtime.sendMessage({
+      await Promise.all(slice.map(analyze))
+        .then(images => collector.active && images.length && chrome.runtime.sendMessage({
           cmd: 'images',
           images: [].concat([], ...images),
           index: slice.length
-        })
-      ).catch(e => console.log(e));
+        })).catch(e => console.log(e));
     }
   }
 };
-collector.loop();
+chrome.runtime.sendMessage({
+  cmd: 'prefs'
+}, prefs => {
+  window.deep = prefs ? prefs.deep : 0;
+  try {
+    if (prefs && prefs.regexp) {
+      if (typeof prefs.regexp === 'string') {
+        return collector.loop([new RegExp(prefs.regexp)]);
+      }
+      else {
+        return collector.loop(prefs.regexp.map(r => new RegExp(r)));
+      }
+    }
+  }
+  catch (e) {
+    console.error(e);
+  }
+  collector.loop();
+});

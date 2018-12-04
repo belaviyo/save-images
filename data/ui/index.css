@@ -8,7 +8,6 @@ body {
   user-select: none;
   margin: 10px;
   height: calc(100% - 20px);
-  min-width: 400px;
   /* fix scrolling issue in Windows */
   transform: translate3d(0, 0, 0);
   overscroll-behavior: contain;
@@ -63,7 +62,7 @@ label {
 }
 input[type=button] {
   margin: 0 5px;
-  width: 80px;
+  width: 70px;
   padding: 0;
   font-size: 11px;
   padding: 4px;

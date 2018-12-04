@@ -72,21 +72,21 @@ Download.prototype.one = function() {
   else {
     if (request.zip) {
       this.zip.generateAsync({type: 'blob'})
-      .then(content => {
-        const url = URL.createObjectURL(content);
-        chrome.downloads.download({
-          url,
-          filename: request.filename,
-          conflictAction: 'uniquify',
-          saveAs: request.saveAs
-        }, () => {
-          chrome.tabs.sendMessage(id, {
-            cmd: 'close-me'
+        .then(content => {
+          const url = URL.createObjectURL(content);
+          chrome.downloads.download({
+            url,
+            filename: request.filename,
+            conflictAction: 'uniquify',
+            saveAs: request.saveAs
+          }, () => {
+            chrome.tabs.sendMessage(id, {
+              cmd: 'close-me'
+            });
+            delete downloads[id];
+            window.setTimeout(() => URL.revokeObjectURL(url), 10000);
           });
-          delete downloads[id];
-          window.setTimeout(() => URL.revokeObjectURL(url), 10000);
         });
-      });
     }
     else {
       chrome.tabs.sendMessage(id, {
@@ -134,33 +134,47 @@ Download.prototype.download = function(obj) {
   }
 };
 
+var cache = {};
+chrome.tabs.onRemoved.addListener(tabId => delete cache[tabId]);
+
 chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.cmd === 'get-images') {
     response({
       domain: new URL(sender.tab.url).hostname,
       title: sender.tab.title
     });
-    chrome.tabs.executeScript(sender.tab.id, {
-      code: String.raw`
-        window.deep = ${request.deep};
-      `,
-      runAt: 'document_start',
-      allFrames: true,
-      matchAboutBlank: true
-    }, () => {
-      const lastError = chrome.runtime.lastError;
-      if (lastError) {
-        notify(lastError.message);
+    let regexp = '';
+    chrome.storage.local.get({
+      'json': {}
+    }, prefs => {
+      for (const r of Object.keys(prefs.json)) {
+        try {
+          if ((new RegExp(r)).test(sender.tab.url)) {
+            regexp = prefs.json[r];
+            break;
+          }
+        }
+        catch (e) {}
       }
-      else {
-        chrome.tabs.executeScript(sender.tab.id, {
-          file: '/data/collector.js',
-          runAt: 'document_start',
-          allFrames: true,
-          matchAboutBlank: true
-        });
-      }
+      cache[sender.tab.id] = {
+        deep: request.deep,
+        regexp
+      };
+      chrome.tabs.executeScript(sender.tab.id, {
+        file: '/data/collector.js',
+        runAt: 'document_start',
+        allFrames: true,
+        matchAboutBlank: true
+      }, () => {
+        const lastError = chrome.runtime.lastError;
+        if (lastError) {
+          notify(lastError.message);
+        }
+      });
     });
+  }
+  else if (request.cmd === 'prefs') {
+    response(cache[sender.tab.id]);
   }
   else if (request.cmd === 'images' || request.cmd === 'links') {
     chrome.tabs.sendMessage(sender.tab.id, request);
@@ -198,13 +212,23 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     req.open('GET', request.src);
     req.responseType = 'document';
     req.timeout = timeout();
-    req.onload = () => response([...req.response.images]
-      .map(img => ({
-        width: img.width,
-        height: img.height,
-        src: img.src,
-        verified: true
-      })));
+    req.onload = () => {
+      const images = [];
+      images.push(...[...req.response.images]
+        .map(img => ({
+          width: img.width,
+          height: img.height,
+          src: img.src,
+          verified: true
+        })).filter(img => img.src));
+      if (request.extractLinks) {
+        images.push(...[...req.response.querySelectorAll('a')].map(a => a.href)
+          .filter(s => s && (s.startsWith('http') || s.startsWith('ftp') || s.startsWith('data:')))
+          .map(src => ({src})));
+      }
+
+      response(images);
+    };
     req.ontimeout = req.onerror = () => response([]);
     req.send();
     return true;

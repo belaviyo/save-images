@@ -17,8 +17,11 @@ function restore() {
     width: 750,
     height: 650,
     notify: true,
-    faqs: true
+    faqs: true,
+    json: {}
   }, prefs => {
+    document.getElementById('json').value = JSON.stringify(prefs.json, null, 2);
+    delete prefs.json;
     Object.keys(prefs).forEach(name => {
       document.getElementById(name)[typeof prefs[name] === 'boolean' ? 'checked' : 'value'] = prefs[name];
     });
@@ -26,11 +29,20 @@ function restore() {
 }
 
 function save() {
+  let json = {};
+  try {
+    json = JSON.parse(document.getElementById('json').value || '{}');
+  }
+  catch (e) {
+    log.textContent = e.message;
+    return setTimeout(() => log.textContent = '', 2000);
+  }
   const prefs = {
     width: Math.max(650, document.getElementById('width').value),
     height: Math.max(500, document.getElementById('height').value),
     notify: document.getElementById('notify').checked,
-    faqs: document.getElementById('faqs').checked
+    faqs: document.getElementById('faqs').checked,
+    json
   };
 
   chrome.storage.local.set(prefs, () => {

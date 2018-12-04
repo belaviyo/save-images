@@ -2,13 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="index.css">
   </head>
   <body>
     <textarea id="clipboard" style="display: none;"></textarea>
     <header hbox>
       <fieldset flex=1>
-        <legend>Statistics</legend>
+        <legend>Statistics <span id="filters"></span></legend>
         <div hbox>
           <span class="note" title="Total number of parsed links (a link might be or might not be an image)">Total:</span>&nbsp;<span id="total-number">-</span>,&nbsp;
           <span class="note" title="Total number of available images">Images:</span>&nbsp;<span id="images-number">0</span>,&nbsp;
@@ -16,12 +17,12 @@
           <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
         </div>
       </fieldset>
-      <fieldset title="0: do not extract linked images (fast)&#013;1: Extract linked images (slow)&#013;2: Extract linked images and parse destination HTML documents (too slow)">
+      <fieldset title="0: do not extract linked images (fast)&#013;1: Extract linked images (slow)&#013;2: Extract linked images and parse destination HTML documents (images) (too slow)&#013; 3: Extract linked images and parse destination HTML documents (images + links) (too slow; use with custom filters)">
         <legend>Deep Search</legend>
         <label>
           Level&nbsp;
           <progress id="deep-progress" value="0" max="100" data-visible=false></progress>&nbsp;
-          <input type="number" value="1" id="deep-level" min="0" max="2">
+          <input type="number" value="1" id="deep-level" min="0" max="3">
         </label>
       </fieldset>
     </header>
@@ -256,6 +257,7 @@
     </fieldset>
 
     <footer hbox pack="center" align="end">
+      <input type="button" value="Help" data-cmd="help" title="Open FAQs page">
       <input type="button" value="Reset" data-cmd="reset" title="Reset settings to the default values">
       <input type="button" value="Restart" data-cmd="restart" title="Restart image collection">
       <input type="button" value="Stop" data-cmd="stop" title="Stop searching for more images">

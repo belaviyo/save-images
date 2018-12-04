@@ -14,7 +14,7 @@ var to = {
   gallery: () => {
     gallery.dataset.loading = true;
     document.body.dataset.mode = 'gallery';
-    gallery.src = '/data/gallery/index.html'
+    gallery.src = '/data/gallery/index.html';
   },
   ui: () => {
     document.body.dataset.mode = 'ui';

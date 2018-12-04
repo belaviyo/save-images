@@ -11,6 +11,7 @@
 
 var elements = {
   counter: {
+    filters: document.getElementById('filters'),
     images: document.getElementById('images-number'),
     save: document.getElementById('save-number'),
     total: document.getElementById('total-number'),
@@ -188,120 +189,120 @@ function filtered() {
   const objs = Object.values(images);
 
   const rtn = objs // size
-  .filter(img => {
-    if (elements.group.size.checked) {
-      const {min, max, ignore} = elements.size;
-      if (img.size) {
-        if (Number(min.value) && Number(min.value) > img.size) {
-          return false;
+    .filter(img => {
+      if (elements.group.size.checked) {
+        const {min, max, ignore} = elements.size;
+        if (img.size) {
+          if (Number(min.value) && Number(min.value) > img.size) {
+            return false;
+          }
+          if (Number(max.value) && Number(max.value) < img.size) {
+            return false;
+          }
+          return true;
         }
-        if (Number(max.value) && Number(max.value) < img.size) {
-          return false;
+        else {
+          return !ignore.checked;
         }
+      }
+      else {
+        return true;
+      }
+    })
+    // dimension
+    .filter(img => {
+      if (elements.group.dimension.checked) {
+        const {width, height, ignore} = elements.dimension;
+        if (img.width) {
+          if (Number(width.min.value) && Number(width.min.value) > img.width) {
+            return false;
+          }
+          if (Number(width.max.value) && Number(width.max.value) < img.width) {
+            return false;
+          }
+        }
+        if (img.height) {
+          if (Number(height.min.value) && Number(height.min.value) > img.height) {
+            return false;
+          }
+          if (Number(height.max.value) && Number(height.max.value) < img.height) {
+            return false;
+          }
+        }
+        if (img.width && img.height) {
+          return true;
+        }
+        else {
+          return !ignore.checked;
+        }
+      }
+      else {
+        return true;
+      }
+    })
+    .filter(img => {
+      if (elements.type.all.checked || !elements.group.type.checked) {
         return true;
       }
       else {
-        return !ignore.checked;
-      }
-    }
-    else {
-      return true;
-    }
-  })
-  // dimension
-  .filter(img => {
-    if (elements.group.dimension.checked) {
-      const {width, height, ignore} = elements.dimension;
-      if (img.width) {
-        if (Number(width.min.value) && Number(width.min.value) > img.width) {
+        if (img.type) {
+          const {jpeg, png, bmp, webp, gif} = elements.type;
+
+          if (img.type === 'image/jpeg' && jpeg.checked) {
+            return true;
+          }
+          if (img.type === 'image/png' && png.checked) {
+            return true;
+          }
+          if (img.type === 'image/bmp' && bmp.checked) {
+            return true;
+          }
+          if (img.type === 'image/webp' && webp.checked) {
+            return true;
+          }
+          if (img.type === 'image/gif' && gif.checked) {
+            return true;
+          }
+
           return false;
         }
-        if (Number(width.max.value) && Number(width.max.value) < img.width) {
-          return false;
-        }
-      }
-      if (img.height) {
-        if (Number(height.min.value) && Number(height.min.value) > img.height) {
-          return false;
-        }
-        if (Number(height.max.value) && Number(height.max.value) < img.height) {
+        else {
           return false;
         }
       }
-      if (img.width && img.height) {
+    })
+    // regexp
+    .filter(img => {
+      if (elements.group.regexp.checked) {
+        const r = new RegExp(elements.regexp.input.value);
+        return r.test(img.src);
+      }
+      else {
         return true;
       }
-      else {
-        return !ignore.checked;
-      }
-    }
-    else {
-      return true;
-    }
-  })
-  .filter(img => {
-    if (elements.type.all.checked || !elements.group.type.checked) {
-      return true;
-    }
-    else {
-      if (img.type) {
-        const {jpeg, png, bmp, webp, gif} = elements.type;
-
-        if (img.type === 'image/jpeg' && jpeg.checked) {
-          return true;
-        }
-        if (img.type === 'image/png' && png.checked) {
-          return true;
-        }
-        if (img.type === 'image/bmp' && bmp.checked) {
-          return true;
-        }
-        if (img.type === 'image/webp' && webp.checked) {
-          return true;
-        }
-        if (img.type === 'image/gif' && gif.checked) {
-          return true;
-        }
-
-        return false;
+    })
+    // blacklist
+    .filter(img => {
+      if (elements.group.blacklist.checked) {
+        const list = elements.blacklist.input.value.split(/\s*,\s*/)
+          .map(k => k.toLowerCase())
+          .filter(a => a);
+        return !list.some(keyword => img.src.toLowerCase().indexOf(keyword) !== -1);
       }
       else {
-        return false;
+        return true;
       }
-    }
-  })
-  // regexp
-  .filter(img => {
-    if (elements.group.regexp.checked) {
-      const r = new RegExp(elements.regexp.input.value);
-      return r.test(img.src);
-    }
-    else {
-      return true;
-    }
-  })
-  // blacklist
-  .filter(img => {
-    if (elements.group.blacklist.checked) {
-      const list = elements.blacklist.input.value.split(/\s*,\s*/)
-        .map(k => k.toLowerCase())
-        .filter(a => a);
-      return !list.some(keyword => img.src.toLowerCase().indexOf(keyword) !== -1);
-    }
-    else {
-      return true;
-    }
-  })
-  // origin
-  .filter(img => {
-    if (elements.group.origin.checked) {
-      const hostname = img.hostname;
-      return domain.endsWith(hostname) || hostname.endsWith(domain) || hostname === 'local';
-    }
-    else {
-      return true;
-    }
-  });
+    })
+    // origin
+    .filter(img => {
+      if (elements.group.origin.checked) {
+        const hostname = img.hostname;
+        return domain.endsWith(hostname) || hostname.endsWith(domain) || hostname === 'local';
+      }
+      else {
+        return true;
+      }
+    });
 
   const keys = rtn.map(o => o.key);
 
@@ -366,6 +367,9 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       total += request.length;
       elements.counter.total.textContent = total;
       elements.counter.progress.max = total;
+      if (request.filters) {
+        elements.counter.filters.textContent = ` (filters: ${request.filters.length})`;
+      }
     }
   }
 });
@@ -468,6 +472,11 @@ document.addEventListener('click', ({target}) => {
     input.dispatchEvent(new Event('input', {
       bubbles: true
     }));
+  }
+  else if (cmd === 'help') {
+    chrome.tabs.create({
+      url: chrome.runtime.getManifest().homepage_url
+    });
   }
 });
 // update counter
