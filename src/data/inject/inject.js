@@ -42,7 +42,7 @@ chrome.storage.local.get({
 
 (callback => {
   document.addEventListener('click', e => {
-    if (window.iframe && window.iframe.contains(e.target) === false) {
+    if (e.isTrusted && window.iframe && window.iframe.contains(e.target) === false) {
       callback();
     }
   });

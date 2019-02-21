@@ -103,13 +103,17 @@ var collector = {
         }
       });
     };
-    // find images; part 1
+    // find images; part 1/1
     let images = [...document.images].map(img => ({
       width: img.width,
       height: img.height,
       src: img.src,
       verified: true // this is an image even if content-type cannot be resolved
     })).filter(img => img.src);
+    // find images; part 1/2
+    images.push(...[...document.querySelectorAll('source')].filter(i => i.srcset).map(i => ({
+      src: i.srcset.split(' ')[0]
+    })));
     // find background images; part 2
     try {
       [...document.querySelectorAll('*')]
