@@ -74,9 +74,6 @@
   "ui_skip": {
     "message": "Skip"
   },
-  "ui_save": {
-    "message": "Save"
-  },
   "ui_dimension": {
     "message": "Dimensions (pixels)"
   },
