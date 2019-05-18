@@ -56,9 +56,20 @@ function humanFileSize(bytes) {
   }
 }
 
+var last;
 document.addEventListener('click', e => {
   const {target} = e;
   const cmd = target.dataset.cmd;
+
+  // select list by shift+click
+  if (target.type === 'checkbox' && e.shiftKey && last) {
+    const entries = [...document.querySelectorAll('.entry')];
+    const i = entries.indexOf(target.closest('.entry'));
+    const j = entries.indexOf(last.closest('.entry'));
+    for (let k = Math.min(i, j) + 1; k < Math.max(i, j); k += 1) {
+      entries[k].querySelector('input[type=checkbox]').checked = true;
+    }
+  }
 
   // data URL is not allowed in a new browser tab (chrome)
   if (target.href && target.href.startsWith('data:')) {
@@ -157,6 +168,7 @@ document.addEventListener('click', e => {
       window.parent.to.ui();
     }
   }
+  last = target;
 });
 
 document.addEventListener('change', () => {
