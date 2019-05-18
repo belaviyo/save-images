@@ -9,6 +9,12 @@
 
 'use strict';
 
+// localization
+[...document.querySelectorAll('[data-i18n]')].forEach(e => {
+  const value = e.dataset.i18nValue || 'textContent';
+  e[value] = chrome.i18n.getMessage(e.dataset.i18n);
+});
+
 var elements = {
   counter: {
     filters: document.getElementById('filters'),

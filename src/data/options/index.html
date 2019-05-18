@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Options :: Download all Images</title>
+  <title data-i18n="options_title"></title>
   <meta charset="utf-8">
   <style>
     body {
@@ -33,29 +33,29 @@
     <tbody>
       <tr>
         <td></td>
-        <td><label for="width">Panel width (in pixels) (min: 650px):</label></td>
+        <td><label for="width" data-i18n="options_width"></label></td>
         <td><input id="width" type="number" min="300"></td>
       </tr>
       <tr>
         <td></td>
-        <td><label for="height">Panel height (in pixels) (min: 500px):</label></td>
+        <td><label for="height" data-i18n="options_height"></label></td>
         <td><input id="height" type="number" min="400"></td>
       </tr>
       <tr>
         <td><input type="checkbox" id="notify"></td>
-        <td><label for="notify">Display desktop notification on image saving</label></td>
+        <td><label for="notify" data-i18n="options_notify"></label></td>
         <td></td>
       </tr>
       <tr>
         <td><input type="checkbox" id="faqs"></td>
-        <td><label for="faqs">Open FAQs page on updates</label></td>
+        <td><label for="faqs" data-i18n="options_faqs"></label></td>
         <td></td>
       </tr>
     </tbody>
   </table>
   <br>
   <div>
-    <h3>Custom rule:</h3>
+    <h3 data-i18n="options_rule"></h3>
     JSON object to limit hostname matching per domain. Read <a id="open" href="#">FAQs page</a> for more info.
     <textarea id="json" rows="10"></textarea>
   </div>
@@ -65,8 +65,8 @@
   </p>
   <div id="explore" data-inc=50></div>
   <p>
-    <button id="support">Support Development</button>
-    <button id="reset">Reset</button> - <button id="save">Save</button>
+    <button id="support" data-i18n="options_support"></button>
+    <button id="reset">Reset</button> - <button id="save" data-i18n="options_save"></button>
     <span id="status"></span>
   </p>
   <script src="index.js"></script>

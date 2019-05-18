@@ -30,7 +30,7 @@ body>span {
 #toolbar {
   display: flex;
   align-items: center;
-  border-top: solid 1px d7d8da;
+  border-top: solid 1px #d7d8da;
   min-height: 42px;
   padding: 0 10px;
 }
@@ -40,6 +40,9 @@ body>span {
 }
 #toolbar>span {
   flex: 1;
+}
+#pattern {
+  padding: 0 5px;
 }
 .entry {
   flex: 1 0 152px;

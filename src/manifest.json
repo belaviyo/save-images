@@ -1,9 +1,9 @@
 {
   "manifest_version": 2,
-  "version": "0.5.8",
+  "version": "0.5.9",
   "name": "Download all Images",
-  "short_name": "download-images",
-  "description": "a customizable extension to save selected images from the current tab page",
+  "description": "__MSG_app_description__",
+  "default_locale": "en",
   "permissions": [
     "storage",
     "activeTab",

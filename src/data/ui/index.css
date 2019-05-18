@@ -43,6 +43,7 @@ footer input {
   }
 }
 
+button,
 input {
   outline: none;
 }
@@ -60,6 +61,7 @@ label {
   display: inline-flex;
   align-items: center;
 }
+button,
 input[type=button] {
   margin: 0 5px;
   width: 70px;
@@ -71,8 +73,12 @@ input[type=button] {
   background-color: #fff;
   color: #000;
 }
+button:active,
 input[type=button]:active {
   opacity: 0.5;
+}
+button * {
+  pointer-events: none;
 }
 
 fieldset {

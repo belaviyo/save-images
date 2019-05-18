@@ -9,18 +9,18 @@
     <textarea id="clipboard" style="display: none;"></textarea>
     <header hbox>
       <fieldset flex=1>
-        <legend>Statistics <span id="filters"></span></legend>
+        <legend><span data-i18n="ui_statistics"></span> <span id="filters"></span></legend>
         <div hbox>
-          <span class="note" title="Total number of parsed links (a link might be or might not be an image)">Total:</span>&nbsp;<span id="total-number">-</span>,&nbsp;
-          <span class="note" title="Total number of available images">Images:</span>&nbsp;<span id="images-number">0</span>,&nbsp;
-          <span class="note" title="Total number of images that will be saved based on your filters">Saving:</span>&nbsp;<span id="save-number">0</span>&nbsp;
+          <span class="note" data-i18n="ui_total_title" data-i18n-value="title"><span data-i18n="ui_total"></span></span>&nbsp;<span id="total-number">-</span>,&nbsp;
+          <span class="note" data-i18n="ui_images_title" data-i18n-value="title"><span data-i18n="ui_images"></span></span>&nbsp;<span id="images-number">0</span>,&nbsp;
+          <span class="note" data-i18n="ui_saving_title" data-i18n-value="title"><span data-i18n="ui_saving"></span></span>&nbsp;<span id="save-number">0</span>&nbsp;
           <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
         </div>
       </fieldset>
-      <fieldset title="0: do not extract linked images (fast)&#013;1: Extract linked images (slow)&#013;2: Extract linked images and parse destination HTML documents (images) (too slow)&#013; 3: Extract linked images and parse destination HTML documents (images + links) (too slow; use with custom filters)">
-        <legend>Deep Search</legend>
+      <fieldset data-i18n="ui_deep_search_title" data-i18n-value="title">
+        <legend data-i18n="ui_deep_search"></legend>
         <label>
-          Level&nbsp;
+          <span data-i18n="ui_level"></span>&nbsp;
           <progress id="deep-progress" value="0" max="100" data-visible=false></progress>&nbsp;
           <input type="number" value="1" id="deep-level" min="0" max="3">
         </label>
@@ -28,109 +28,109 @@
     </header>
     <div hbox>
       <fieldset flex=1>
-        <legend><label><input type="checkbox" id="group-size"> File Size</label></legend>
+        <legend><label><input type="checkbox" id="group-size"> <span data-i18n="ui_file_size"></span></label></legend>
         <table>
           <tr>
-            <td>Min</td>
+            <td data-i18n="ui_min"></td>
             <td><input type="number" value="4000" id="size-min"></td>
-            <td>bytes</td>
+            <td data-i18n="ui_bytes"></td>
           </tr>
           <tr>
-            <td>Max</td>
+            <td data-i18n="ui_max"></td>
             <td><input type="number" value="0" id="size-max"></td>
-            <td>bytes</td>
+            <td data-i18n="ui_bytes"></td>
           </tr>
         </table>
 
         <fieldset>
-          <legend>If unknown</legend>
+          <legend data-i18n="ui_unkown"></legend>
           <table>
             <tr>
               <td><input type="radio" name="size" id="unknown-size-skip"></td>
-              <td><label for="unknown-size-skip">Skip</label></td>
+              <td><label for="unknown-size-skip" data-i18n="ui_skip"></label></td>
             </tr>
             <tr>
               <td><input type="radio" name="size" id="unknown-size-save" checked="true"></td>
-              <td><label for="unknown-size-save">Save</label></td>
+              <td><label for="unknown-size-save" data-i18n="ui_save"></label></td>
             </tr>
           </table>
         </fieldset>
       </fieldset>
 
       <fieldset flex=1>
-        <legend><label><input type="checkbox" id="group-dimension">Dimensions (pixels)</label></legend>
+        <legend><label><input type="checkbox" id="group-dimension"></label><span data-i18n="ui_dimension"></span></legend>
         <table>
           <tr>
-            <td>Min width</td>
+            <td data-i18n="ui_min_width"></td>
             <td><input type="number" value="200" id="dimension-width-min"></td>
           </tr>
           <tr>
-            <td>Max width</td>
+            <td data-i18n="ui_max_width"></td>
             <td><input type="number" value="0" id="dimension-width-max"></td>
           </tr>
           <tr>
-            <td>Min height</td>
+            <td data-i18n="ui_min_height"></td>
             <td><input type="number" value="200" id="dimension-height-min"></td>
           </tr>
           <tr>
-            <td>Max height</td>
+            <td data-i18n="ui_max_height"></td>
             <td><input type="number" value="0" id="dimension-height-max"></td>
           </tr>
         </table>
 
         <fieldset>
-          <legend>If unknown</legend>
+          <legend data-i18n="ui_unkown"></legend>
           <table>
             <tr>
               <td><input type="radio" name="dimension" id="unknown-dimension-skip"></td>
-              <td><label for="unknown-dimension-skip">Skip</label></td>
+              <td><label for="unknown-dimension-skip" data-i18n="ui_skip"></label></td>
             </tr>
             <tr>
               <td><input type="radio" name="dimension" id="unknown-dimension-save" checked=true></td>
-              <td><label for="unknown-dimension-save">Save</label></td>
+              <td><label for="unknown-dimension-save" data-i18n="ui_save"></label></td>
             </tr>
           </table>
         </fieldset>
       </fieldset>
 
       <fieldset flex=1>
-        <legend><label><input type="checkbox" id="group-type" checked="true">Image Types</label></legend>
+        <legend><label><input type="checkbox" id="group-type" checked="true"><span data-i18n="ui_image_types"></span></label></legend>
         <table>
           <tr>
             <td><input type="radio" name="type" id="type-all" checked=true></td>
-            <td><label for="type-all">All images</label></td>
+            <td><label for="type-all" data-i18n="ui_all_images"></label></td>
           </tr>
           <tr>
             <td><input type="radio" name="type" id="type-selection"></td>
-            <td><label for="type-selection">Selection</label></td>
+            <td><label for="type-selection" data-i18n="ui_Selection"></label></td>
           </tr>
         </table>
         <table class="indent" id="image-types">
           <tr>
             <td><input type="checkbox" id="type-jpeg"></td>
-            <td><label for="type-jpeg">JP(E)G images</label></td>
+            <td><label for="type-jpeg" data-i18n="ui_jpg_images"></label></td>
           </tr>
           <tr>
             <td><input type="checkbox" id="type-png"></td>
-            <td><label for="type-png">PNG images</label></td>
+            <td><label for="type-png" data-i18n="ui_png_images"></label></td>
           </tr>
           <tr>
             <td><input type="checkbox" id="type-gif"></td>
-            <td><label for="type-gif">GIF images</label></td>
+            <td><label for="type-gif" data-i18n="ui_gif_images"></label></td>
           </tr>
           <tr>
             <td><input type="checkbox" id="type-bmp"></td>
-            <td><label for="type-bmp">BMP images</label></td>
+            <td><label for="type-bmp" data-i18n="ui_bmp_images"></label></td>
           </tr>
           <tr>
             <td><input type="checkbox" id="type-webp"></td>
-            <td><label for="type-webp">WebP images</label></td>
+            <td><label for="type-webp" data-i18n="ui_webp_images"></label></td>
           </tr>
         </table>
         <table>
           <tr>
             <td><input type="checkbox" id="no-type" checked="true"></td>
-            <td><label for="no-type">If no extension, save as JPG</label></td>
+            <td><label for="no-type" data-i18n="ui_no_extension"></label></td>
           </tr>
         </table>
       </fieldset>
@@ -138,11 +138,11 @@
 
     <div hbox>
       <fieldset flex=1>
-        <legend>Regular Expressions</legend>
+        <legend data-i18n="ui_regexp"></legend>
         <table width="100%">
           <tr>
             <td><input type="checkbox" id="group-regexp"></td>
-            <td><label for="group-regexp">Regular expression based on images URL (only matching images will be saved)</label></td>
+            <td><label for="group-regexp" data-i18n="ui_regexp_desc"></label></td>
           </tr>
           <tr>
             <td></td>
@@ -151,11 +151,11 @@
         </table>
       </fieldset>
       <fieldset flex=1>
-        <legend>Blacklisted keywords</legend>
+        <legend data-i18n="ui_blacklist"></legend>
         <table width="100%">
           <tr>
             <td><input type="checkbox" id="group-blacklist"></td>
-            <td><label for="group-blacklist">Comma-separated list of keywords to exclude (matching images will NOT be saved)</label></td>
+            <td><label for="group-blacklist" data-i18n="ui_blacklist_desc"></label></td>
           </tr>
           <tr>
             <td></td>
@@ -166,29 +166,29 @@
     </div>
     <div hbox>
       <fieldset flex=1>
-        <legend>Misc</legend>
+        <legend data-i18n="ui_misc"></legend>
         <table width="100%">
           <tr>
             <td><input type="checkbox" id="group-origin"></td>
-            <td><label for="group-origin">Only save images from the same domain/server as the selected tab's URL</label></td>
+            <td><label for="group-origin" data-i18n="ui_same_domain"></label></td>
           </tr>
           <tr>
             <td><input type="checkbox" id="group-identical" checked="true"></td>
-            <td><label for="group-identical">Try to exclude identical images</label></td>
+            <td><label for="group-identical" data-i18n="ui_unique"></label></td>
           </tr>
           <tr>
             <td><input type="checkbox" id="group-zip"></td>
-            <td><label for="group-zip">Download each image separately</label></td>
+            <td><label for="group-zip" data-i18n="ui_separate"></label></td>
           </tr>
         </table>
       </fieldset>
       <fieldset flex=1>
-        <legend>File Mask</legend>
-        You can use this section to rename the image filenames to the desired format
+        <legend data-i18n="ui_mask"></legend>
+        <span data-i18n="ui_mask_desc"></span>
         <div hbox style="margin-top: 10px;">
-          <input type="text" id="file-mask" value="" placeholder="[name][extension]" flex="1"  title="You will need to put the desired keyword inside closed brackets like [name][extension]">
+          <input type="text" id="file-mask" value="" placeholder="[name][extension]" flex="1"  data-i18n="ui_mask_keywords" data-i18n-value="title">
           <div class="list" hbox align=center>
-            <span>Keywords</span>
+            <span data-i18n="ui_keywords"></span>
             <ul>
               <li data-cmd="insert" data-value="[name]">[name]</li>
               <li data-cmd="insert" data-value="[type]">[type]</li>
@@ -203,7 +203,7 @@
     </div>
 
     <fieldset style="margin-bottom: 55px">
-      <legend>Save in</legend>
+      <legend data-i18n="ui_save_in"></legend>
       <table width=100%>
         <colgroup>
           <col width=24>
@@ -211,19 +211,19 @@
           <col>
         </colgroup>
         <tbody>
-          <tr title="Show browser's save dialog to choose the destination directory">
+          <tr data-i18n="ui_dialog" data-i18n-value="title">
             <td><input type="checkbox" id="open-save-dialog"></td>
-            <td><label for="open-save-dialog">Save dialog</label></td>
-            <td align=right title="number of seconds a request can take before automatically being terminated (a number between 5 to 120 seconds)"><input type="number" id="timeout" min="5" max="120" value=10> seconds</td>
+            <td><label for="open-save-dialog" data-i18n="ui_save_dialog"></label></td>
+            <td align=right data-i18n="ui_delay" data-i18n-value="title"><input type="number" id="timeout" min="5" max="120" value=10></td>
           </tr>
           <tr>
             <td></td>
-            <td>Format</td>
+            <td data-i18n="ui_format"></td>
             <td>
               <div hbox>
                 <input type="text" id="format" value="[title] - [date] [time].zip" placeholder="[title] - [date] [time].zip" flex="1">
                 <div class="list" hbox align=center>
-                  <span>Keywords</span>
+                  <span data-i18n="ui_keywords"></span>
                   <ul>
                     <li data-cmd="insert" data-value="[title]">[title]</li>
                     <li data-cmd="insert" data-value="[date]">[date]</li>
@@ -236,7 +236,7 @@
           </tr>
           <tr>
             <td></td>
-            <td>ZIP filename</td>
+            <td data-i18n="ui_zip"></td>
             <td>
               <div hbox>
                 <input type="text" id="filename" placeholder="Filename" flex="1">
@@ -245,10 +245,10 @@
           </tr>
           <tr>
             <td></td>
-            <td>Directory</td>
+            <td data-i18n="ui_directroy"></td>
             <td>
               <div hbox>
-                <input type="text" id="custom-directory" placeholder="custom directory relative to the default download directory" flex="1">
+                <input type="text" id="custom-directory" data-i18n="ui_relative" data-i18n-value="placeholder" flex="1">
               </div>
             </td>
           </tr>
@@ -257,15 +257,15 @@
     </fieldset>
 
     <footer hbox pack="center" align="end">
-      <input type="button" value="Help" data-cmd="help" title="Open FAQs page">
-      <input type="button" value="Reset" data-cmd="reset" title="Reset settings to the default values">
-      <input type="button" value="Restart" data-cmd="restart" title="Restart image collection">
-      <input type="button" value="Stop" data-cmd="stop" title="Stop searching for more images">
-      <input type="button" value="Gallery" data-cmd="gallery" title="Open selected images in gallery mode">
+      <button data-i18n="ui_help_title" data-i18n-value="title" data-cmd="help"><span data-i18n="ui_help"></span></button>
+      <button data-i18n="ui_reset_title" data-i18n-value="title" data-cmd="reset"><span data-i18n="ui_reset"></span></button>
+      <button data-i18n="ui_restart_title" data-i18n-value="title" data-cmd="restart"><span data-i18n="ui_restart"></span></button>
+      <button data-i18n="ui_stop_title" data-i18n-value="title" data-cmd="stop"><span data-i18n="ui_stop"></span></button>
+      <button data-i18n="ui_gallery_title" data-i18n-value="title" data-cmd="gallery"><span data-i18n="ui_gallery"></span></button>
       <span flex="1"></span>
-      <input type="button" value="Copy" data-cmd="copy" title="Copy selected images to the clipbaord">
-      <input type="button" value="Save" data-cmd="save" title="Save selected images">
-      <input type="button" value="Cancel" data-cmd="close" title="Close this window">
+      <button data-i18n="ui_copy_title" data-i18n-value="title" data-cmd="copy"><span data-i18n="ui_copy"></span></button>
+      <button data-i18n="ui_save_title" data-i18n-value="title" data-cmd="save"><span data-i18n="ui_save"></span></button>
+      <button data-i18n="ui_cancel_title" data-i18n-value="title" data-cmd="close"><span data-i18n="ui_cancel"></span></button>
     </footer>
     <script src="persist.js"></script>
     <script src="index.js"></script>

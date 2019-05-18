@@ -1,4 +1,19 @@
+/* Copyright (C) 2014-2017 Joe Ertaba
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ * Home: http://add0n.com/save-images.html
+ * GitHub: https://github.com/belaviyo/save-images/ */
+
 'use strict';
+
+// localization
+[...document.querySelectorAll('[data-i18n]')].forEach(e => {
+  const value = e.dataset.i18nValue || 'textContent';
+  e[value] = chrome.i18n.getMessage(e.dataset.i18n);
+});
 
 var t = document.getElementById('entry');
 var body = document.getElementById('body');

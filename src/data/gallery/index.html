@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>Image Gallery</title>
+    <title data-i18n="galley_title"></title>
     <link rel="stylesheet" href="index.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
@@ -22,15 +22,15 @@
     <div id="toolbar">
       <input type="button" data-cmd="close">
       <div style="display: flex">
-        <input type="button" data-cmd="select-all" title="Select All; To select a range, first unselect all then select the first item. Now select the last item with Shift + Click;" style="margin-right: -1px">
-        <input type="button" data-cmd="select-none" title="Select None">
+        <input type="button" data-cmd="select-all" data-i18n="gallery_select_all" data-i18n-value="title" style="margin-right: -1px">
+        <input type="button" data-cmd="select-none" data-i18n="gallery_select_none" data-i18n-value="title">
       </div>
-      <input type="button" data-cmd="download" title="Download selected images">
-      <input type="button" data-cmd="copy" title="Copy URLs of the selected images to the clipboard">
-      <input type="button" data-cmd="window" title="Open in a browser tab">
+      <input type="button" data-cmd="download"  data-i18n="gallery_download" data-i18n-value="title">
+      <input type="button" data-cmd="copy"  data-i18n="gallery_copy" data-i18n-value="title">
+      <input type="button" data-cmd="window"  data-i18n="gallery_window" data-i18n-value="title">
       <div style="display: flex">
-        <input type="button" data-cmd="rename" value="Rename" style="margin-right: -1px">
-        <input type="text" id="pattern" value="image-[#=1][extension]">
+        <input type="button" data-cmd="rename" data-i18n="gallery_rename" data-i18n-value="value" style="margin-right: -1px">
+        <input type="text" id="pattern" data-i18n="gallery_pattern" data-i18n-value="value" >
       </div>
       <span></span>
       <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
