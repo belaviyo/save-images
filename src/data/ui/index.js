@@ -111,7 +111,7 @@ function guess(img) {
         // make sure name is writable
         name = name.replace(/[`~!@#$%^&*()_|+\-=?;:'",<>{}[\]\\/]/gi, '-');
       }
-      catch(e) {}
+      catch (e) {}
     }
     else { // data-url
       name = 'image';
@@ -394,8 +394,6 @@ var search = () => chrome.runtime.sendMessage({
   // filename
   filename();
 });
-document.addEventListener('DOMContentLoaded', search);
-
 elements.deep.level.addEventListener('change', search);
 
 // commands

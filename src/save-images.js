@@ -36,10 +36,12 @@ Download.prototype.terminate = function() {
     notify(`Image downloading is canceled for "${this.tab.title}".
 Do not close the panel if you want to keep downloading`);
   }
-  chrome.browserAction.setBadgeText({
-    tabId: this.tab.id,
-    text: ''
-  });
+  if (chrome.browserAction.setBadgeText) {
+    chrome.browserAction.setBadgeText({
+      tabId: this.tab.id,
+      text: ''
+    });
+  }
   this.abort = true;
   this.jobs = [];
 };
@@ -51,10 +53,12 @@ Download.prototype.one = function() {
   const jobs = this.jobs;
   const request = this.request;
 
-  chrome.browserAction.setBadgeText({
-    tabId: id,
-    text: jobs.length ? String(jobs.length) : ''
-  });
+  if (chrome.browserAction.setBadgeText) {
+    chrome.browserAction.setBadgeText({
+      tabId: id,
+      text: jobs.length ? String(jobs.length) : ''
+    });
+  }
   chrome.tabs.sendMessage(id, {
     cmd: 'progress',
     value: jobs.length
