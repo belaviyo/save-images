@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "version": "0.5.7",
+  "version": "0.5.8",
   "name": "Download all Images",
   "short_name": "download-images",
   "description": "a customizable extension to save selected images from the current tab page",
@@ -40,7 +40,7 @@
     "data/ui/index.html",
     "data/gallery/index.html"
   ],
-  "homepage_url": "http://add0n.com/save-images.html",
+  "homepage_url": "https://add0n.com/save-images.html",
   "options_ui": {
     "page": "data/options/index.html",
     "chrome_style": true

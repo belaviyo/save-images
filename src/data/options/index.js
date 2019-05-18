@@ -89,3 +89,10 @@ else if (navigator.userAgent.indexOf('OPR') !== -1) {
   document.getElementById('rate').href =
     'https://addons.opera.com/en/extensions/details/save-all-images/#feedback-container';
 }
+
+document.getElementById('open').addEventListener('click', e => {
+  e.preventDefault();
+  chrome.tabs.create({
+    url: chrome.runtime.getManifest().homepage_url + '#faq16'
+  });
+});

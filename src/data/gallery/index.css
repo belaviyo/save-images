@@ -101,6 +101,7 @@ input[type=button] {
   height: 28px;
   min-width: 48px;
   background-color: #fff;
+  color: #000;
   cursor: pointer;
   outline: none;
 }
