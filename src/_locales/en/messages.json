@@ -162,7 +162,7 @@
     "message": "Save dialog"
   },
   "ui_delay": {
-    "message": "number of seconds a request can take before automatically being terminated (a number between 5 to 120 seconds)"
+    "message": "Number of seconds a request can take before automatically being terminated (a number between 5 to 120 seconds)"
   },
   "ui_format": {
     "message": "Format"
@@ -223,6 +223,15 @@
   },
   "ui_cancel_title": {
     "message": "Close this window"
+  },
+  "ui_preferences": {
+    "message": "Preferences"
+  },
+  "ui_prefs_zip_warning": {
+    "message": "Display a confirmation when \"Download each image separately\" is checked and the total number of images is more than"
+  },
+  "ui_prefs_max_warning": {
+    "message": "Display a confirmation when the total number of images is more than"
   },
   "options_title": {
     "message": "Options :: Download all Images"

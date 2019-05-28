@@ -20,6 +20,9 @@ document.addEventListener('change', ({target}) => {
       if (id === 'timeout') {
         value = Math.min(Math.max(5, value), 120);
       }
+      else if (id === 'prefs-max-warning' || id === 'prefs-zip-warning') {
+        value = Math.max(5, value);
+      }
       persist[id] = value;
     }
     chrome.storage.local.set({

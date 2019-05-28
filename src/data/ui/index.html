@@ -202,7 +202,7 @@
       </fieldset>
     </div>
 
-    <fieldset style="margin-bottom: 55px">
+    <fieldset>
       <legend data-i18n="ui_save_in"></legend>
       <table width=100%>
         <colgroup>
@@ -213,8 +213,7 @@
         <tbody>
           <tr data-i18n="ui_dialog" data-i18n-value="title">
             <td><input type="checkbox" id="open-save-dialog"></td>
-            <td><label for="open-save-dialog" data-i18n="ui_save_dialog"></label></td>
-            <td align=right data-i18n="ui_delay" data-i18n-value="title"><input type="number" id="timeout" min="5" max="120" value=10></td>
+            <td colspan="2"><label for="open-save-dialog" data-i18n="ui_save_dialog"></label></td>
           </tr>
           <tr>
             <td></td>
@@ -251,6 +250,29 @@
                 <input type="text" id="custom-directory" data-i18n="ui_relative" data-i18n-value="placeholder" flex="1">
               </div>
             </td>
+          </tr>
+        </tbody>
+      </table>
+    </fieldset>
+    <fieldset style="margin-bottom: 55px">
+      <legend data-i18n="ui_preferences"></legend>
+      <table width=100%>
+        <colgroup>
+          <col>
+          <col width="100">
+        </colgroup>
+        <tbody>
+          <tr>
+            <td data-i18n="ui_prefs_max_warning"></td>
+            <td align="right"><input type="number" min="5" id="prefs-max-warning" value="30"></td>
+          </tr>
+          <tr>
+            <td data-i18n="ui_prefs_zip_warning"></td>
+            <td align="right"><input type="number" min="3" id="prefs-zip-warning" value="15"></td>
+          </tr>
+          <tr>
+            <td data-i18n="ui_delay"></td>
+            <td align="right"><input type="number" id="timeout" min="5" max="120" value=10></td>
           </tr>
         </tbody>
       </table>

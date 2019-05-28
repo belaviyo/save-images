@@ -76,6 +76,10 @@ var elements = {
   deep: {
     level: document.getElementById('deep-level'),
     progress: document.getElementById('deep-progress')
+  },
+  prefs: {
+    max: document.getElementById('prefs-max-warning'),
+    zip: document.getElementById('prefs-zip-warning')
   }
 };
 
@@ -183,7 +187,7 @@ function build() {
     saveAs: elements.save.dialog.checked,
     get zip() {
       let zip = !elements.group.zip.checked;
-      if (zip === false && elements.counter.save.value > 15) {
+      if (zip === false && elements.counter.save.value > Number(elements.prefs.zip.value)) {
         zip = window.confirm('Downloading more than 15 images separately is not recommended. Should I download them as a ZIP archive?');
       }
       return zip;
@@ -417,7 +421,7 @@ document.addEventListener('click', ({target}) => {
       elements.counter.progress.max = len;
       chrome.runtime.sendMessage(obj);
     };
-    if (len > 30) {
+    if (len > Number(elements.prefs.max.value)) {
       if (window.confirm(`Are you sure you want to download "${len}" images?`)) {
         save();
       }
