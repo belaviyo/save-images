@@ -16,7 +16,7 @@ function timeout() {
   return Number(localStorage.getItem('timeout') || 10) * 1000;
 }
 
-var downloads = {};
+const downloads = {};
 
 function Download() {
   this.zip = new JSZip();
@@ -110,7 +110,11 @@ Download.prototype.download = function(obj) {
 
       const req = new XMLHttpRequest(); // do not use fetch API as it cannot get CORS headers
       req.open('GET', obj.src);
-      req.timeout = timeout();
+      console.log(obj);
+      if (obj.size) {
+        // for huge files, we need to alter the timeout
+        req.timeout = Math.max(timeout(), timeout() * obj.size / (100 * 1024));
+      }
       req.onerror = req.ontimeout = reject;
       req.responseType = 'blob';
       req.onload = () => {
