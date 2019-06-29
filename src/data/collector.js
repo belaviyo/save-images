@@ -1,8 +1,9 @@
+/* eslint no-var: 0 */
 'use strict';
 
 var collector = {
-  links: {},
   active: true,
+  cache: {}, // prevents duplicated inspection
   size: src => new Promise(resolve => {
     const image = new Image();
     image.onload = () => resolve({
@@ -21,22 +22,24 @@ var collector = {
         reject(type);
       }
       // fix the type when possible
-      if (img.src.indexOf('.png?') !== -1 || img.src.endsWith('.png')) {
-        type = 'image/png';
-      }
-      else if (
-        img.src.indexOf('.jpg?') !== -1 ||
-        img.src.indexOf('.jpeg?') !== -1 ||
-        img.src.endsWith('.jpg') ||
-        img.src.endsWith('.jpeg')
-      ) {
-        type = 'image/jpeg';
-      }
-      else if (img.src.indexOf('.bmp?') !== -1 || img.src.endsWith('.bmp')) {
-        type = 'image/bmp';
-      }
-      else if (img.src.indexOf('.gif?') !== -1 || img.src.endsWith('.gif')) {
-        type = 'image/gif';
+      if (img.src) {
+        if (img.src.indexOf('.png?') !== -1 || img.src.endsWith('.png')) {
+          type = 'image/png';
+        }
+        else if (
+          img.src.indexOf('.jpg?') !== -1 ||
+          img.src.indexOf('.jpeg?') !== -1 ||
+          img.src.endsWith('.jpg') ||
+          img.src.endsWith('.jpeg')
+        ) {
+          type = 'image/jpeg';
+        }
+        else if (img.src.indexOf('.bmp?') !== -1 || img.src.endsWith('.bmp')) {
+          type = 'image/bmp';
+        }
+        else if (img.src.indexOf('.gif?') !== -1 || img.src.endsWith('.gif')) {
+          type = 'image/gif';
+        }
       }
       // forced the image file type for verified images
       if (!type && img.verified) {
@@ -66,6 +69,23 @@ var collector = {
     }, next);
   }),
   loop: async regexps => {
+    const cleanup = images => {
+      const list = [];
+      for (const img of images) {
+        const {src} = img;
+        if (src && (src.startsWith('http') || src.startsWith('ftp') || src.startsWith('data:'))) {
+          if (collector.cache[src] === undefined) {
+            collector.cache[src] = true;
+            if (regexps && regexps.some(r => r.test(src)) === false) {
+              continue;
+            }
+            list.push(img);
+          }
+        }
+      }
+      return list;
+    };
+
     // get info for single link
     const analyze = img => {
       return collector.inspect(img).then(img => [img]).catch(type => {
@@ -76,15 +96,17 @@ var collector = {
               src: img.src,
               extractLinks: window.deep === 3
             }, async images => {
-              images = images.filter(img => collector.links[img.src] !== true);
-              // limit by regexp
-              if (regexps) {
-                images = images.filter(img => regexps.some(r => r.test(img.src)));
+              images = cleanup(images);
+              // fix page link
+              for (const i of images) {
+                i.page = img.src;
               }
-
               if (images.length) {
-                // store
-                images.forEach(img => collector.links[img.src] = true);
+                chrome.runtime.sendMessage({
+                  cmd: 'links',
+                  filters: regexps,
+                  length: images.length
+                });
                 const tmp = [];
                 for (let i = 0; collector.active && i < images.length; i += 5) {
                   const slice = images.slice(i, i + 5);
@@ -108,11 +130,13 @@ var collector = {
       width: img.width,
       height: img.height,
       src: img.src,
-      verified: true // this is an image even if content-type cannot be resolved
-    })).filter(img => img.src);
+      verified: true, // this is an image even if content-type cannot be resolved,
+      page: location.href
+    }));
     // find images; part 1/2
     images.push(...[...document.querySelectorAll('source')].filter(i => i.srcset).map(i => ({
-      src: i.srcset.split(' ')[0]
+      src: i.srcset.split(' ')[0],
+      page: location.href
     })));
     // find background images; part 2
     try {
@@ -121,22 +145,27 @@ var collector = {
         .map(i => {
           const e = /url\(['"]([^)]+)["']\)/.exec(i);
           return e && e.length ? e[1] : null;
-        }).filter((s, i, l) => s && l.indexOf(s) === i).forEach(src => {
+        }).forEach(src => {
           if (src.startsWith('//')) {
             src = document.location.protocol + src;
           }
           else if (src.startsWith('/')) {
             document.location.origin + src;
           }
-          images.push({src});
+          images.push({
+            src,
+            page: location.href
+          });
         });
     }
     catch (e) {}
     // find linked images; part 3
     if (window.deep > 0) {
       [...document.querySelectorAll('a')].map(a => a.href)
-        .filter(s => s && (s.startsWith('http') || s.startsWith('ftp') || s.startsWith('data:')))
-        .forEach(src => images.push({src}));
+        .forEach(src => images.push({
+          src,
+          page: location.href
+        }));
     }
     // find hard-coded links; part 4
     if (window.deep > 0) {
@@ -144,18 +173,13 @@ var collector = {
       // decode html special characters; &amp;
       (document.documentElement.innerHTML.match(r) || [])
         .map(s => s.replace(/&amp;/g, '&'))
-        .filter(src => src)
-        .forEach(src => images.push({src}));
+        .forEach(src => images.push({
+          src,
+          page: location.href
+        }));
     }
-
-    // filter duplicates
-    images = images.filter((s, i, l) => l.indexOf(s) === i);
-    // limit by regexp
-    if (regexps) {
-      images = images.filter(img => regexps.some(r => r.test(img.src)));
-    }
-    // store
-    images.forEach(key => collector.links[key] = true);
+    // clean
+    images = cleanup(images);
     // notify the total number of links to be parsed
     chrome.runtime.sendMessage({
       cmd: 'links',

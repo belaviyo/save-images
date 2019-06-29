@@ -1,1 +1,3 @@
 1. https://www.cbr.com/dc-comics-solicitations-may-2019/
+2. "aHR0cDovL2tpdHR5LWthdHMubmV0L3RocmVhZHMvZWxsZS1iLXByZXNlbnRpbmctMDctMDItMjUteDE2MC0yOTEyeDQzNjhweC4yNjYyMTEzLw=="
+  -> Image name from page URL

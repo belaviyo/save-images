@@ -15,7 +15,7 @@
   e[value] = chrome.i18n.getMessage(e.dataset.i18n);
 });
 
-var elements = {
+const elements = {
   counter: {
     filters: document.getElementById('filters'),
     images: document.getElementById('images-number'),
@@ -83,15 +83,16 @@ var elements = {
   }
 };
 
-var domain;
-var title;
-var images = {};
-var total = 0;
-var indices = {};
+let domain;
+let title;
+const images = {};
+let total = 0;
+const indices = {};
 
 /* guess filename */
 function guess(img) {
-  const {disposition, type, src} = img;
+  const {disposition, type, src, page, size} = img;
+
   let name = img.name || '';
   if (!name && disposition) {
     const tmp = /filename\*=UTF-8''([^;]*)/.exec(disposition);
@@ -104,6 +105,18 @@ function guess(img) {
     const tmp = /filename=([^;]*)/.exec(disposition);
     if (tmp && tmp.length) {
       name = tmp[1].replace(/["']$/, '').replace(/^["']/, '');
+    }
+  }
+  // find name from page's URL when size > 500K.
+  // some websites put the actual image name in the page's URL
+  // we need to apply this file-naming only to the actual image
+  if (!name && page) {
+    for (const ext of ['jpeg', 'jpg', 'png', 'gif', 'bmp', 'webp']) {
+      const i = page.toLowerCase().indexOf('.' + ext);
+      if (i !== -1 && size > 500 * 1024) {
+        name = page.substr(0, i).split('/').pop();
+        break;
+      }
     }
   }
   if (!name) {
@@ -336,7 +349,7 @@ function update() {
 }
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
-  if (request.cmd === 'progress') {
+  if (request.cmd === 'progress') { // for downloading
     elements.counter.progress.dataset.visible = true;
     elements.counter.progress.value = elements.counter.progress.max - request.value;
   }
@@ -363,14 +376,6 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
         img.key = name + img.size + img.hostname;
         images[img.src] = img;
       });
-      // we might have more images due to html parsing, so lets update all counters
-      if (request.images.length > request.index) {
-        total += (request.images.length - request.index);
-        elements.counter.total.textContent = total;
-        elements.counter.progress.max = total;
-      }
-      elements.counter.progress.value += Math.max(request.images.length, request.index);
-      elements.counter.progress.dataset.visible = elements.counter.progress.value !== total;
       update();
     }
     else if (request.cmd === 'links') {
@@ -382,10 +387,19 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       }
     }
   }
+  else if (request.cmd === 'header-resolved') {
+    elements.counter.progress.value += 1;
+    if (elements.counter.progress.value >= elements.counter.progress.max) {
+      elements.counter.progress.dataset.visible = false;
+    }
+    else {
+      elements.counter.progress.dataset.visible = true;
+    }
+  }
 });
 
 // construct ZIP filename
-var filename = () => {
+const filename = () => {
   const time = new Date();
   elements.save.filename.value = (elements.save.format.value || elements.save.format.placeholder)
     .replace('[title]', title)
@@ -394,7 +408,7 @@ var filename = () => {
 };
 elements.save.format.addEventListener('input', filename);
 
-var search = () => chrome.runtime.sendMessage({
+const search = () => chrome.runtime.sendMessage({
   cmd: 'get-images',
   deep: Number(elements.deep.level.value)
 }, result => {
@@ -466,8 +480,8 @@ document.addEventListener('click', ({target}) => {
   }
   else if (cmd === 'insert') {
     const input = target.closest('.list').parentNode.querySelector('input');
-    var start = input.selectionStart;
-    var end = input.selectionEnd;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
     input.value = input.value.substring(0, start) +
       target.dataset.value +
       input.value.substring(end, input.value.length);

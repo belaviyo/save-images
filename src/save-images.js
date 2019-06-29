@@ -138,7 +138,7 @@ Download.prototype.download = function(obj) {
   }
 };
 
-var cache = {};
+const cache = {};
 chrome.tabs.onRemoved.addListener(tabId => delete cache[tabId]);
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
@@ -198,6 +198,9 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     req.open('GET', request.src);
     req.timeout = timeout();
     req.ontimeout = req.onerror = () => response({});
+    chrome.tabs.sendMessage(sender.tab.id, {
+      cmd: 'header-resolved'
+    });
     req.onreadystatechange = () => {
       if (req.readyState === req.HEADERS_RECEIVED) {
         response({
@@ -224,7 +227,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
           height: img.height,
           src: img.src,
           verified: true
-        })).filter(img => img.src));
+        })));
       if (request.extractLinks) {
         images.push(...[...req.response.querySelectorAll('a')].map(a => a.href)
           .filter(s => s && (s.startsWith('http') || s.startsWith('ftp') || s.startsWith('data:')))

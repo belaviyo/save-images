@@ -37,11 +37,6 @@ footer input {
   margin-top: 2px !important;
   margin-bottom: 2px !important;
 }
-@media screen and (max-width: 600px) {
-  footer span {
-    display: none;
-  }
-}
 
 button,
 input {
@@ -63,7 +58,7 @@ label {
 }
 button,
 input[type=button] {
-  margin: 0 5px;
+  margin: 2px 5px;
   width: 70px;
   padding: 0;
   font-size: 11px;
