@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
- * Home: http://add0n.com/save-images.html
+ * Home: https://add0n.com/save-images.html
  * GitHub: https://github.com/belaviyo/save-images/ */
 
-/* globals JSZip, onClicked, notify */
+/* globals JSZip, onClicked, notify, guess */
 'use strict';
 
 window.count = 0;
@@ -110,16 +110,37 @@ Download.prototype.download = function(obj) {
 
       const req = new XMLHttpRequest(); // do not use fetch API as it cannot get CORS headers
       req.open('GET', obj.src);
-      console.log(obj);
       if (obj.size) {
         // for huge files, we need to alter the timeout
-        req.timeout = Math.max(timeout(), timeout() * obj.size / (100 * 1024));
+        req.timeout = Math.min(
+          Math.max(timeout(), timeout() * obj.size / (100 * 1024)),
+          4 * 60 * 1000
+        );
+      }
+      else {
+        req.timeout = timeout();
       }
       req.onerror = req.ontimeout = reject;
       req.responseType = 'blob';
       req.onload = () => {
-        this.zip.file(obj.filename, req.response);
-        resolve();
+        // if obj.head === false -> request headers are skipped during image collection.
+        // We need to use the guess function to find the filename.
+        if (obj.head === false) {
+          obj.disposition = req.getResponseHeader('content-disposition');
+          chrome.storage.local.get({
+            persist: {}
+          }, prefs => {
+            const mask = 'file-mask' in prefs.persist ? prefs.persist['file-mask'] : '';
+            const noType = 'no-type' in prefs.persist ? prefs.persist['no-type'] : true;
+            obj.filename = guess(obj, mask, noType).filename || obj.filename || 'unknown';
+            this.zip.file(obj.filename, req.response);
+            resolve();
+          });
+        }
+        else {
+          this.zip.file(obj.filename, req.response);
+          resolve();
+        }
       };
       req.send();
     });
@@ -166,7 +187,8 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       }
       cache[sender.tab.id] = {
         deep: request.deep,
-        regexp
+        regexp,
+        accuracy: request.accuracy || true
       };
       chrome.tabs.executeScript(sender.tab.id, {
         file: '/data/collector.js',
@@ -197,25 +219,57 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     downloads[sender.tab.id].init(request, sender.tab);
   }
   else if (request.cmd === 'xml-head') {
-    // use GET; HEAD is not widely supported
-    const req = new XMLHttpRequest();
-    req.open('GET', request.src);
-    req.timeout = timeout();
-    req.ontimeout = req.onerror = () => response({});
     chrome.tabs.sendMessage(sender.tab.id, {
       cmd: 'header-resolved'
     });
-    req.onreadystatechange = () => {
-      if (req.readyState === req.HEADERS_RECEIVED) {
-        response({
-          type: req.getResponseHeader('content-type') || '',
-          size: req.getResponseHeader('content-length'),
-          disposition: req.getResponseHeader('content-disposition')
-        });
-        req.abort();
-      }
-    };
-    req.send();
+    if (request.src.endsWith('.css') || request.src.indexOf('.css?') !== -1) {
+      response({
+        type: 'text/css',
+        size: 0,
+        disposition: ''
+      });
+    }
+    else if (request.src.endsWith('.html') || request.src.indexOf('.html?') !== -1) {
+      response({
+        type: 'text/html',
+        size: 0,
+        disposition: ''
+      });
+    }
+    else if (request.src.endsWith('.js') || request.src.indexOf('.js?') !== -1) {
+      response({
+        type: 'text/javascript',
+        size: 0,
+        disposition: ''
+      });
+    }
+    else if (request.skip === true) {
+      response({
+        head: false,
+        type: '',
+        size: 0,
+        disposition: ''
+      });
+    }
+    else {
+      // use GET; HEAD is not widely supported
+      const req = new XMLHttpRequest();
+      req.open('GET', request.src);
+      req.timeout = timeout();
+      req.ontimeout = req.onerror = () => response({});
+
+      req.onreadystatechange = () => {
+        if (req.readyState === req.HEADERS_RECEIVED) {
+          response({
+            type: req.getResponseHeader('content-type') || '',
+            size: req.getResponseHeader('content-length'),
+            disposition: req.getResponseHeader('content-disposition')
+          });
+          req.abort();
+        }
+      };
+      req.send();
+    }
     return true;
   }
   else if (request.cmd === 'xml-img') {

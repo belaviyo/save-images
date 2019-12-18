@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
- * Home: http://add0n.com/save-images.html
+ * Home: https://add0n.com/save-images.html
  * GitHub: https://github.com/belaviyo/save-images/ */
 
 'use strict';
@@ -44,13 +44,14 @@ chrome.runtime.onMessage.addListener((request, sender) => {
   }
 });
 
+// FAQs and Feedback
 {
   const {onInstalled, setUninstallURL, getManifest} = chrome.runtime;
   const {name, version} = getManifest();
   const page = getManifest().homepage_url;
   onInstalled.addListener(({reason, previousVersion}) => {
     chrome.storage.local.get({
-      'faqs': false,
+      'faqs': true,
       'last-update': 0
     }, prefs => {
       if (reason === 'install' || (prefs.faqs && reason === 'update')) {

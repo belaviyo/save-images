@@ -15,13 +15,15 @@
   e[value] = chrome.i18n.getMessage(e.dataset.i18n);
 });
 
-var t = document.getElementById('entry');
-var body = document.getElementById('body');
-var download = document.querySelector('[data-cmd=download]');
-var rename = document.querySelector('[data-cmd=rename]');
-var copy = document.querySelector('[data-cmd=copy]');
-var progress = document.getElementById('progress');
-var resp;
+const t = document.getElementById('entry');
+const body = document.getElementById('body');
+const download = document.querySelector('[data-cmd=download]');
+const rename = document.querySelector('[data-cmd=rename]');
+const copy = document.querySelector('[data-cmd=copy]');
+const progress = document.getElementById('progress');
+
+let resp;
+
 function humanFileSize(bytes) {
   const thresh = 1024;
   if (Math.abs(bytes) < thresh) {
@@ -71,7 +73,7 @@ function humanFileSize(bytes) {
   }
 }
 
-var last;
+let last;
 document.addEventListener('click', e => {
   const {target} = e;
   const cmd = target.dataset.cmd;
@@ -123,6 +125,7 @@ document.addEventListener('click', e => {
         .replace(/\[#=*\d*\]/gi, ('000000' + (i + offset)).substr(o))
         .replace(/\[extension\]/gi, extension);
       input.value = name;
+      input.dispatchEvent(new Event('input'));
     });
   }
   else if (cmd === 'select-all') {
@@ -137,10 +140,17 @@ document.addEventListener('click', e => {
     const images = [...document.querySelectorAll('.entry :checked')].map(i => {
       const div = i.closest('div');
       const info = div.info;
-      const filename = div.querySelector('input[type=text]').value;
-      return Object.assign(info, {
-        filename
-      });
+      const input = div.querySelector('input[type=text]');
+      if (input.dataset.modified === 'true') {
+        const filename = input.value;
+        return Object.assign(info, {
+          filename,
+          head: true // make sure content-disposition is not being used to rename the file
+        });
+      }
+      else {
+        return info;
+      }
     });
     if (cmd === 'download') {
       progress.dataset.visible = true;
@@ -189,6 +199,11 @@ document.addEventListener('click', e => {
 document.addEventListener('change', () => {
   copy.disabled = rename.disabled = download.disabled = document.querySelector('.entry :checked') === null;
 });
+// make sure the user-defined name is used for the filename
+document.addEventListener('input', e => {
+  e.target.dataset.modified = e.target.value ? true : false;
+});
+
 
 chrome.runtime.onMessage.addListener(request => {
   if (request.cmd === 'progress') {

@@ -1,3 +1,12 @@
+/* Copyright (C) 2014-2017 Joe Ertaba
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ * Home: https://add0n.com/save-images.html
+ * GitHub: https://github.com/belaviyo/save-images/ */
+
 /* eslint no-var: 0 */
 'use strict';
 
@@ -16,30 +25,29 @@ var collector = {
     });
     image.src = src;
   }),
+  head: (img, callback, skip) => {
+    chrome.runtime.sendMessage({
+      cmd: 'xml-head',
+      src: img.src,
+      skip
+    }, callback);
+  },
   inspect: img => new Promise((resolve, reject) => {
-    const next = ({type, size, disposition}) => {
-      if (type && type.startsWith('text/html')) {
+    const src = img.src.toLowerCase();
+    // for known types, force the file extension; also on partial-accurate mode, do not fetch the header
+    const EXTENSIONS = ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'svg'];
+    const next = ({type = '', size, disposition, head = true}) => {
+      if (type.startsWith('text/html')) {
         reject(type);
       }
       // fix the type when possible
       if (img.src) {
-        if (img.src.indexOf('.png?') !== -1 || img.src.endsWith('.png')) {
-          type = 'image/png';
+        for (const e of EXTENSIONS) {
+          if (src.indexOf('.' + e + '?') !== -1 || src.endsWith('.' + e)) {
+            type = 'image/' + e;
+          }
         }
-        else if (
-          img.src.indexOf('.jpg?') !== -1 ||
-          img.src.indexOf('.jpeg?') !== -1 ||
-          img.src.endsWith('.jpg') ||
-          img.src.endsWith('.jpeg')
-        ) {
-          type = 'image/jpeg';
-        }
-        else if (img.src.indexOf('.bmp?') !== -1 || img.src.endsWith('.bmp')) {
-          type = 'image/bmp';
-        }
-        else if (img.src.indexOf('.gif?') !== -1 || img.src.endsWith('.gif')) {
-          type = 'image/gif';
-        }
+        type = type.replace('image/jpg', 'image/jpeg');
       }
       // forced the image file type for verified images
       if (!type && img.verified) {
@@ -47,32 +55,46 @@ var collector = {
       }
       if (type && type.startsWith('image/')) {
         Object.assign(img, {
-          size: img.src.startsWith('http') ? (Number(size) || 0) : img.src.length,
+          size: src.startsWith('http') ? (Number(size) || 0) : src.length,
           type,
-          disposition: disposition || ''
+          disposition: disposition || '',
+          head
         });
-        if (img.src.startsWith('http')) {
+        if (src.startsWith('http')) {
           resolve(img);
         }
         // get image width and height for data-url images
         else {
-          collector.size(img.src).then(obj => resolve(Object.assign(img, obj)));
+          collector.size(src).then(obj => resolve(Object.assign(img, obj)));
         }
       }
       else {
         reject(type);
       }
     };
-    chrome.runtime.sendMessage({
-      cmd: 'xml-head',
-      src: img.src
-    }, next);
+    // get image header info?
+    if (window.accuracy === 'accurate') {
+      collector.head(img, next);
+    }
+    else if (window.accuracy === 'partial-accurate') {
+      if (EXTENSIONS.some(e => src.indexOf('.' + e + '?') !== -1 || src.endsWith('.' + e))) {
+        collector.head(img, next, true);
+      }
+      else {
+        collector.head(img, next);
+      }
+    }
+    else {
+      collector.head(img, next, true);
+    }
   }),
   loop: async regexps => {
     const cleanup = images => {
       const list = [];
       for (const img of images) {
-        const {src} = img;
+        let {src} = img;
+        // remove hash to prevent duplicates
+        src = src.split('#')[0];
         if (src && (src.startsWith('http') || src.startsWith('ftp') || src.startsWith('data:'))) {
           if (collector.cache[src] === undefined) {
             collector.cache[src] = true;
@@ -194,7 +216,7 @@ var collector = {
           cmd: 'images',
           images: [].concat([], ...images),
           index: slice.length
-        })).catch(e => console.log(e));
+        })).catch(e => console.error(e));
     }
   }
 };
@@ -202,6 +224,7 @@ chrome.runtime.sendMessage({
   cmd: 'prefs'
 }, prefs => {
   window.deep = prefs ? prefs.deep : 0;
+  window.accuracy = prefs ? prefs.accuracy : 'accurate';
   try {
     if (prefs && prefs.regexp) {
       if (typeof prefs.regexp === 'string') {
