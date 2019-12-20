@@ -141,16 +141,12 @@ document.addEventListener('click', e => {
       const div = i.closest('div');
       const info = div.info;
       const input = div.querySelector('input[type=text]');
-      if (input.dataset.modified === 'true') {
-        const filename = input.value;
-        return Object.assign(info, {
-          filename,
-          head: true // make sure content-disposition is not being used to rename the file
-        });
-      }
-      else {
-        return info;
-      }
+      // in gallery mode we use the name as it is
+      const filename = input.value;
+      return Object.assign(info, {
+        filename,
+        head: true // make sure content-disposition is not being used to rename the file
+      });
     });
     if (cmd === 'download') {
       progress.dataset.visible = true;

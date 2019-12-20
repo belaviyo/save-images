@@ -335,7 +335,9 @@ document.addEventListener('click', ({target}) => {
   if (cmd === 'save') {
     target.disabled = true;
     const obj = Object.assign(build(), {
-      cmd: 'save-images'
+      cmd: 'save-images',
+      mask: elements.files.mask.value,
+      noType: elements.type.noType.checked
     });
     // length after filtering
     const len = elements.counter.save.value;

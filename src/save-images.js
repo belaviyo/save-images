@@ -28,6 +28,8 @@ Download.prototype.init = function(request, tab) {
   this.tab = tab;
   this.jobs = request.images;
   this.length = this.jobs.length;
+  this.mask = request.mask;
+  this.noType = request.noType;
 
   this.one();
 };
@@ -127,15 +129,10 @@ Download.prototype.download = function(obj) {
         // We need to use the guess function to find the filename.
         if (obj.head === false) {
           obj.disposition = req.getResponseHeader('content-disposition');
-          chrome.storage.local.get({
-            persist: {}
-          }, prefs => {
-            const mask = 'file-mask' in prefs.persist ? prefs.persist['file-mask'] : '';
-            const noType = 'no-type' in prefs.persist ? prefs.persist['no-type'] : true;
-            obj.filename = guess(obj, mask, noType).filename || obj.filename || 'unknown';
-            this.zip.file(obj.filename, req.response);
-            resolve();
-          });
+          obj.filename = guess(obj, this.mask, this.noType).filename || obj.filename || 'unknown';
+          console.log(this.noType, this.mask);
+          this.zip.file(obj.filename, req.response);
+          resolve();
         }
         else {
           this.zip.file(obj.filename, req.response);
