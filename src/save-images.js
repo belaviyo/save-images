@@ -130,7 +130,6 @@ Download.prototype.download = function(obj) {
         if (obj.head === false) {
           obj.disposition = req.getResponseHeader('content-disposition');
           obj.filename = guess(obj, this.mask, this.noType).filename || obj.filename || 'unknown';
-          console.log(this.noType, this.mask);
           this.zip.file(obj.filename, req.response);
           resolve();
         }
