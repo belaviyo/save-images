@@ -20,21 +20,16 @@
     <div id="body"></div>
     <span></span>
     <div id="toolbar">
-      <input type="button" data-cmd="close">
-      <div style="display: flex">
-        <input type="button" data-cmd="select-all" data-i18n="gallery_select_all" data-i18n-value="title" style="margin-right: -1px">
-        <input type="button" data-cmd="select-none" data-i18n="gallery_select_none" data-i18n-value="title">
-      </div>
-      <input type="button" data-cmd="download"  data-i18n="gallery_download" data-i18n-value="title">
-      <input type="button" data-cmd="copy"  data-i18n="gallery_copy" data-i18n-value="title">
-      <input type="button" data-cmd="window"  data-i18n="gallery_window" data-i18n-value="title">
-      <div style="display: flex">
-        <input type="button" data-cmd="rename" data-i18n="gallery_rename" data-i18n-value="value" style="margin-right: -1px">
-        <input type="text" id="pattern" data-i18n="gallery_pattern" data-i18n-value="value" >
-      </div>
-      <span></span>
-      <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
+      <input type="button" data-cmd="close" value="Close">
+      <input type="button" data-cmd="select-all" data-i18n="gallery_select_all" data-i18n-value="title" value="Sel: All">
+      <input type="button" data-cmd="select-none" data-i18n="gallery_select_none" data-i18n-value="title" value="Sel: None">
+      <input type="button" data-cmd="download" data-i18n="gallery_download" data-i18n-value="title" value="Download">
+      <input type="button" data-cmd="copy" data-i18n="gallery_copy" data-i18n-value="title" value="Copy">
+      <input type="button" data-cmd="window" data-i18n="gallery_window" data-i18n-value="title" value="Detach">
+      <input type="text" id="pattern" data-i18n="gallery_pattern" data-i18n-value="value">
+      <input type="button" data-cmd="rename" data-i18n="gallery_rename" data-i18n-value="value" value="Rename">
     </div>
+    <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
     <script src="index.js"></script>
   </body>
 </html>

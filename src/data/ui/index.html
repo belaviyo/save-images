@@ -6,8 +6,8 @@
     <link rel="stylesheet" href="index.css">
   </head>
   <body>
-    <textarea id="clipboard" style="display: none;"></textarea>
     <header hbox>
+      <textarea id="clipboard" style="display: none;"></textarea>
       <fieldset flex=1>
         <legend><span data-i18n="ui_statistics"></span> <span id="filters"></span></legend>
         <div hbox>
@@ -26,269 +26,270 @@
         </label>
       </fieldset>
     </header>
-    <div hbox>
-      <fieldset flex=1>
-        <legend><label><input type="checkbox" id="group-size"> <span data-i18n="ui_file_size"></span></label></legend>
-        <table>
-          <tr>
-            <td data-i18n="ui_min"></td>
-            <td><input type="number" value="4000" id="size-min"></td>
-            <td data-i18n="ui_bytes"></td>
-          </tr>
-          <tr>
-            <td data-i18n="ui_max"></td>
-            <td><input type="number" value="0" id="size-max"></td>
-            <td data-i18n="ui_bytes"></td>
-          </tr>
-        </table>
-
-        <fieldset>
-          <legend data-i18n="ui_unkown"></legend>
+    <div id="body">
+      <div hbox>
+        <fieldset flex=1>
+          <legend><label><input type="checkbox" id="group-size"> <span data-i18n="ui_file_size"></span></label></legend>
           <table>
             <tr>
-              <td><input type="radio" name="size" id="unknown-size-skip"></td>
-              <td><label for="unknown-size-skip" data-i18n="ui_skip"></label></td>
+              <td data-i18n="ui_min"></td>
+              <td><input type="number" value="4000" id="size-min"></td>
+              <td data-i18n="ui_bytes"></td>
             </tr>
             <tr>
-              <td><input type="radio" name="size" id="unknown-size-save" checked="true"></td>
-              <td><label for="unknown-size-save" data-i18n="ui_save"></label></td>
+              <td data-i18n="ui_max"></td>
+              <td><input type="number" value="0" id="size-max"></td>
+              <td data-i18n="ui_bytes"></td>
+            </tr>
+          </table>
+
+          <fieldset>
+            <legend data-i18n="ui_unkown"></legend>
+            <table>
+              <tr>
+                <td><input type="radio" name="size" id="unknown-size-skip"></td>
+                <td><label for="unknown-size-skip" data-i18n="ui_skip"></label></td>
+              </tr>
+              <tr>
+                <td><input type="radio" name="size" id="unknown-size-save" checked="true"></td>
+                <td><label for="unknown-size-save" data-i18n="ui_save"></label></td>
+              </tr>
+            </table>
+          </fieldset>
+        </fieldset>
+
+        <fieldset flex=1>
+          <legend><label><input type="checkbox" id="group-dimension"></label><span data-i18n="ui_dimension"></span></legend>
+          <table>
+            <tr>
+              <td data-i18n="ui_min_width"></td>
+              <td><input type="number" value="200" id="dimension-width-min"></td>
+            </tr>
+            <tr>
+              <td data-i18n="ui_max_width"></td>
+              <td><input type="number" value="0" id="dimension-width-max"></td>
+            </tr>
+            <tr>
+              <td data-i18n="ui_min_height"></td>
+              <td><input type="number" value="200" id="dimension-height-min"></td>
+            </tr>
+            <tr>
+              <td data-i18n="ui_max_height"></td>
+              <td><input type="number" value="0" id="dimension-height-max"></td>
+            </tr>
+          </table>
+
+          <fieldset>
+            <legend data-i18n="ui_unkown"></legend>
+            <table>
+              <tr>
+                <td><input type="radio" name="dimension" id="unknown-dimension-skip"></td>
+                <td><label for="unknown-dimension-skip" data-i18n="ui_skip"></label></td>
+              </tr>
+              <tr>
+                <td><input type="radio" name="dimension" id="unknown-dimension-save" checked=true></td>
+                <td><label for="unknown-dimension-save" data-i18n="ui_save"></label></td>
+              </tr>
+            </table>
+          </fieldset>
+        </fieldset>
+
+        <fieldset flex=1>
+          <legend><label><input type="checkbox" id="group-type" checked="true"><span data-i18n="ui_image_types"></span></label></legend>
+          <table>
+            <tr>
+              <td><input type="radio" name="type" id="type-all" checked=true></td>
+              <td><label for="type-all" data-i18n="ui_all_images"></label></td>
+            </tr>
+            <tr>
+              <td><input type="radio" name="type" id="type-selection"></td>
+              <td><label for="type-selection" data-i18n="ui_Selection"></label></td>
+            </tr>
+          </table>
+          <table class="indent" id="image-types">
+            <tr>
+              <td><input type="checkbox" id="type-jpeg"></td>
+              <td><label for="type-jpeg" data-i18n="ui_jpg_images"></label></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" id="type-png"></td>
+              <td><label for="type-png" data-i18n="ui_png_images"></label></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" id="type-gif"></td>
+              <td><label for="type-gif" data-i18n="ui_gif_images"></label></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" id="type-bmp"></td>
+              <td><label for="type-bmp" data-i18n="ui_bmp_images"></label></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" id="type-webp"></td>
+              <td><label for="type-webp" data-i18n="ui_webp_images"></label></td>
+            </tr>
+          </table>
+          <table>
+            <tr>
+              <td><input type="checkbox" id="no-type" checked="true"></td>
+              <td><label for="no-type" data-i18n="ui_no_extension"></label></td>
             </tr>
           </table>
         </fieldset>
-      </fieldset>
+      </div>
 
-      <fieldset flex=1>
-        <legend><label><input type="checkbox" id="group-dimension"></label><span data-i18n="ui_dimension"></span></legend>
-        <table>
-          <tr>
-            <td data-i18n="ui_min_width"></td>
-            <td><input type="number" value="200" id="dimension-width-min"></td>
-          </tr>
-          <tr>
-            <td data-i18n="ui_max_width"></td>
-            <td><input type="number" value="0" id="dimension-width-max"></td>
-          </tr>
-          <tr>
-            <td data-i18n="ui_min_height"></td>
-            <td><input type="number" value="200" id="dimension-height-min"></td>
-          </tr>
-          <tr>
-            <td data-i18n="ui_max_height"></td>
-            <td><input type="number" value="0" id="dimension-height-max"></td>
-          </tr>
-        </table>
-
-        <fieldset>
-          <legend data-i18n="ui_unkown"></legend>
-          <table>
+      <div hbox>
+        <fieldset flex=1>
+          <legend data-i18n="ui_regexp"></legend>
+          <table width="100%">
             <tr>
-              <td><input type="radio" name="dimension" id="unknown-dimension-skip"></td>
-              <td><label for="unknown-dimension-skip" data-i18n="ui_skip"></label></td>
+              <td><input type="checkbox" id="group-regexp"></td>
+              <td><label for="group-regexp" data-i18n="ui_regexp_desc"></label></td>
             </tr>
             <tr>
-              <td><input type="radio" name="dimension" id="unknown-dimension-save" checked=true></td>
-              <td><label for="unknown-dimension-save" data-i18n="ui_save"></label></td>
+              <td></td>
+              <td hbox><input type="text" id="regexp-input" flex=1 placeholder="e.g.: .*"></td>
             </tr>
           </table>
         </fieldset>
-      </fieldset>
-
-      <fieldset flex=1>
-        <legend><label><input type="checkbox" id="group-type" checked="true"><span data-i18n="ui_image_types"></span></label></legend>
-        <table>
-          <tr>
-            <td><input type="radio" name="type" id="type-all" checked=true></td>
-            <td><label for="type-all" data-i18n="ui_all_images"></label></td>
-          </tr>
-          <tr>
-            <td><input type="radio" name="type" id="type-selection"></td>
-            <td><label for="type-selection" data-i18n="ui_Selection"></label></td>
-          </tr>
-        </table>
-        <table class="indent" id="image-types">
-          <tr>
-            <td><input type="checkbox" id="type-jpeg"></td>
-            <td><label for="type-jpeg" data-i18n="ui_jpg_images"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="type-png"></td>
-            <td><label for="type-png" data-i18n="ui_png_images"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="type-gif"></td>
-            <td><label for="type-gif" data-i18n="ui_gif_images"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="type-bmp"></td>
-            <td><label for="type-bmp" data-i18n="ui_bmp_images"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="type-webp"></td>
-            <td><label for="type-webp" data-i18n="ui_webp_images"></label></td>
-          </tr>
-        </table>
-        <table>
-          <tr>
-            <td><input type="checkbox" id="no-type" checked="true"></td>
-            <td><label for="no-type" data-i18n="ui_no_extension"></label></td>
-          </tr>
-        </table>
-      </fieldset>
-    </div>
-
-    <div hbox>
-      <fieldset flex=1>
-        <legend data-i18n="ui_regexp"></legend>
-        <table width="100%">
-          <tr>
-            <td><input type="checkbox" id="group-regexp"></td>
-            <td><label for="group-regexp" data-i18n="ui_regexp_desc"></label></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td hbox><input type="text" id="regexp-input" flex=1 placeholder="e.g.: .*"></td>
-          </tr>
-        </table>
-      </fieldset>
-      <fieldset flex=1>
-        <legend data-i18n="ui_blacklist"></legend>
-        <table width="100%">
-          <tr>
-            <td><input type="checkbox" id="group-blacklist"></td>
-            <td><label for="group-blacklist" data-i18n="ui_blacklist_desc"></label></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td hbox><input type="text" id="blacklist-input" flex=1 placeholder="e.g.: word1, word2"></td>
-          </tr>
-        </table>
-      </fieldset>
-    </div>
-    <div hbox>
-      <fieldset flex=1>
-        <legend data-i18n="ui_misc"></legend>
-        <table width="100%">
-          <tr>
-            <td><input type="checkbox" id="group-origin"></td>
-            <td><label for="group-origin" data-i18n="ui_same_domain"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="group-identical" checked="true"></td>
-            <td><label for="group-identical" data-i18n="ui_unique"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="group-zip"></td>
-            <td><label for="group-zip" data-i18n="ui_separate"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="accurate"></td>
-            <td><label for="accurate" data-i18n="ui_accurate"></label></td>
-          </tr>
-        </table>
-      </fieldset>
-      <fieldset flex=1>
-        <legend data-i18n="ui_mask"></legend>
-        <span data-i18n="ui_mask_desc"></span>
-        <div hbox style="margin-top: 10px;">
-          <input type="text" id="file-mask" value="" placeholder="[name][extension]" flex="1"  data-i18n="ui_mask_keywords" data-i18n-value="title">
-          <div class="list" hbox align=center>
-            <span data-i18n="ui_keywords"></span>
-            <ul>
-              <li data-cmd="insert" data-value="[name]">[name]</li>
-              <li data-cmd="insert" data-value="[type]">[type]</li>
-              <li data-cmd="insert" data-value="[disposition]">[disposition]</li>
-              <li data-cmd="insert" data-value="[extension]">[extension]</li>
-              <li data-cmd="insert" data-value="[order]">[order]</li>
-              <li data-cmd="insert" data-value="[index]">[index]</li>
-            </ul>
+        <fieldset flex=1>
+          <legend data-i18n="ui_blacklist"></legend>
+          <table width="100%">
+            <tr>
+              <td><input type="checkbox" id="group-blacklist"></td>
+              <td><label for="group-blacklist" data-i18n="ui_blacklist_desc"></label></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td hbox><input type="text" id="blacklist-input" flex=1 placeholder="e.g.: word1, word2"></td>
+            </tr>
+          </table>
+        </fieldset>
+      </div>
+      <div hbox>
+        <fieldset flex=1>
+          <legend data-i18n="ui_misc"></legend>
+          <table width="100%">
+            <tr>
+              <td><input type="checkbox" id="group-origin"></td>
+              <td><label for="group-origin" data-i18n="ui_same_domain"></label></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" id="group-identical" checked="true"></td>
+              <td><label for="group-identical" data-i18n="ui_unique"></label></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" id="group-zip"></td>
+              <td><label for="group-zip" data-i18n="ui_separate"></label></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" id="accurate"></td>
+              <td><label for="accurate" data-i18n="ui_accurate"></label></td>
+            </tr>
+          </table>
+        </fieldset>
+        <fieldset flex=1>
+          <legend data-i18n="ui_mask"></legend>
+          <span data-i18n="ui_mask_desc"></span>
+          <div hbox style="margin-top: 10px;">
+            <input type="text" id="file-mask" value="" placeholder="[name][extension]" flex="1"  data-i18n="ui_mask_keywords" data-i18n-value="title">
+            <div class="list" hbox align=center>
+              <span data-i18n="ui_keywords"></span>
+              <ul>
+                <li data-cmd="insert" data-value="[name]">[name]</li>
+                <li data-cmd="insert" data-value="[type]">[type]</li>
+                <li data-cmd="insert" data-value="[disposition]">[disposition]</li>
+                <li data-cmd="insert" data-value="[extension]">[extension]</li>
+                <li data-cmd="insert" data-value="[order]">[order]</li>
+                <li data-cmd="insert" data-value="[index]">[index]</li>
+              </ul>
+            </div>
           </div>
-        </div>
+        </fieldset>
+      </div>
+
+      <fieldset>
+        <legend data-i18n="ui_save_in"></legend>
+        <table width=100%>
+          <colgroup>
+            <col width=24>
+            <col width="100">
+            <col>
+          </colgroup>
+          <tbody>
+            <tr data-i18n="ui_dialog" data-i18n-value="title">
+              <td><input type="checkbox" id="open-save-dialog"></td>
+              <td colspan="2"><label for="open-save-dialog" data-i18n="ui_save_dialog"></label></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td data-i18n="ui_format"></td>
+              <td>
+                <div hbox>
+                  <input type="text" id="format" value="[title] - [date] [time].zip" placeholder="[title] - [date] [time].zip" flex="1">
+                  <div class="list" hbox align=center>
+                    <span data-i18n="ui_keywords"></span>
+                    <ul>
+                      <li data-cmd="insert" data-value="[title]">[title]</li>
+                      <li data-cmd="insert" data-value="[date]">[date]</li>
+                      <li data-cmd="insert" data-value="[time]">[time]</li>
+                      <li data-cmd="insert" data-value=".zip">.zip</li>
+                    </ul>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td></td>
+              <td data-i18n="ui_zip"></td>
+              <td>
+                <div hbox>
+                  <input type="text" id="filename" placeholder="Filename" flex="1">
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td></td>
+              <td data-i18n="ui_directory"></td>
+              <td>
+                <div hbox>
+                  <input type="text" id="custom-directory" data-i18n="ui_relative" data-i18n-value="placeholder" flex="1">
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </fieldset>
+      <fieldset>
+        <legend data-i18n="ui_preferences"></legend>
+        <table width=100%>
+          <colgroup>
+            <col>
+            <col width="100">
+          </colgroup>
+          <tbody>
+            <tr>
+              <td data-i18n="ui_prefs_max_warning"></td>
+              <td align="right"><input type="number" min="5" id="prefs-max-warning" value="30"></td>
+            </tr>
+            <tr>
+              <td data-i18n="ui_prefs_zip_warning"></td>
+              <td align="right"><input type="number" min="3" id="prefs-zip-warning" value="15"></td>
+            </tr>
+            <tr>
+              <td data-i18n="ui_delay"></td>
+              <td align="right"><input type="number" id="timeout" min="5" max="120" value=10></td>
+            </tr>
+          </tbody>
+        </table>
       </fieldset>
     </div>
-
-    <fieldset>
-      <legend data-i18n="ui_save_in"></legend>
-      <table width=100%>
-        <colgroup>
-          <col width=24>
-          <col width="100">
-          <col>
-        </colgroup>
-        <tbody>
-          <tr data-i18n="ui_dialog" data-i18n-value="title">
-            <td><input type="checkbox" id="open-save-dialog"></td>
-            <td colspan="2"><label for="open-save-dialog" data-i18n="ui_save_dialog"></label></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td data-i18n="ui_format"></td>
-            <td>
-              <div hbox>
-                <input type="text" id="format" value="[title] - [date] [time].zip" placeholder="[title] - [date] [time].zip" flex="1">
-                <div class="list" hbox align=center>
-                  <span data-i18n="ui_keywords"></span>
-                  <ul>
-                    <li data-cmd="insert" data-value="[title]">[title]</li>
-                    <li data-cmd="insert" data-value="[date]">[date]</li>
-                    <li data-cmd="insert" data-value="[time]">[time]</li>
-                    <li data-cmd="insert" data-value=".zip">.zip</li>
-                  </ul>
-                </div>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td></td>
-            <td data-i18n="ui_zip"></td>
-            <td>
-              <div hbox>
-                <input type="text" id="filename" placeholder="Filename" flex="1">
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td></td>
-            <td data-i18n="ui_directory"></td>
-            <td>
-              <div hbox>
-                <input type="text" id="custom-directory" data-i18n="ui_relative" data-i18n-value="placeholder" flex="1">
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </fieldset>
-    <fieldset style="margin-bottom: 55px">
-      <legend data-i18n="ui_preferences"></legend>
-      <table width=100%>
-        <colgroup>
-          <col>
-          <col width="100">
-        </colgroup>
-        <tbody>
-          <tr>
-            <td data-i18n="ui_prefs_max_warning"></td>
-            <td align="right"><input type="number" min="5" id="prefs-max-warning" value="30"></td>
-          </tr>
-          <tr>
-            <td data-i18n="ui_prefs_zip_warning"></td>
-            <td align="right"><input type="number" min="3" id="prefs-zip-warning" value="15"></td>
-          </tr>
-          <tr>
-            <td data-i18n="ui_delay"></td>
-            <td align="right"><input type="number" id="timeout" min="5" max="120" value=10></td>
-          </tr>
-        </tbody>
-      </table>
-    </fieldset>
-
-    <footer hbox>
+    <footer>
       <button data-i18n="ui_help_title" data-i18n-value="title" data-cmd="help"><span data-i18n="ui_help"></span></button>
       <button data-i18n="ui_reset_title" data-i18n-value="title" data-cmd="reset"><span data-i18n="ui_reset"></span></button>
       <button data-i18n="ui_restart_title" data-i18n-value="title" data-cmd="restart"><span data-i18n="ui_restart"></span></button>
       <button data-i18n="ui_stop_title" data-i18n-value="title" data-cmd="stop"><span data-i18n="ui_stop"></span></button>
       <button data-i18n="ui_gallery_title" data-i18n-value="title" data-cmd="gallery"><span data-i18n="ui_gallery"></span></button>
-      <span flex="1"></span>
+
       <button data-i18n="ui_copy_title" data-i18n-value="title" data-cmd="copy"><span data-i18n="ui_copy"></span></button>
       <button data-i18n="ui_save_title" data-i18n-value="title" data-cmd="save"><span data-i18n="ui_save"></span></button>
       <button data-i18n="ui_cancel_title" data-i18n-value="title" data-cmd="close"><span data-i18n="ui_cancel"></span></button>

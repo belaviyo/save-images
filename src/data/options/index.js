@@ -95,6 +95,10 @@ else if (navigator.userAgent.indexOf('OPR') !== -1) {
   document.getElementById('rate').href =
     'https://addons.opera.com/en/extensions/details/save-all-images/#feedback-container';
 }
+else if (navigator.userAgent.indexOf('Edg/') !== -1) {
+  document.getElementById('rate').href =
+    'https://microsoftedge.microsoft.com/addons/detail/focinmnfmbmhknhdaamhppgdhahnbgif';
+}
 
 document.getElementById('open').addEventListener('click', e => {
   e.preventDefault();

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
-  "version": "0.6.6",
-  "name": "Download all Images",
+  "version": "0.6.6.1",
+  "name": "Download All Images",
   "description": "__MSG_app_description__",
   "default_locale": "en",
   "permissions": [
