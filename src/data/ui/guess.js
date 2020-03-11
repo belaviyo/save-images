@@ -93,6 +93,7 @@ function guess(img, mask, noType = true) {
     .replace(/\[name\]/gi, name + (indices[name] === 1 ? '' : '-' + indices[name]))
     .replace(/\[type\]/gi, type || '')
     .replace(/\[disposition\]/gi, disposition || '')
+    .replace(/\[alt\]/gi, img.alt || '')
     .replace(/\[order\]/gi, img.order || 0)
     .replace(/\[index\]/gi, indices[name])
     // make sure filename is acceptable

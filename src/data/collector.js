@@ -58,6 +58,7 @@ var collector = {
           size: src.startsWith('http') ? (Number(size) || 0) : src.length,
           type,
           disposition: disposition || '',
+          alt: img.alt || '',
           head
         });
         if (src.startsWith('http')) {
@@ -116,6 +117,7 @@ var collector = {
             chrome.runtime.sendMessage({
               cmd: 'xml-img',
               src: img.src,
+              alt: img.alt,
               extractLinks: window.deep === 3
             }, async images => {
               images = cleanup(images);
@@ -152,6 +154,7 @@ var collector = {
       width: img.width,
       height: img.height,
       src: img.src,
+      alt: img.alt,
       verified: true, // this is an image even if content-type cannot be resolved,
       page: location.href
     }));

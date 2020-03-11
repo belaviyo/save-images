@@ -280,6 +280,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
           width: img.width,
           height: img.height,
           src: img.src,
+          alt: img.alt,
           verified: true
         })));
       if (request.extractLinks) {
