@@ -308,11 +308,23 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 
 // construct ZIP filename
 const filename = () => {
-  const time = new Date();
+  const current = new Date();
+  const modified = new Date(document.lastModified);
+  let navigation = false;
+  if (performance && performance.timing && performance.timing.domInteractive) {
+    navigation = new Date(performance.timing.domInteractive);
+  }
+
   elements.save.filename.value = (elements.save.format.value || elements.save.format.placeholder)
     .replace('[title]', title)
-    .replace('[date]', time.toLocaleDateString())
-    .replace('[time]', time.toLocaleTimeString());
+    .replace('[date]', current.toLocaleDateString())
+    .replace('[current-date]', current.toLocaleDateString())
+    .replace('[time]', current.toLocaleTimeString())
+    .replace('[current-time]', current.toLocaleTimeString())
+    .replace('[modified-date]', modified.toLocaleDateString())
+    .replace('[modified-time]', modified.toLocaleTimeString())
+    .replace('[navigation-date]', navigation ? navigation.toLocaleDateString() : 'NA')
+    .replace('[navigation-time]', navigation ? navigation.toLocaleTimeString() : 'NA');
 };
 elements.save.format.addEventListener('input', filename);
 
