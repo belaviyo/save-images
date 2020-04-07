@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2017 Joe Ertaba
+/* Copyright (C) 2014-2020 Joe Ertaba
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -170,7 +170,7 @@ var collector = {
         .map(i => {
           const e = /url\(['"]([^)]+)["']\)/.exec(i);
           return e && e.length ? e[1] : null;
-        }).forEach(src => {
+        }).filter(s => s).forEach(src => {
           if (src.startsWith('//')) {
             src = document.location.protocol + src;
           }
@@ -183,7 +183,9 @@ var collector = {
           });
         });
     }
-    catch (e) {}
+    catch (e) {
+      console.warn('Cannot collect background images', e);
+    }
     // find linked images; part 3
     if (window.deep > 0) {
       [...document.querySelectorAll('a')].map(a => a.href)
