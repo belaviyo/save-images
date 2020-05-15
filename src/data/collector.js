@@ -15,10 +15,13 @@ var collector = {
   cache: {}, // prevents duplicated inspection
   size: src => new Promise(resolve => {
     const image = new Image();
-    image.onload = () => resolve({
-      width: image.naturalWidth,
-      height: image.naturalHeight
-    });
+    image.onload = image.onloadedmetadata = () => {
+      resolve({
+        width: image.naturalWidth,
+        height: image.naturalHeight
+      });
+      image.src = '';
+    };
     image.onerror = () => resolve({
       width: 0,
       height: 0
@@ -62,7 +65,18 @@ var collector = {
           head
         });
         if (src.startsWith('http')) {
-          resolve(img);
+          if ('width' in img && 'height' in img) {
+            resolve(img);
+          }
+          else if (window.calc) {
+            collector.size(src).then(o => {
+              Object.assign(img, o);
+              resolve(img);
+            }).catch(() => resolve(img));
+          }
+          else {
+            resolve(img);
+          }
         }
         // get image width and height for data-url images
         else {
@@ -230,6 +244,7 @@ chrome.runtime.sendMessage({
 }, prefs => {
   window.deep = prefs ? prefs.deep : 0;
   window.accuracy = prefs ? prefs.accuracy : 'accurate';
+  window.calc = prefs.calc || false;
   try {
     if (prefs && prefs.regexp) {
       if (typeof prefs.regexp === 'string') {

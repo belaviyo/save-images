@@ -143,6 +143,9 @@
   "ui_accurate": {
     "message": "Confirm mime-types and guess filenames from server (slow) (restart required)"
   },
+  "ui_calc": {
+    "message": "Find width and height of all images (slow) (restart required)"
+  },
   "ui_mask": {
     "message": "File Mask"
   },

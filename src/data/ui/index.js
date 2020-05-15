@@ -30,6 +30,7 @@ const elements = {
     dimension: document.getElementById('group-dimension'),
     zip: document.getElementById('group-zip'),
     accurate: document.getElementById('accurate'),
+    calc: document.getElementById('calc'),
     type: document.getElementById('group-type'),
     regexp: document.getElementById('group-regexp'),
     blacklist: document.getElementById('group-blacklist'),
@@ -331,7 +332,8 @@ elements.save.format.addEventListener('input', filename);
 const search = () => chrome.runtime.sendMessage({
   cmd: 'get-images',
   deep: Number(elements.deep.level.value),
-  accuracy: elements.group.accurate.checked ? 'accurate' : 'partial-accurate' // no-accurate, partial-accurate, accurate
+  accuracy: elements.group.accurate.checked ? 'accurate' : 'partial-accurate', // no-accurate, partial-accurate, accurate
+  calc: elements.group.calc.checked // force calculate image with and height
 }, result => {
   domain = result.domain || '';
   title = result.title || 'unknown';
@@ -463,3 +465,9 @@ const accurate = () => {
 elements.group.size.addEventListener('change', accurate);
 elements.group.zip.addEventListener('change', accurate);
 
+// remote get image sizes
+window.meta = (url, obj) => {
+  if (images[url]) {
+    Object.assign(images[url], obj);
+  }
+};

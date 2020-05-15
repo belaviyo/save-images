@@ -44,7 +44,8 @@ function humanFileSize(bytes) {
     resp = r;
     Object.values(resp.images).forEach(obj => {
       const clone = document.importNode(t.content, true);
-      clone.querySelector('img').src = obj.src;
+      const img = clone.querySelector('img');
+      img.src = obj.src;
       clone.querySelector('div').info = obj;
       clone.querySelector('input[type=text]').value = obj.filename;
 
@@ -52,6 +53,16 @@ function humanFileSize(bytes) {
       let title = obj.size ? humanFileSize(obj.size) : '-';
       if (obj.width && obj.height) {
         title += ' (' + obj.width + '✕' + obj.height + ')';
+      }
+      else {
+        img.onload = () => {
+          a.textContent += ' (' + img.naturalWidth + '✕' + img.naturalHeight + ')';
+          // set image size for the "ui" view
+          parent.document.getElementById('ui').contentWindow.meta(obj.src, {
+            width: img.naturalWidth,
+            height: img.naturalHeight
+          });
+        };
       }
       a.textContent = title;
       a.href = obj.src;
