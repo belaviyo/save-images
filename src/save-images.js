@@ -18,6 +18,17 @@ function timeout() {
 
 const downloads = {};
 
+
+const nd = options => new Promise(resolve => chrome.downloads.download(options, id => {
+  if (chrome.runtime.lastError) {
+    delete options.filename;
+    chrome.downloads.download(options, resolve);
+  }
+  else {
+    resolve(id);
+  }
+}));
+
 function Download() {
   this.zip = new JSZip();
   this.indices = {};
@@ -84,17 +95,17 @@ Download.prototype.one = function() {
           this.indices = {};
 
           const url = URL.createObjectURL(content);
-          chrome.downloads.download({
+          nd({
             url,
             filename: request.filename,
             conflictAction: 'uniquify',
             saveAs: request.saveAs
-          }, () => {
+          }).then(() => {
             chrome.tabs.sendMessage(id, {
               cmd: 'close-me'
             });
             delete downloads[id];
-            window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
           });
         });
     }
@@ -135,10 +146,10 @@ Download.prototype.download = function(obj) {
           this.indices[filename] += 1;
           if (this.indices[filename] > 1) {
             if (/\.([^.]{1,6})$/.test(filename)) {
-              filename = filename.replace(/\.([^.]{1,6})$/, (a, b) => `-${this.indices[filename] - 1}.${b}`);
+              filename = filename.replace(/\.([^.]{1,6})$/, (a, b) => ` (${this.indices[filename] - 1}).${b}`);
             }
             else {
-              filename += `-${this.indices[filename] - 1}`;
+              filename += ` (${this.indices[filename] - 1})`;
             }
           }
           return filename;
@@ -166,13 +177,13 @@ Download.prototype.download = function(obj) {
       path.pop();
       path.push(obj.filename);
 
-      chrome.downloads.download({
+      nd({
         url: obj.src,
         filename: path.join('/'),
         conflictAction: 'uniquify',
         saveAs: false
-      }, () => {
-        window.setTimeout(resolve, 3000);
+      }).then(() => {
+        setTimeout(resolve, 3000);
       });
     });
   }

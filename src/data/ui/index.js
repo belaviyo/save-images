@@ -96,7 +96,7 @@ function build() {
   const custom = elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_');
   let filename = elements.save.filename.value
     .replace(/\.zip/g, '')
-    .replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/]/gi, '-') + '.zip';
+    .replace(/[`~!@#$%^&*()|+=?;:'",.<>{}[\]\\/]/gi, '-') + '.zip';
 
   filename = custom ? custom + '/' + filename : filename;
 

@@ -54,7 +54,7 @@ function guess(img, mask, noType = true) {
       try {
         name = decodeURIComponent(name.split('?')[0].split('&')[0]) || 'image';
         // make sure name is writable
-        name = name.replace(/[`~!@#$%^&*()_|+\-=?;:'",<>{}[\]\\/]/gi, '-');
+        name = name.replace(/[`~!@#$%^&*()|+=?;:'",<>{}[\]\\/]/gi, '-');
       }
       catch (e) {}
     }
@@ -97,7 +97,7 @@ function guess(img, mask, noType = true) {
     .replace(/\[order\]/gi, img.order || 0)
     .replace(/\[index\]/gi, indices[name])
     // make sure filename is acceptable
-    .replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/]/gi, '-')
+    .replace(/[`~!@#$%^&*()|+=?;:'",.<>{}[\]\\/]/gi, '-')
     // limit length of each section to 60 chars
     .substr(0, 60)).join(extension);
 
