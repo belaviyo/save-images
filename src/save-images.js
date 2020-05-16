@@ -46,6 +46,7 @@ Do not close the panel if you want to keep downloading`);
   }
   this.abort = true;
   this.jobs = [];
+  this.indices = {};
 };
 Download.prototype.one = function() {
   if (this.abort) {
@@ -79,6 +80,9 @@ Download.prototype.one = function() {
     if (request.zip) {
       this.zip.generateAsync({type: 'blob'})
         .then(content => {
+          this.jobs = [];
+          this.indices = {};
+
           const url = URL.createObjectURL(content);
           chrome.downloads.download({
             url,
@@ -125,16 +129,31 @@ Download.prototype.download = function(obj) {
       req.onerror = req.ontimeout = reject;
       req.responseType = 'blob';
       req.onload = () => {
+        const fix = () => {
+          let filename = obj.filename;
+          this.indices[filename] = this.indices[filename] || 0;
+          this.indices[filename] += 1;
+          if (this.indices[filename] > 1) {
+            if (/\.([^.]{1,6})$/.test(filename)) {
+              filename = filename.replace(/\.([^.]{1,6})$/, (a, b) => `-${this.indices[filename] - 1}.${b}`);
+            }
+            else {
+              filename += `-${this.indices[filename] - 1}`;
+            }
+          }
+          return filename;
+        };
+
         // if obj.head === false -> request headers are skipped during image collection.
         // We need to use the guess function to find the filename.
         if (obj.head === false) {
           obj.disposition = req.getResponseHeader('content-disposition');
           obj.filename = guess(obj, this.mask, this.noType).filename || obj.filename || 'unknown';
-          this.zip.file(obj.filename, req.response);
+          this.zip.file(fix(), req.response);
           resolve();
         }
         else {
-          this.zip.file(obj.filename, req.response);
+          this.zip.file(fix(), req.response);
           resolve();
         }
       };
