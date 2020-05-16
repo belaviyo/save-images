@@ -11,6 +11,9 @@
     "<all_urls>",
     "downloads"
   ],
+  "optional_permissions": [
+    "clipboardWrite"
+  ],
   "background": {
     "persistent": false,
     "scripts": [

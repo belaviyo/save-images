@@ -58,7 +58,7 @@ function humanFileSize(bytes) {
         img.onload = () => {
           a.textContent += ' (' + img.naturalWidth + '✕' + img.naturalHeight + ')';
           // set image size for the "ui" view
-          parent.document.getElementById('ui').contentWindow.meta(obj.src, {
+          window.parent.ui.contentWindow.meta(obj.src, {
             width: img.naturalWidth,
             height: img.naturalHeight
           });
@@ -173,18 +173,8 @@ document.addEventListener('click', e => {
       });
     }
     else {
-      const cb = document.getElementById('clipboard');
-      cb.style.display = 'block';
-      cb.value = images.map(o => o.src).join('\n');
-      cb.focus();
-      cb.select();
-      const bol = document.execCommand('copy');
-      cb.style.display = 'none';
-
-      chrome.runtime.sendMessage({
-        method: 'notify',
-        message: bol ? 'Image links are copied to the clipboard' : 'Cannot copy to the clipboard'
-      });
+      const content = images.map(o => o.src).join('\n');
+      window.parent.ui.contentWindow.copy(content);
     }
   }
   else if (cmd === 'window') {

@@ -373,18 +373,8 @@ document.addEventListener('click', ({target}) => {
     }
   }
   else if (cmd === 'copy') {
-    const cb = document.getElementById('clipboard');
-    cb.style.display = 'block';
-    cb.value = Object.keys(images).join('\n');
-    cb.focus();
-    cb.select();
-    const bol = document.execCommand('copy');
-    cb.style.display = 'none';
-
-    chrome.runtime.sendMessage({
-      method: 'notify',
-      message: bol ? 'Image links are copied to the clipboard' : 'Cannot copy to the clipboard'
-    });
+    const content = Object.keys(images).join('\n');
+    window.copy(content);
   }
   else if (cmd === 'close') {
     chrome.runtime.sendMessage({
@@ -471,3 +461,22 @@ window.meta = (url, obj) => {
     Object.assign(images[url], obj);
   }
 };
+
+window.copy = content => chrome.runtime.sendMessage({
+  cmd: 'copy',
+  content
+}, resp => {
+  if (resp !== true) {
+    const blob = new Blob([content], {type: 'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'links.txt');
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url));
+    chrome.runtime.sendMessage({
+      method: 'notify',
+      message: 'Image links are downloaded to the default download directory'
+    });
+  }
+});

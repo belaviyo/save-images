@@ -163,7 +163,35 @@ const cache = {};
 chrome.tabs.onRemoved.addListener(tabId => delete cache[tabId]);
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
-  if (request.cmd === 'get-images') {
+  if (request.cmd === 'copy') {
+    chrome.permissions.request({
+      permissions: ['clipboardWrite']
+    }, granted => {
+      if (granted) {
+        navigator.clipboard.writeText(request.content).then(() => {
+          notify('Image links are copied to the clipboard');
+          response(true);
+        }).catch(() => {
+          document.oncopy = e => {
+            e.clipboardData.setData('text/plain', request.content);
+            e.preventDefault();
+          };
+          if (document.execCommand('Copy', false, null)) {
+            notify('Image links are copied to the clipboard');
+            response(true);
+          }
+          else {
+            response(false);
+          }
+        });
+      }
+      else {
+        response(false);
+      }
+    });
+    return true;
+  }
+  else if (request.cmd === 'get-images') {
     response({
       domain: new URL(sender.tab.url).hostname,
       title: sender.tab.title
