@@ -30,7 +30,10 @@ const nd = options => new Promise(resolve => chrome.downloads.download(options, 
 }));
 
 function Download() {
+  const now = new Date();
+  JSZip.defaults.date = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
   this.zip = new JSZip();
+
   this.indices = {};
   this.abort = false;
 }
