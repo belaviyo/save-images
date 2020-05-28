@@ -241,7 +241,8 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
         deep: request.deep,
         regexp,
         accuracy: request.accuracy || true,
-        calc: request.calc || false // calculate image with and height by loading meta data
+        calc: request.calc || false, // calculate image with and height by loading meta data
+        custom: request.custom
       };
       chrome.tabs.executeScript(sender.tab.id, {
         file: '/data/collector.js',

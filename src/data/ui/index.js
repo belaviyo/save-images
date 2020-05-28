@@ -279,6 +279,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
         catch (e) {}
         img.hostname = img.hostname || 'local';
         img.order = Object.keys(images).length + 1;
+
         const {filename, name} = guess(img, elements.files.mask.value, elements.type.noType.checked);
 
         img.filename = filename;
@@ -336,6 +337,13 @@ elements.save.format.addEventListener('input', filename);
 
 const search = () => chrome.runtime.sendMessage({
   cmd: 'get-images',
+  custom: (() => {
+    const custom = (elements.files.mask.value || '[name][extension]').split('[custom=');
+    if (custom.length === 2) {
+      return custom[1].split(']')[0];
+    }
+    return '';
+  })(),
   deep: Number(elements.deep.level.value),
   accuracy: elements.group.accurate.checked ? 'accurate' : 'partial-accurate', // no-accurate, partial-accurate, accurate
   calc: elements.group.calc.checked // force calculate image with and height

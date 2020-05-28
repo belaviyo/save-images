@@ -96,6 +96,7 @@ function guess(img, mask, noType = true) {
     .replace(/\[alt\]/gi, img.alt || '')
     .replace(/\[order\]/gi, img.order || 0)
     .replace(/\[index\]/gi, indices[name])
+    .replace(/\[custom=[^\]]+\]/gi, img.custom)
     // make sure filename is acceptable
     .replace(/[`~!@#$%^&*()|+=?;:'",.<>{}[\]\\/]/gi, '-')
     // limit length of each section to 60 chars

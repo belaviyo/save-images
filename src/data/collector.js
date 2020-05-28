@@ -61,7 +61,6 @@ var collector = {
           size: src.startsWith('http') ? (Number(size) || 0) : src.length,
           type,
           disposition: disposition || '',
-          alt: img.alt || '',
           head
         });
         if (src.startsWith('http')) {
@@ -131,7 +130,6 @@ var collector = {
             chrome.runtime.sendMessage({
               cmd: 'xml-img',
               src: img.src,
-              alt: img.alt,
               extractLinks: window.deep === 3
             }, async images => {
               images = cleanup(images);
@@ -169,6 +167,7 @@ var collector = {
       height: img.height,
       src: img.src,
       alt: img.alt,
+      custom: img.getAttribute(window.custom) || '',
       verified: true, // this is an image even if content-type cannot be resolved,
       page: location.href
     }));
@@ -245,6 +244,7 @@ chrome.runtime.sendMessage({
   window.deep = prefs ? prefs.deep : 0;
   window.accuracy = prefs ? prefs.accuracy : 'accurate';
   window.calc = prefs.calc || false;
+  window.custom = prefs.custom || 'id';
   try {
     if (prefs && prefs.regexp) {
       if (typeof prefs.regexp === 'string') {
