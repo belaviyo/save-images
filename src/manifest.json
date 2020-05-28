@@ -18,7 +18,7 @@
     "persistent": false,
     "scripts": [
       "background.js",
-      "jszip.js",
+      "inzip.js",
       "data/ui/guess.js",
       "save-images.js"
     ]

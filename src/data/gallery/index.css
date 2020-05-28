@@ -131,6 +131,7 @@ input[type=button] {
   color: #000;
   cursor: pointer;
   outline: none;
+  font-size: 11px;
 }
 input[type=button]:active {
   background-color: #ccc;

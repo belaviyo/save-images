@@ -236,15 +236,15 @@ function filtered() {
     });
 
   const keys = rtn.map(o => o.key);
-
-  return rtn.filter((img, index) => {
+  const r = rtn.filter((img, index) => {
     if (elements.group.identical.checked) {
-      return img.size ? keys.indexOf(img.key) === index : true;
+      return img.key ? keys.indexOf(img.key) === index : true;
     }
     else {
       return true;
     }
   });
+  return r;
 }
 
 function update() {
@@ -282,7 +282,12 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
         const {filename, name} = guess(img, elements.files.mask.value, elements.type.noType.checked);
 
         img.filename = filename;
-        img.key = name + img.size + img.hostname;
+        if (img.size) {
+          img.key = name + '.' + img.size + '.' + img.hostname;
+        }
+        else if (img.width && img.height) {
+          img.key = name + '.' + img.width + '.' + img.height + '.' + img.hostname;
+        }
         images[img.src] = img;
       });
       update();

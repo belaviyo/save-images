@@ -7,7 +7,7 @@
  * Home: https://add0n.com/save-images.html
  * GitHub: https://github.com/belaviyo/save-images/ */
 
-/* globals JSZip, onClicked, notify, guess */
+/* global InZIP, onClicked, notify, guess */
 'use strict';
 
 window.count = 0;
@@ -30,9 +30,7 @@ const nd = options => new Promise(resolve => chrome.downloads.download(options, 
 }));
 
 function Download() {
-  const now = new Date();
-  JSZip.defaults.date = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-  this.zip = new JSZip();
+  this.zip = new InZIP();
 
   this.indices = {};
   this.abort = false;
@@ -45,7 +43,7 @@ Download.prototype.init = function(request, tab) {
   this.mask = request.mask;
   this.noType = request.noType;
 
-  this.one();
+  this.zip.open().then(() => this.one());
 };
 Download.prototype.terminate = function() {
   if (this.abort === false) {
@@ -83,34 +81,33 @@ Download.prototype.one = function() {
   const [j1, j2, j3, j4, j5] = [jobs.shift(), jobs.shift(), jobs.shift(), jobs.shift(), jobs.shift()];
   if (j1) {
     Promise.all([
-      j1 ? this.download(j1).catch(() => {}) : Promise.resolve(),
-      j2 ? this.download(j2).catch(() => {}) : Promise.resolve(),
-      j3 ? this.download(j3).catch(() => {}) : Promise.resolve(),
-      j4 ? this.download(j4).catch(() => {}) : Promise.resolve(),
-      j5 ? this.download(j5).catch(() => {}) : Promise.resolve()
+      j1 ? this.download(j1).catch(e => console.warn('dl failed', e)) : Promise.resolve(),
+      j2 ? this.download(j2).catch(e => console.warn('dl failed', e)) : Promise.resolve(),
+      j3 ? this.download(j3).catch(e => console.warn('dl failed', e)) : Promise.resolve(),
+      j4 ? this.download(j4).catch(e => console.warn('dl failed', e)) : Promise.resolve(),
+      j5 ? this.download(j5).catch(e => console.warn('dl failed', e)) : Promise.resolve()
     ]).then(() => this.one());
   }
   else {
     if (request.zip) {
-      this.zip.generateAsync({type: 'blob'})
-        .then(content => {
-          this.jobs = [];
-          this.indices = {};
+      this.zip.blob().then(blob => {
+        this.jobs = [];
+        this.indices = {};
 
-          const url = URL.createObjectURL(content);
-          nd({
-            url,
-            filename: request.filename,
-            conflictAction: 'uniquify',
-            saveAs: request.saveAs
-          }).then(() => {
-            chrome.tabs.sendMessage(id, {
-              cmd: 'close-me'
-            });
-            delete downloads[id];
-            setTimeout(() => URL.revokeObjectURL(url), 10000);
+        const url = URL.createObjectURL(blob);
+        nd({
+          url,
+          filename: request.filename,
+          conflictAction: 'uniquify',
+          saveAs: request.saveAs
+        }).then(() => {
+          chrome.tabs.sendMessage(id, {
+            cmd: 'close-me'
           });
+          delete downloads[id];
+          setTimeout(() => URL.revokeObjectURL(url), 10000);
         });
+      }).finally(() => this.zip.delete());
     }
     else {
       chrome.tabs.sendMessage(id, {
@@ -141,7 +138,7 @@ Download.prototype.download = function(obj) {
         req.timeout = timeout();
       }
       req.onerror = req.ontimeout = reject;
-      req.responseType = 'blob';
+      req.responseType = 'arraybuffer';
       req.onload = () => {
         const fix = () => {
           let filename = obj.filename;
@@ -163,12 +160,10 @@ Download.prototype.download = function(obj) {
         if (obj.head === false) {
           obj.disposition = req.getResponseHeader('content-disposition');
           obj.filename = guess(obj, this.mask, this.noType).filename || obj.filename || 'unknown';
-          this.zip.file(fix(), req.response);
-          resolve();
+          this.zip.add(fix(), new Uint8Array(req.response)).then(resolve, reject);
         }
         else {
-          this.zip.file(fix(), req.response);
-          resolve();
+          this.zip.add(fix(), new Uint8Array(req.response)).then(resolve, reject);
         }
       };
       req.send();
@@ -385,3 +380,18 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     onClicked(sender.tab);
   }
 });
+
+// remove the old dbs
+{
+  const restore = async () => {
+    const os = 'databases' in indexedDB ? await indexedDB.databases() : [];
+    for (const o of os) {
+      const request = indexedDB.deleteDatabase(o.name);
+      request.onsuccess = () => {
+        console.warn('old db is removed');
+      };
+    }
+  };
+  chrome.runtime.onStartup.addListener(restore);
+  chrome.runtime.onInstalled.addListener(restore);
+}
