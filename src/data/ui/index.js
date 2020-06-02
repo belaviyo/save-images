@@ -423,9 +423,40 @@ document.addEventListener('click', ({target}) => {
       bubbles: true
     }));
   }
-  else if (cmd === 'help') {
-    chrome.tabs.create({
-      url: chrome.runtime.getManifest().homepage_url
+  else if (cmd === 'tdm') {
+    let id = 'pabnknalmhfecdheflmcaehlepmhjlaa';
+
+    let link = 'https://chrome.google.com/webstore/detail/pabnknalmhfecdheflmcaehlepmhjlaa';
+    if (navigator.userAgent.indexOf('Firefox') !== -1) {
+      id = 'jid0-dsq67mf5kjjhiiju2dfb6kk8dfw@jetpack';
+      link = 'https://addons.mozilla.org/firefox/addon/turbo-download-manager/';
+    }
+    else if (navigator.userAgent.indexOf('OPR') !== -1) {
+      id = 'lejgoophpfnabjcnfbphcndcjfpinbfk';
+      link = 'https://addons.opera.com/extensions/details/turbo-download-manager/';
+    }
+    else if (navigator.userAgent.indexOf('Edg/') !== -1) {
+      id = 'mkgpbehnmcnadhklbcigfbehjfnpdblf';
+      link = 'https://microsoftedge.microsoft.com/addons/detail/mkgpbehnmcnadhklbcigfbehjfnpdblf';
+    }
+    chrome.runtime.sendMessage(id, {
+      method: 'add-jobs',
+      configs: {
+        // prevent multi-threading (CloudFlare image optimization issue)
+        'min-segment-size': 10 * 1024 * 1024
+      },
+      jobs: build().images.map(img => ({
+        link: img.src,
+        filename: img.filename,
+        threads: 3
+      }))
+    }, resp => {
+      if (resp) {
+        chrome.runtime.sendMessage({cmd: 'close-me'});
+      }
+      else {
+        chrome.tabs.create({url: link});
+      }
     });
   }
 });

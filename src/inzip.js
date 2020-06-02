@@ -65,32 +65,50 @@ class InZIP {
         this.db = request.result;
         resolve();
       };
+    }).catch(e => {
+      this.cache = {
+        'file-data': [],
+        'dir-data': []
+      };
+      console.warn('Cannot access indexedDB, use memory instead', e);
+      return Promise.resolve();
     });
   }
   write(name, ...abs) {
-    return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction(name, 'readwrite');
-      transaction.oncomplete = resolve;
-      transaction.onerror = e => reject(Error('File.write, ' + e.target.error));
-      for (const ab of abs) {
-        transaction.objectStore(name).add(ab);
-      }
-    });
+    if (this.db) {
+      return new Promise((resolve, reject) => {
+        const transaction = this.db.transaction(name, 'readwrite');
+        transaction.oncomplete = resolve;
+        transaction.onerror = e => reject(Error('File.write, ' + e.target.error));
+        for (const ab of abs) {
+          transaction.objectStore(name).add(ab);
+        }
+      });
+    }
+    else {
+      this.cache[name].push(...abs);
+      return Promise.resolve();
+    }
   }
   read(name) {
-    return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction(name, 'readonly');
-      const chunks = [];
-      transaction.objectStore(name).openCursor().onsuccess = e => {
-        const cursor = e.target.result;
-        if (cursor) {
-          chunks.push(cursor.value);
-          cursor.continue();
-        }
-      };
-      transaction.onerror = e => reject(Error('File.objects, ' + e.target.error));
-      transaction.oncomplete = () => resolve(chunks);
-    });
+    if (this.db) {
+      return new Promise((resolve, reject) => {
+        const transaction = this.db.transaction(name, 'readonly');
+        const chunks = [];
+        transaction.objectStore(name).openCursor().onsuccess = e => {
+          const cursor = e.target.result;
+          if (cursor) {
+            chunks.push(cursor.value);
+            cursor.continue();
+          }
+        };
+        transaction.onerror = e => reject(Error('File.objects, ' + e.target.error));
+        transaction.oncomplete = () => resolve(chunks);
+      });
+    }
+    else {
+      return this.cache[name];
+    }
   }
   time() {
     const {date} = this.config;
@@ -161,12 +179,16 @@ class InZIP {
     await this.write('dir-data', this.ab(dirRecord));
   }
   delete() {
-    this.db.close();
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.deleteDatabase(this.name);
-      request.onsuccess = () => resolve();
-      request.onerror = e => reject(Error(e.target.error));
-    });
+    delete this.cache;
+    if (this.db) {
+      this.db.close();
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.deleteDatabase(this.name);
+        request.onsuccess = () => resolve();
+        request.onerror = e => reject(Error(e.target.error));
+      });
+    }
+    return Promise.resolve();
   }
   async blob() {
     const fileData = await this.read('file-data');

@@ -182,8 +182,8 @@
   "ui_relative": {
     "message": "custom directory relative to the default download directory"
   },
-  "ui_help": {
-    "message": "Help"
+  "ui_tdm": {
+    "message": "Turbo Save"
   },
   "ui_reset": {
     "message": "Reset"
@@ -206,8 +206,8 @@
   "ui_cancel": {
     "message": "Cancel"
   },
-  "ui_help_title": {
-    "message": "Open FAQs page"
+  "ui_tdm_title": {
+    "message": "Save individual image files (no ZIP archive) using Turbo Download Manager extension"
   },
   "ui_reset_title": {
     "message": "Reset settings to the default values"

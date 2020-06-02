@@ -39,8 +39,8 @@ footer input {
   margin-bottom: 2px !important;
 }
 footer button[data-cmd="copy"] {
-  grid-column-start: 7;
-  grid-column-end: 7;
+  grid-column-start: 6;
+  grid-column-end: 6;
 }
 @media screen and (max-width: 700px) {
   footer {
