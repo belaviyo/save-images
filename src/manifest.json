@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "version": "0.7.1",
+  "version": "0.7.3",
   "name": "Download All Images",
   "description": "__MSG_app_description__",
   "default_locale": "en",
@@ -9,7 +9,8 @@
     "activeTab",
     "notifications",
     "<all_urls>",
-    "downloads"
+    "downloads",
+    "unlimitedStorage"
   ],
   "optional_permissions": [
     "clipboardWrite"
@@ -23,13 +24,7 @@
       "save-images.js"
     ]
   },
-  "browser_action": {
-    "default_icon": {
-      "16": "data/icons/16.png",
-      "32": "data/icons/32.png",
-      "64": "data/icons/64.png"
-    }
-  },
+  "browser_action": {},
   "icons": {
     "16": "data/icons/16.png",
     "32": "data/icons/32.png",

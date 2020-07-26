@@ -13,7 +13,7 @@
 window.count = 0;
 
 function timeout() {
-  return Number(localStorage.getItem('timeout') || 10) * 1000;
+  return Number(localStorage.getItem('timeout') || 1800) * 1000;
 }
 
 const downloads = {};
