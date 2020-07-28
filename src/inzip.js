@@ -9,6 +9,18 @@
  * Home: https://add0n.com/save-images.html
  * GitHub: https://github.com/belaviyo/save-images/ */
 
+// (async () => {
+//   var a = new InZIP();
+//   await a.open();
+//   await a.add('엠카 현.txt', (new TextEncoder()).encode('Hello'));
+//   a.blob().then(blob => {
+//     const u = URL.createObjectURL(blob);
+//     chrome.downloads.download({
+//       filename: 'aa.zip',url: u
+//     });
+//   })
+// })()
+
 class InZIP {
   constructor() {
     this.config = {
@@ -47,12 +59,9 @@ class InZIP {
     }
     return bytes;
   }
-  merge(a, b) {
-    const c = new Int8Array(a.byteLength + b.byteLength);
-    c.set(a);
-    c.set(b, a.byteLength);
-
-    return c;
+  utf8encode(data) {
+    const c = new TextEncoder();
+    return String.fromCharCode(...c.encode(data));
   }
   open() {
     this.name = 'file:' + Math.random();
@@ -165,29 +174,27 @@ class InZIP {
     return crc ^ (-1);
   }
   async add(filename, uint8a) {
+    filename = this.utf8encode(filename);
+
     this.fileCount += 1;
-    const encoder = new TextEncoder();
-    filename = encoder.encode(filename);
-    const header = '\x0A\x00\x00\x00\x00\x00' +
+    const header = '\x0A\x00\x00\x08\x00\x00' +
       this.decToHex(this.time(), 2) +
       this.decToHex(this.date(), 2) +
       this.decToHex(this.crc(uint8a), 4) +
       this.decToHex(uint8a.byteLength, 4) +
       this.decToHex(uint8a.byteLength, 4) +
-      this.decToHex(filename.byteLength, 2) +
+      this.decToHex(filename.length, 2) +
       '\x00\x00';
 
-    const fd = this.merge(
-      this.ab('\x50\x4b\x03\x04' + header),
-      filename
-    );
+    const fd = this.ab('\x50\x4b\x03\x04' + header + filename);
     await this.write('file-data', fd, uint8a);
-    const dirRecord = this.merge(
-      this.ab('\x50\x4b\x01\x02\x14\x00' + header + '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' + this.decToHex(this.fileOffset, 4)),
-      filename
-    );
+    const dirRecord = '\x50\x4b\x01\x02\x14\x00' +
+        header +
+        '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' +
+        this.decToHex(this.fileOffset, 4) +
+        filename;
     this.fileOffset += fd.byteLength + uint8a.byteLength;
-    await this.write('dir-data', dirRecord);
+    await this.write('dir-data', this.ab(dirRecord));
   }
   delete() {
     delete this.cache;
