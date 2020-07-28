@@ -79,6 +79,9 @@ function guess(img, mask, noType = true) {
     extension = '.jpg';
   }
   name = name.substr(0, index);
+  if (name.startsWith('%')) {
+    name = decodeURIComponent(name);
+  }
 
   if (name in indices) {
     indices[name] += 1;

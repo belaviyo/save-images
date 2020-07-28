@@ -47,6 +47,13 @@ class InZIP {
     }
     return bytes;
   }
+  merge(a, b) {
+    const c = new Int8Array(a.byteLength + b.byteLength);
+    c.set(a);
+    c.set(b, a.byteLength);
+
+    return c;
+  }
   open() {
     this.name = 'file:' + Math.random();
     return new Promise((resolve, reject) => {
@@ -159,24 +166,28 @@ class InZIP {
   }
   async add(filename, uint8a) {
     this.fileCount += 1;
+    const encoder = new TextEncoder();
+    filename = encoder.encode(filename);
     const header = '\x0A\x00\x00\x00\x00\x00' +
       this.decToHex(this.time(), 2) +
       this.decToHex(this.date(), 2) +
       this.decToHex(this.crc(uint8a), 4) +
       this.decToHex(uint8a.byteLength, 4) +
       this.decToHex(uint8a.byteLength, 4) +
-      this.decToHex(filename.length, 2) +
+      this.decToHex(filename.byteLength, 2) +
       '\x00\x00';
 
-    const fd = this.ab('\x50\x4b\x03\x04' + header + filename);
+    const fd = this.merge(
+      this.ab('\x50\x4b\x03\x04' + header),
+      filename
+    );
     await this.write('file-data', fd, uint8a);
-    const dirRecord = '\x50\x4b\x01\x02\x14\x00' +
-        header +
-        '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' +
-        this.decToHex(this.fileOffset, 4) +
-        filename;
+    const dirRecord = this.merge(
+      this.ab('\x50\x4b\x01\x02\x14\x00' + header + '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' + this.decToHex(this.fileOffset, 4)),
+      filename
+    );
     this.fileOffset += fd.byteLength + uint8a.byteLength;
-    await this.write('dir-data', this.ab(dirRecord));
+    await this.write('dir-data', dirRecord);
   }
   delete() {
     delete this.cache;
