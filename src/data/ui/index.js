@@ -252,6 +252,7 @@ function update() {
   const index = elements.counter.save.value =
     elements.counter.save.textContent = filtered().length;
   document.querySelector('[data-cmd=save]').disabled = index === 0;
+  document.querySelector('[data-cmd=save-dir]').disabled = index === 0 || !('showDirectoryPicker' in window);
   document.querySelector('[data-cmd=copy]').disabled = index === 0;
   document.querySelector('[data-cmd=gallery]').disabled = index === 0;
 }
@@ -359,10 +360,13 @@ elements.deep.level.addEventListener('change', search);
 // commands
 document.addEventListener('click', ({target}) => {
   const cmd = target.dataset.cmd;
-  if (cmd === 'save') {
-    target.disabled = true;
+  if (cmd === 'save' || cmd === 'save-dir') {
+    document.querySelector('[data-cmd=save]').disabled = true;
+    document.querySelector('[data-cmd=save-dir]').disabled = true;
+
     const obj = Object.assign(build(), {
       cmd: 'save-images',
+      directory: cmd === 'save-dir',
       mask: elements.files.mask.value,
       noType: elements.type.noType.checked
     });
@@ -378,7 +382,8 @@ document.addEventListener('click', ({target}) => {
         save();
       }
       else {
-        target.disabled = false;
+        document.querySelector('[data-cmd=save]').disabled = false;
+        document.querySelector('[data-cmd=save-dir]').disabled = false;
       }
     }
     else {
@@ -422,42 +427,6 @@ document.addEventListener('click', ({target}) => {
     input.dispatchEvent(new Event('input', {
       bubbles: true
     }));
-  }
-  else if (cmd === 'tdm') {
-    let id = 'pabnknalmhfecdheflmcaehlepmhjlaa';
-
-    let link = 'https://chrome.google.com/webstore/detail/pabnknalmhfecdheflmcaehlepmhjlaa';
-    if (navigator.userAgent.indexOf('Firefox') !== -1) {
-      id = 'jid0-dsq67mf5kjjhiiju2dfb6kk8dfw@jetpack';
-      link = 'https://addons.mozilla.org/firefox/addon/turbo-download-manager/';
-    }
-    else if (navigator.userAgent.indexOf('OPR') !== -1) {
-      id = 'lejgoophpfnabjcnfbphcndcjfpinbfk';
-      link = 'https://addons.opera.com/extensions/details/turbo-download-manager/';
-    }
-    else if (navigator.userAgent.indexOf('Edg/') !== -1) {
-      id = 'mkgpbehnmcnadhklbcigfbehjfnpdblf';
-      link = 'https://microsoftedge.microsoft.com/addons/detail/mkgpbehnmcnadhklbcigfbehjfnpdblf';
-    }
-    chrome.runtime.sendMessage(id, {
-      method: 'add-jobs',
-      configs: {
-        // prevent multi-threading (CloudFlare image optimization issue)
-        'min-segment-size': 10 * 1024 * 1024
-      },
-      jobs: build().images.map(img => ({
-        link: img.src,
-        filename: img.filename,
-        threads: 3
-      }))
-    }, resp => {
-      if (resp) {
-        chrome.runtime.sendMessage({cmd: 'close-me'});
-      }
-      else {
-        chrome.tabs.create({url: link});
-      }
-    });
   }
 });
 // update counter

@@ -158,8 +158,11 @@
   "ui_keywords": {
     "message": "Keywords"
   },
-  "ui_save_in": {
-    "message": "Save In"
+  "ui_save_in_1": {
+    "message": "Save and Save DIR"
+  },
+  "ui_save_in_2": {
+    "message": "Save"
   },
   "ui_dialog": {
     "message": "Show browser's save dialog to choose the destination directory"
@@ -182,9 +185,6 @@
   "ui_relative": {
     "message": "custom directory relative to the default download directory"
   },
-  "ui_tdm": {
-    "message": "Turbo Save"
-  },
   "ui_reset": {
     "message": "Reset"
   },
@@ -203,11 +203,11 @@
   "ui_save": {
     "message": "Save"
   },
+  "ui_save_dir": {
+    "message": "Save DIR"
+  },
   "ui_cancel": {
     "message": "Cancel"
-  },
-  "ui_tdm_title": {
-    "message": "Save individual image files (no ZIP archive) using Turbo Download Manager extension"
   },
   "ui_reset_title": {
     "message": "Reset settings to the default values"
@@ -225,7 +225,10 @@
     "message": "Copy selected images to the clipbaord"
   },
   "ui_save_title": {
-    "message": "Save selected images"
+    "message": "Save selected images on the default download directory"
+  },
+  "ui_save_dir_title": {
+    "message": "[Experimental Feature] Save selected images on a custom directory without first adding them to a ZIP archive. Only available on HTTPS pages if your browser supports the native file system"
   },
   "ui_cancel_title": {
     "message": "Close this window"

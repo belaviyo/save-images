@@ -29,11 +29,12 @@ const nd = options => new Promise(resolve => chrome.downloads.download(options, 
   }
 }));
 
-function Download() {
+function Download(directory) {
   this.zip = new InZIP();
 
   this.indices = {};
   this.abort = false;
+  this.directory = directory;
 }
 Download.prototype.init = function(request, tab) {
   this.request = request;
@@ -43,7 +44,24 @@ Download.prototype.init = function(request, tab) {
   this.mask = request.mask;
   this.noType = request.noType;
 
-  this.zip.open().then(() => this.one());
+  if (this.directory) {
+    chrome.tabs.sendMessage(tab.id, {
+      cmd: 'directory'
+    }, err => {
+      if (err) {
+        notify('Using the default download directory; ' + err);
+        this.directory = false;
+        this.zip.open().then(() => this.one());
+      }
+      else {
+        request.zip = true; // prevent chrome.downloads from being called
+        this.one();
+      }
+    });
+  }
+  else {
+    this.zip.open().then(() => this.one());
+  }
 };
 Download.prototype.terminate = function() {
   if (this.abort === false) {
@@ -89,7 +107,7 @@ Download.prototype.one = function() {
     ]).then(() => this.one());
   }
   else {
-    if (request.zip) {
+    if (request.zip && this.directory !== true) {
       this.zip.blob().then(blob => {
         this.jobs = [];
         this.indices = {};
@@ -160,7 +178,21 @@ Download.prototype.download = function(obj) {
         if (obj.head === false) {
           obj.disposition = req.getResponseHeader('content-disposition');
           obj.filename = guess(obj, this.mask, this.noType).filename || obj.filename || 'unknown';
-          this.zip.add(fix(), new Uint8Array(req.response)).then(resolve, reject);
+        }
+        if (this.directory) {
+          const blob = new Blob([new Uint8Array(req.response)]);
+          const href = URL.createObjectURL(blob);
+          chrome.tabs.sendMessage(this.tab.id, {
+            cmd: 'write-binary',
+            filename: fix(),
+            href
+          }, err => {
+            URL.revokeObjectURL(href);
+            if (err) {
+              return reject(Error(err));
+            }
+            resolve();
+          });
         }
         else {
           this.zip.add(fix(), new Uint8Array(req.response)).then(resolve, reject);
@@ -269,7 +301,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     if (downloads[sender.tab.id]) {
       downloads[sender.tab.id].terminate();
     }
-    downloads[sender.tab.id] = new Download();
+    downloads[sender.tab.id] = new Download(request.directory);
     downloads[sender.tab.id].init(request, sender.tab);
   }
   else if (request.cmd === 'xml-head') {

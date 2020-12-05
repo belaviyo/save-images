@@ -212,21 +212,27 @@
         </fieldset>
       </div>
 
-      <fieldset>
-        <legend data-i18n="ui_save_in"></legend>
+<!--       <fieldset>
+        <legend data-i18n="ui_save_in_1"></legend>
         <table width=100%>
           <colgroup>
-            <col width=24>
-            <col width="100">
+            <col width="80">
             <col>
           </colgroup>
           <tbody>
-            <tr data-i18n="ui_dialog" data-i18n-value="title">
-              <td><input type="checkbox" id="open-save-dialog"></td>
-              <td colspan="2"><label for="open-save-dialog" data-i18n="ui_save_dialog"></label></td>
-            </tr>
+
+          </tbody>
+        </table>
+      </fieldset> -->
+      <fieldset>
+        <legend data-i18n="ui_save_in_2"></legend>
+        <table width=100%>
+          <colgroup>
+            <col width="80">
+            <col>
+          </colgroup>
+          <tbody>
             <tr>
-              <td></td>
               <td data-i18n="ui_format"></td>
               <td>
                 <div hbox>
@@ -247,8 +253,11 @@
                 </div>
               </td>
             </tr>
+            <tr data-i18n="ui_dialog" data-i18n-value="title">
+              <td><label for="open-save-dialog" data-i18n="ui_save_dialog"></label></td>
+              <td><input type="checkbox" id="open-save-dialog"></td>
+            </tr>
             <tr>
-              <td></td>
               <td data-i18n="ui_zip"></td>
               <td>
                 <div hbox>
@@ -257,7 +266,6 @@
               </td>
             </tr>
             <tr>
-              <td></td>
               <td data-i18n="ui_directory"></td>
               <td>
                 <div hbox>
@@ -299,7 +307,7 @@
       <button data-i18n="ui_gallery_title" data-i18n-value="title" data-cmd="gallery"><span data-i18n="ui_gallery"></span></button>
 
       <button data-i18n="ui_copy_title" data-i18n-value="title" data-cmd="copy"><span data-i18n="ui_copy"></span></button>
-      <button data-i18n="ui_tdm_title" data-i18n-value="title" data-cmd="tdm"><span data-i18n="ui_tdm"></span></button>
+      <button data-i18n="ui_save_dir_title" data-i18n-value="title" data-cmd="save-dir"><span data-i18n="ui_save_dir"></span></button>
       <button data-i18n="ui_save_title" data-i18n-value="title" data-cmd="save"><span data-i18n="ui_save"></span></button>
       <button data-i18n="ui_cancel_title" data-i18n-value="title" data-cmd="close"><span data-i18n="ui_cancel"></span></button>
     </footer>

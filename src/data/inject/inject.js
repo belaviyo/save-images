@@ -16,6 +16,62 @@ try {
 catch (e) {}
 
 window.iframe = document.createElement('iframe');
+
+{
+  let directory;
+  const onclick = e => {
+    if (e.isTrusted && window.iframe && window.iframe.contains(e.target) === false) {
+      close();
+    }
+  };
+  const onmessage = (request, sender, response) => {
+    if (request.cmd === 'close-me') {
+      close();
+    }
+    else if (request.cmd === 'directory') {
+      try {
+        window.showDirectoryPicker().then(d => {
+          directory = d;
+          response();
+        }).catch(e => {
+          console.warn('Cannot assign a directory', e);
+          response(e.message);
+        });
+      }
+      catch (e) {
+        response(e.message);
+      }
+      return true;
+    }
+    else if (request.cmd === 'write-binary') {
+      Promise.all([
+        fetch(request.href),
+        directory.getFileHandle(request.filename, {
+          create: true
+        }).then(file => file.createWritable())
+      ]).then(([response, writable]) => {
+        return writable.truncate(0).then(() => response.body.pipeTo(writable));
+      }).then(() => response(), e => response(e.message));
+
+      return true;
+    }
+  };
+  const close = () => {
+    if (window.iframe) {
+      window.iframe.remove();
+      window.iframe = null;
+      document.removeEventListener('click', onclick);
+      chrome.runtime.onMessage.removeListener(onmessage);
+      chrome.runtime.sendMessage({
+        cmd: 'stop'
+      });
+    }
+  };
+  document.addEventListener('click', onclick);
+  chrome.runtime.onMessage.addListener(onmessage);
+}
+
+
 chrome.storage.local.get({
   width: 750,
   height: 650
@@ -38,25 +94,4 @@ chrome.storage.local.get({
   `);
   window.iframe.src = chrome.runtime.getURL('data/inject/selector.html');
   document.body.appendChild(window.iframe);
-});
-
-(callback => {
-  document.addEventListener('click', e => {
-    if (e.isTrusted && window.iframe && window.iframe.contains(e.target) === false) {
-      callback();
-    }
-  });
-  chrome.runtime.onMessage.addListener(request => {
-    if (request.cmd === 'close-me') {
-      callback();
-    }
-  });
-})(() => {
-  if (window.iframe) {
-    window.iframe.remove();
-    window.iframe = null;
-    chrome.runtime.sendMessage({
-      cmd: 'stop'
-    });
-  }
 });
