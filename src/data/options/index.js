@@ -106,3 +106,11 @@ document.getElementById('open').addEventListener('click', e => {
     url: chrome.runtime.getManifest().homepage_url + '#faq16'
   });
 });
+
+document.getElementById('tutorial').onclick = () => chrome.tabs.create({
+  url: 'https://www.youtube.com/watch?v=YaT5sWRV6JQ'
+});
+
+document.getElementById('sample').onclick = () => chrome.tabs.create({
+  url: 'https://webbrowsertools.com/test-download-with/'
+});

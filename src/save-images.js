@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2017 Joe Ertaba
+/* Copyright (C) 2014-2021 Joe Ertaba
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,16 @@
 
 /* global InZIP, onClicked, notify, guess */
 'use strict';
+
+// Test Pages:
+// https://www.pixiv.net/en/artworks/89029828 -> needs "referer" header
+
+chrome.declarativeNetRequest = chrome.declarativeNetRequest || {
+  updateDynamicRules(props, c = () => {}) {
+    c();
+  },
+  getDynamicRules() {}
+};
 
 window.count = 0;
 
@@ -21,7 +31,7 @@ const downloads = {};
 
 const nd = options => new Promise(resolve => chrome.downloads.download(options, id => {
   if (chrome.runtime.lastError) {
-    delete options.filename;
+    options.filename = 'images.zip';
     chrome.downloads.download(options, resolve);
   }
   else {
@@ -142,6 +152,8 @@ Download.prototype.download = function(obj) {
       if (this.abort) {
         return;
       }
+      const id = rId;
+      rId += 1;
 
       const req = new XMLHttpRequest(); // do not use fetch API as it cannot get CORS headers
       req.open('GET', obj.src);
@@ -197,8 +209,24 @@ Download.prototype.download = function(obj) {
         else {
           this.zip.add(fix(), new Uint8Array(req.response)).then(resolve, reject);
         }
+        chrome.declarativeNetRequest.updateDynamicRules({removeRuleIds: [id]});
       };
-      req.send();
+      chrome.declarativeNetRequest.updateDynamicRules({
+        addRules: [{
+          id,
+          action: {
+            type: 'modifyHeaders',
+            requestHeaders: [{
+              operation: 'set',
+              header: 'referer',
+              value: obj.page
+            }]
+          },
+          condition: {
+            urlFilter: obj.src
+          }
+        }]
+      }, () => req.send());
     });
   }
   else {
@@ -220,7 +248,12 @@ Download.prototype.download = function(obj) {
 };
 
 const cache = {};
-chrome.tabs.onRemoved.addListener(tabId => delete cache[tabId]);
+const promises = {};
+chrome.tabs.onRemoved.addListener(tabId => {
+  delete cache[tabId];
+  delete promises[tabId];
+});
+let rId = 1;
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.cmd === 'copy') {
@@ -339,26 +372,50 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     }
     else {
       // use GET; HEAD is not widely supported
+      const id = rId;
+      rId += 1;
+
       const req = new XMLHttpRequest();
       req.open('GET', request.src);
       req.timeout = timeout();
-      req.ontimeout = req.onerror = () => response({});
+      req.onerror = req.ontimeout = () => response({});
 
       req.onreadystatechange = () => {
         if (req.readyState === req.HEADERS_RECEIVED) {
+          const type = req.getResponseHeader('content-type') || '';
+
           response({
-            type: req.getResponseHeader('content-type') || '',
+            type,
             size: req.getResponseHeader('content-length'),
             disposition: req.getResponseHeader('content-disposition')
           });
           req.abort();
+          chrome.declarativeNetRequest.updateDynamicRules({removeRuleIds: [id]});
         }
       };
-      req.send();
+      chrome.declarativeNetRequest.updateDynamicRules({
+        addRules: [{
+          id,
+          action: {
+            type: 'modifyHeaders',
+            requestHeaders: [{
+              operation: 'set',
+              header: 'referer',
+              value: sender.tab.url
+            }]
+          },
+          condition: {
+            urlFilter: request.src
+          }
+        }]
+      }, () => req.send());
     }
     return true;
   }
   else if (request.cmd === 'xml-img') {
+    const id = rId;
+    rId += 1;
+
     const req = new XMLHttpRequest();
     req.open('GET', request.src);
     req.responseType = 'document';
@@ -380,9 +437,25 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       }
 
       response(images);
+      chrome.declarativeNetRequest.updateDynamicRules({removeRuleIds: [id]});
     };
     req.ontimeout = req.onerror = () => response([]);
-    req.send();
+    chrome.declarativeNetRequest.updateDynamicRules({
+      addRules: [{
+        id,
+        action: {
+          type: 'modifyHeaders',
+          requestHeaders: [{
+            operation: 'set',
+            header: 'referer',
+            value: sender.tab.url
+          }]
+        },
+        condition: {
+          urlFilter: request.src
+        }
+      }]
+    }, () => req.send());
     return true;
   }
   //
@@ -428,3 +501,17 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   chrome.runtime.onStartup.addListener(restore);
   chrome.runtime.onInstalled.addListener(restore);
 }
+
+// remove the old rules
+{
+  const remove = () => {
+    chrome.declarativeNetRequest.getDynamicRules(ar => {
+      if (ar.length) {
+        chrome.declarativeNetRequest.updateDynamicRules({removeRuleIds: ar.map(a => a.id)});
+      }
+    });
+  };
+  chrome.runtime.onStartup.addListener(remove);
+  chrome.runtime.onInstalled.addListener(remove);
+}
+

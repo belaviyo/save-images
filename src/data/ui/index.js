@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2017 Joe Ertaba
+/* Copyright (C) 2014-2021 Joe Ertaba
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,6 +16,17 @@
   const value = e.dataset.i18nValue || 'textContent';
   e[value] = chrome.i18n.getMessage(e.dataset.i18n);
 });
+
+// When confirm is not allowed, return true; https://www.pixiv.net/en/artworks/88641171
+const vconfirm = msg => {
+  const a = Date.now();
+  const r = window.confirm(msg);
+  if (Date.now() - a < 10) {
+    return true;
+  }
+
+  return r;
+};
 
 const elements = {
   counter: {
@@ -109,7 +120,7 @@ function build() {
     get zip() {
       let zip = !elements.group.zip.checked;
       if (zip === false && elements.counter.save.value > Number(elements.prefs.zip.value)) {
-        zip = window.confirm('Downloading more than 15 images separately is not recommended. Should I download them as a ZIP archive?');
+        zip = vconfirm('Downloading more than 15 images separately is not recommended. Should I download them as a ZIP archive?');
       }
       return zip;
     }
@@ -360,6 +371,7 @@ elements.deep.level.addEventListener('change', search);
 // commands
 document.addEventListener('click', ({target}) => {
   const cmd = target.dataset.cmd;
+  console.log(cmd);
   if (cmd === 'save' || cmd === 'save-dir') {
     document.querySelector('[data-cmd=save]').disabled = true;
     document.querySelector('[data-cmd=save-dir]').disabled = true;
@@ -378,7 +390,7 @@ document.addEventListener('click', ({target}) => {
       chrome.runtime.sendMessage(obj);
     };
     if (len > Number(elements.prefs.max.value)) {
-      if (window.confirm(`Are you sure you want to download "${len}" images?`)) {
+      if (vconfirm(`Are you sure you want to download "${len}" images?`)) {
         save();
       }
       else {

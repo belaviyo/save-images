@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2017 Joe Ertaba
+/* Copyright (C) 2014-2021 Joe Ertaba
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -66,3 +66,19 @@ document.addEventListener('click', ({target}) => {
     }));
   }
 });
+
+document.getElementById('declarativeNetRequest').onchange = e => {
+  if (e.target.checked) {
+    console.log(123);
+    chrome.permissions.request({
+      permissions: ['declarativeNetRequest']
+    }, granted => {
+      if (granted === false) {
+        e.target.checked = false;
+        e.target.dispatchEvent(new Event('change', {
+          bubbles: true
+        }));
+      }
+    });
+  }
+};

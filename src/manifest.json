@@ -10,7 +10,8 @@
     "notifications",
     "<all_urls>",
     "downloads",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "declarativeNetRequest"
   ],
   "optional_permissions": [
     "clipboardWrite"
