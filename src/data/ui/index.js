@@ -371,7 +371,6 @@ elements.deep.level.addEventListener('change', search);
 // commands
 document.addEventListener('click', ({target}) => {
   const cmd = target.dataset.cmd;
-  console.log(cmd);
   if (cmd === 'save' || cmd === 'save-dir') {
     document.querySelector('[data-cmd=save]').disabled = true;
     document.querySelector('[data-cmd=save-dir]').disabled = true;

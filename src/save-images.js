@@ -248,10 +248,8 @@ Download.prototype.download = function(obj) {
 };
 
 const cache = {};
-const promises = {};
 chrome.tabs.onRemoved.addListener(tabId => {
   delete cache[tabId];
-  delete promises[tabId];
 });
 let rId = 1;
 

@@ -66,19 +66,3 @@ document.addEventListener('click', ({target}) => {
     }));
   }
 });
-
-document.getElementById('declarativeNetRequest').onchange = e => {
-  if (e.target.checked) {
-    console.log(123);
-    chrome.permissions.request({
-      permissions: ['declarativeNetRequest']
-    }, granted => {
-      if (granted === false) {
-        e.target.checked = false;
-        e.target.dispatchEvent(new Event('change', {
-          bubbles: true
-        }));
-      }
-    });
-  }
-};
