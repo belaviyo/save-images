@@ -25,6 +25,15 @@ window.count = 0;
 function timeout() {
   return Number(localStorage.getItem('timeout') || 1800) * 1000;
 }
+function pause(type = 'detection') {
+  const p = Number(localStorage.getItem('pause-' + type) || 0) * 1000;
+  if (p === 0) {
+    return Promise.resolve();
+  }
+  else {
+    return new Promise(resolve => setTimeout(resolve, p));
+  }
+}
 
 const downloads = {};
 
@@ -203,11 +212,11 @@ Download.prototype.download = function(obj) {
             if (err) {
               return reject(Error(err));
             }
-            resolve();
+            pause('download').then(resolve);
           });
         }
         else {
-          this.zip.add(fix(), new Uint8Array(req.response)).then(resolve, reject);
+          this.zip.add(fix(), new Uint8Array(req.response)).then(() => pause('download')).then(resolve, reject);
         }
         chrome.declarativeNetRequest.updateDynamicRules({removeRuleIds: [id]});
       };
@@ -240,7 +249,7 @@ Download.prototype.download = function(obj) {
         filename: path.join('/'),
         conflictAction: 'uniquify',
         saveAs: false
-      }).then(() => {
+      }).then(() => pause('download')).then(() => {
         setTimeout(resolve, 3000);
       });
     });
@@ -380,13 +389,12 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 
       req.onreadystatechange = () => {
         if (req.readyState === req.HEADERS_RECEIVED) {
-          const type = req.getResponseHeader('content-type') || '';
-
-          response({
-            type,
+          const o = {
+            type: req.getResponseHeader('content-type') || '',
             size: req.getResponseHeader('content-length'),
             disposition: req.getResponseHeader('content-disposition')
-          });
+          };
+          pause('detection').then(() => response(o));
           req.abort();
           chrome.declarativeNetRequest.updateDynamicRules({removeRuleIds: [id]});
         }
@@ -433,8 +441,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
           .filter(s => s && (s.startsWith('http') || s.startsWith('ftp') || s.startsWith('data:')))
           .map(src => ({src})));
       }
-
-      response(images);
+      pause('detection').then(() => response(images));
       chrome.declarativeNetRequest.updateDynamicRules({removeRuleIds: [id]});
     };
     req.ontimeout = req.onerror = () => response([]);

@@ -28,6 +28,15 @@ document.addEventListener('change', ({target}) => {
       let value = target.value;
       if (id === 'timeout') {
         value = Math.min(Math.max(5, value), 120);
+        localStorage.setItem('timeout', value);
+      }
+      else if (id === 'detection_delay') {
+        value = Math.max(0, value);
+        localStorage.setItem('pause-detection', value);
+      }
+      else if (id === 'download_delay') {
+        value = Math.max(0, value);
+        localStorage.setItem('pause-download', value);
       }
       else if (id === 'prefs-max-warning' || id === 'prefs-zip-warning') {
         value = Math.max(5, value);

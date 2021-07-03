@@ -173,6 +173,12 @@
   "ui_delay": {
     "message": "Number of seconds a request can take before automatically being terminated (a number between 5 to 120 seconds)"
   },
+  "detection_delay": {
+    "message": "Number of seconds to pause after each server-side image detection (rate-limit)"
+  },
+  "download_delay": {
+    "message": "Number of seconds to pause after each server-side image download (rate-limit)"
+  },
   "ui_format": {
     "message": "Format"
   },
