@@ -1,0 +1,31 @@
+html {
+  height: 100%;
+}
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+}
+body[data-loading=false] {
+  transition-duration: 500ms;
+}
+body[data-mode=gallery] {
+  transform: translateX(-100%);
+}
+body > div {
+  border: none;
+  min-width: 100%;
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+}
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+iframe[data-loading=true] {
+  background: url('loading.gif') center center no-repeat;
+}

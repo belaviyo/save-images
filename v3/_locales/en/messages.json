@@ -1,0 +1,296 @@
+{
+  "app_description": {
+    "message": "Easily save images with a wide range of customization features, such as file size, dimensions, and image type."
+  },
+  "gallery_title": {
+    "message": "Image Gallery"
+  },
+  "gallery_select_all": {
+    "message": "Select All; To select a range, first unselect all then select the first item. Now select the last item with Shift + Click"
+  },
+  "gallery_select_none": {
+    "message": "Select None"
+  },
+  "gallery_download": {
+    "message": "Download selected images"
+  },
+  "gallery_copy": {
+    "message": "Copy URLs of the selected images to the clipboard"
+  },
+  "gallery_window": {
+    "message": "Open in a browser tab"
+  },
+  "gallery_rename": {
+    "message": "Rename"
+  },
+  "gallery_pattern": {
+    "message": "image-[#=1][extension]"
+  },
+  "ui_statistics": {
+    "message": "Statistics"
+  },
+  "ui_total": {
+    "message": "Total:"
+  },
+  "ui_total_title": {
+    "message": "Total number of parsed links (a link might be or might not be an image)"
+  },
+  "ui_images_title": {
+    "message": "Total number of available images"
+  },
+  "ui_saving_title": {
+    "message": "Total number of images that will be saved based on your filters"
+  },
+  "ui_images": {
+    "message": "Images:"
+  },
+  "ui_saving": {
+    "message": "Saving:"
+  },
+  "ui_deep_search_title": {
+    "message": "0: do not extract linked images (fast)\n1: Extract linked images (slow)\n2: Extract linked images and parse destination HTML documents (images) (too slow)\n 3: Extract linked images and parse destination HTML documents (images + links) (too slow; use with custom filters)"
+  },
+  "ui_deep_search": {
+    "message": "Deep Search"
+  },
+  "ui_level": {
+    "message": "Level"
+  },
+  "ui_file_size": {
+    "message": "File Size (slow)"
+  },
+  "ui_min": {
+    "message": "Min"
+  },
+  "ui_bytes": {
+    "message": "bytes"
+  },
+  "ui_max": {
+    "message": "Max"
+  },
+  "ui_unkown": {
+    "message": "If unknown"
+  },
+  "ui_skip": {
+    "message": "Skip"
+  },
+  "ui_dimension": {
+    "message": "Dimensions (pixels)"
+  },
+  "ui_min_width": {
+    "message": "Min width"
+  },
+  "ui_max_width": {
+    "message": "Max width"
+  },
+  "ui_min_height": {
+    "message": "Min height"
+  },
+  "ui_max_height": {
+    "message": "Max height"
+  },
+  "ui_image_types": {
+    "message": "Image Types"
+  },
+  "ui_all_images": {
+    "message": "All images"
+  },
+  "ui_Selection": {
+    "message": "Selection"
+  },
+  "ui_jpg_images": {
+    "message": "JP(E)G images"
+  },
+  "ui_png_images": {
+    "message": "PNG images"
+  },
+  "ui_gif_images": {
+    "message": "GIF images"
+  },
+  "ui_bmp_images": {
+    "message": "BMP images"
+  },
+  "ui_webp_images": {
+    "message": "WebP images"
+  },
+  "ui_no_extension": {
+    "message": "If no extension, save as JPG"
+  },
+  "ui_regexp": {
+    "message": "Regular Expressions"
+  },
+  "ui_regexp_desc": {
+    "message": "Regular expression based on images URL (only matching images will be saved)"
+  },
+  "ui_blacklist": {
+    "message": "Blacklisted Keywords"
+  },
+  "ui_blacklist_desc": {
+    "message": "Comma-separated list of keywords to exclude (matching images will NOT be saved)"
+  },
+  "ui_misc": {
+    "message": "Misc"
+  },
+  "ui_same_domain": {
+    "message": "Only save images from the same domain/server as the selected tab's URL"
+  },
+  "ui_unique": {
+    "message": "Try to exclude identical images"
+  },
+  "ui_separate": {
+    "message": "Download each image separately (slow)"
+  },
+  "ui_accurate": {
+    "message": "Confirm mime-types and guess filenames from server"
+  },
+  "ui_calc": {
+    "message": "Find width and height of all images"
+  },
+  "ui_sl_re": {
+    "message": "(slow) (restart required)"
+  },
+  "ui_mask": {
+    "message": "File Mask"
+  },
+  "ui_mask_desc": {
+    "message": "You can use this section to rename the image filenames to the desired format"
+  },
+  "ui_mask_keywords": {
+    "message": "You will need to put the desired keyword inside closed brackets like [name][extension]"
+  },
+  "ui_keywords": {
+    "message": "Keywords"
+  },
+  "ui_save_in_1": {
+    "message": "Save and Save DIR"
+  },
+  "ui_save_in_2": {
+    "message": "Save"
+  },
+  "ui_dialog": {
+    "message": "Show browser's save dialog to choose the destination directory"
+  },
+  "ui_save_dialog": {
+    "message": "Save dialog"
+  },
+  "ui_delay": {
+    "message": "Number of seconds a request can take before automatically being terminated (a number between 5 to 120 seconds)"
+  },
+  "detection_delay": {
+    "message": "Number of seconds to pause after each server-side image detection (rate-limit)"
+  },
+  "download_delay": {
+    "message": "Number of seconds to pause after each server-side image download (rate-limit)"
+  },
+  "ui_format": {
+    "message": "Format"
+  },
+  "ui_zip": {
+    "message": "ZIP filename"
+  },
+  "ui_directory": {
+    "message": "Directory"
+  },
+  "ui_relative": {
+    "message": "custom directory relative to the default download directory"
+  },
+  "ui_reset": {
+    "message": "Reset"
+  },
+  "ui_restart": {
+    "message": "Restart"
+  },
+  "ui_stop": {
+    "message": "Stop"
+  },
+  "ui_gallery": {
+    "message": "Gallery"
+  },
+  "ui_copy": {
+    "message": "Copy"
+  },
+  "ui_save": {
+    "message": "Save"
+  },
+  "ui_save_dir": {
+    "message": "Save DIR"
+  },
+  "ui_cancel": {
+    "message": "Cancel"
+  },
+  "ui_reset_title": {
+    "message": "Reset settings to the default values"
+  },
+  "ui_restart_title": {
+    "message": "Restart image collection"
+  },
+  "ui_stop_title": {
+    "message": "Stop searching for more images"
+  },
+  "ui_gallery_title": {
+    "message": "Open selected images in gallery mode"
+  },
+  "ui_copy_title": {
+    "message": "Copy selected images to the clipbaord"
+  },
+  "ui_save_title": {
+    "message": "Save selected images on the default download directory"
+  },
+  "ui_save_dir_title": {
+    "message": "[Experimental Feature] Save selected images on a custom directory without first adding them to a ZIP archive. Only available on HTTPS pages if your browser supports the native file system"
+  },
+  "ui_cancel_title": {
+    "message": "Close this window"
+  },
+  "ui_preferences": {
+    "message": "Preferences"
+  },
+  "ui_prefs_zip_warning": {
+    "message": "Display a confirmation when \"Download each image separately\" is checked and the total number of images is more than"
+  },
+  "ui_prefs_max_warning": {
+    "message": "Display a confirmation when the total number of images is more than"
+  },
+  "options_title": {
+    "message": "Options :: Download all Images"
+  },
+  "options_width": {
+    "message": "Interface width in pixels:"
+  },
+  "options_height": {
+    "message": "Interface height in pixels:"
+  },
+  "options_notify": {
+    "message": "Display desktop notification on image saving"
+  },
+  "options_faqs": {
+    "message": "Open FAQs page on updates"
+  },
+  "options_rule": {
+    "message": "Custom Rule:"
+  },
+  "options_save": {
+    "message": "Save Options"
+  },
+  "options_support": {
+    "message": "Support Development"
+  },
+  "options_tutorial": {
+    "message": "Usage Preview"
+  },
+  "options_sample": {
+    "message": "Open Test Page"
+  },
+  "options_head_delay": {
+    "message": "Delay in milliseconds after each image metadata read"
+  },
+  "options_head_timeout": {
+    "message": "Timeout in seconds to abort metadata request for an image"
+  },
+  "options_dig_delay": {
+    "message": "Delay in milliseconds after each HTML document parsing"
+  },
+  "options_dig_timeout": {
+    "message": "Timeout in seconds to wait for parsing of an HTML document"
+  }
+}

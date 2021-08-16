@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "version": "0.9.0",
+  "name": "Download All Images",
+  "description": "__MSG_app_description__",
+  "default_locale": "en",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "notifications",
+    "downloads",
+    "unlimitedStorage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "optional_permissions": [
+    "clipboardWrite"
+  ],
+  "background": {
+    "service_worker": "worker.js"
+  },
+  "action": {},
+  "icons": {
+    "16": "data/icons/16.png",
+    "32": "data/icons/32.png",
+    "48": "data/icons/48.png",
+    "64": "data/icons/64.png",
+    "128": "data/icons/128.png",
+    "256": "data/icons/256.png",
+    "512": "data/icons/512.png"
+  },
+  "web_accessible_resources": [{
+    "resources": [
+      "data/inject/core/index.html",
+      "data/ui/index.html",
+      "data/gallery/index.html"
+    ],
+    "matches": ["<all_urls>"]
+  }],
+  "homepage_url": "https://add0n.com/save-images.html",
+  "options_ui": {
+    "page": "data/options/index.html"
+  }
+}
