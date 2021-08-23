@@ -80,7 +80,7 @@ size.webp = uint8a => {
 
   // Extended webp stream signature
   if (chunkHeader === 'VP8X') {
-    console.log(1);
+    console.warn('VP8X is not yet supported');
   }
   // Lossless webp stream signature
   if (chunkHeader === 'VP8 ' && uint8a[0] !== 0x2f) {

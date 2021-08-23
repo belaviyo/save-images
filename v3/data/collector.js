@@ -139,6 +139,7 @@ collector.meta = async function(o) {
   for (const [ext, type] of Object.entries(extensions)) {
     if (
       o.src.toLowerCase().endsWith('.' + ext) ||
+      (o.width && o.src.toLowerCase().indexOf('.' + ext) !== -1) || // e.g. http:../3522.jpg/0
       o.src.toLowerCase().indexOf('.' + ext + '?') !== -1 ||
       o.src.startsWith('data:image/' + ext)
     ) {
@@ -148,6 +149,7 @@ collector.meta = async function(o) {
         },
         origin: 'guess'
       };
+      break;
     }
   }
 
@@ -155,7 +157,6 @@ collector.meta = async function(o) {
     (window.accuracy === 'accurate' || window.accuracy === 'partial-accurate') && !o.width, // we will later run width and height detection
     (window.accuracy !== 'accurate' || o.size)
   ];
-
   if (im && conds.some(a => a)) {
     return im;
   }
@@ -502,6 +503,7 @@ collector.validate = async function() {
 
     try {
       const {meta, origin, fetch} = await collector.meta(o);
+
       Object.assign(o, meta);
       o.meta.type = origin;
       o.meta.fetch = fetch;
