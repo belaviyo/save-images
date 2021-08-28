@@ -310,6 +310,9 @@ collector.push = function(o) {
     if (window.regexp && window.regexp.some(r => r.test(o.src)) === false) {
       return;
     }
+    // try to arrange items
+    o.position = collector.position ++;
+    o.uid = window.uid;
 
     // convert relative path to absolute and remove hash section (to prevent duplicates)
     try {
@@ -349,6 +352,7 @@ collector.push = function(o) {
     }
   }
 };
+collector.position = 0;
 
 collector.addImage = function(o) {
   if (window.accuracy === 'accurate' || window.accuracy === 'partial-accurate') {
@@ -625,15 +629,21 @@ collector.dig = async function() {
 collector.dig.jobs = 0;
 
 collector.loop = function() {
-  collector.inspect(document, location, 'one', {
-    bg: true,
-    links: true,
-    extract: true
-  });
+  chrome.runtime.sendMessage({
+    cmd: 'frame-id'
+  }, uid => {
+    window.uid = uid;
+    console.log(uid);
+    collector.inspect(document, location, 'one', {
+      bg: true,
+      links: true,
+      extract: true
+    });
 
-  collector.validate();
-  collector.validate();
-  collector.validate();
-  collector.validate();
-  collector.validate();
+    collector.validate();
+    collector.validate();
+    collector.validate();
+    collector.validate();
+    collector.validate();
+  });
 };

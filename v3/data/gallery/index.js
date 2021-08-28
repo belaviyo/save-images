@@ -50,7 +50,7 @@ function humanFileSize(bytes) {
       const img = clone.querySelector('img');
       img.src = obj.src;
       clone.querySelector('div').info = obj;
-      clone.querySelector('input[type=text]').value = obj.filename;
+      img.alt = clone.querySelector('input[type=text]').value = obj.filename;
 
       const a = clone.querySelector('a');
       let title = obj.size ? humanFileSize(obj.size) : 'no size';

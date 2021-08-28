@@ -97,7 +97,7 @@ function guess(img, mask, noType = true) {
     .replace(/\[type\]/gi, type || '')
     .replace(/\[disposition\]/gi, disposition || '')
     .replace(/\[alt\]/gi, img.alt || '')
-    .replace(/\[order\]/gi, img.order || 0)
+    .replace(/\[order\]/gi, '__ORDER__') // order is not yet resolved
     .replace(/\[index\]/gi, indices[name])
     .replace(/\[custom=[^\]]+\]/gi, img.custom)
     // make sure filename is acceptable

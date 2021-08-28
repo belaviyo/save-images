@@ -123,6 +123,18 @@ input[type=button]:active {
   object-fit: scale-down;
   overflow: hidden;
 }
+.entry img::after {
+  content: "no preview";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 40px;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 80px);
+  background-image: url(grid.png);
+}
 
 [data-visible=false] {
   display: none;

@@ -115,6 +115,23 @@ function build() {
   filename = custom ? custom + '/' + filename : filename;
 
   const images = filtered();
+  // sort images
+  const stats = {};
+  for (const img of images) {
+    stats[img.uid] = (stats[img.uid] || 0) + 1;
+  }
+  const keys = Object.keys(stats).map(Number);
+  for (const img of images) {
+    const p = keys.indexOf(img.uid);
+    const offset = keys.slice(0, p).reduce((p, c) => p + stats[c], 0);
+    img.order = offset + img.position;
+  }
+  images.sort((a, b) => a.order - b.order);
+  // fix filename
+  for (const img of images) {
+    console.log(img);
+    img.filename = img.filename.replace('__ORDER__', img.order);
+  }
 
   return {
     filename,
@@ -285,7 +302,6 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       }
       catch (e) {}
       img.hostname = img.hostname || 'local';
-      img.order = Object.keys(images).length + 1;
 
       const {filename, name} = guess(img, elements.files.mask.value, elements.type.noType.checked);
 

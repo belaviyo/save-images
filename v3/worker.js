@@ -33,6 +33,9 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       tabId: sender.tab.id
     });
   }
+  else if (request.cmd === 'frame-id') {
+    response(sender.frameId);
+  }
   else if (request.cmd === 'close-me') {
     chrome.tabs.sendMessage(sender.tab.id, request);
   }
