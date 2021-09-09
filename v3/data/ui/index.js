@@ -101,8 +101,9 @@ const elements = {
   }
 };
 
-let domain;
-let title;
+const domain = elements.save.directory.value = new URL(args.get('href')).hostname;
+const title = args.get('title');
+
 const images = {};
 let total = 0;
 
@@ -129,7 +130,6 @@ function build() {
   images.sort((a, b) => a.order - b.order);
   // fix filename
   for (const img of images) {
-    console.log(img);
     img.filename = img.filename.replace('__ORDER__', img.order);
   }
 
@@ -210,7 +210,7 @@ function filtered() {
         if (img.type) {
           const {jpeg, png, bmp, webp, gif} = elements.type;
 
-          if (img.type === 'image/jpeg' && jpeg.checked) {
+          if ((img.type === 'image/jpeg' || img.type === 'image/jpg') && jpeg.checked) {
             return true;
           }
           if (img.type === 'image/png' && png.checked) {
@@ -359,90 +359,83 @@ const filename = () => {
 elements.save.format.addEventListener('input', filename);
 
 const search = () => {
-  chrome.runtime.sendMessage({
-    cmd: 'who-am-i'
-  }, response => {
-    elements.save.directory.value = domain = new URL(response.href).hostname;
-    title = response.name || 'unknown';
+  // filename
+  filename();
 
-    // filename
-    filename();
+  // collect
+  const custom = (() => {
+    const custom = (elements.files.mask.value || '[name][extension]').split('[custom=');
+    if (custom.length === 2) {
+      return custom[1].split(']')[0];
+    }
+    return '';
+  })();
 
-    // collect
-    const custom = (() => {
-      const custom = (elements.files.mask.value || '[name][extension]').split('[custom=');
-      if (custom.length === 2) {
-        return custom[1].split(']')[0];
-      }
-      return '';
-    })();
-
-    const accuracy = elements.group.accurate.checked ? 'accurate' : (
-      elements.group.calc.checked ? 'partial-accurate' : 'no-accurate'
-    );
-    /* collect images */
-    let regexp = '';
-    chrome.storage.local.get({
-      'json': {}
-    }, async prefs => {
-      for (const r of Object.keys(prefs.json)) {
-        try {
-          if ((new RegExp(r)).test(response.href)) {
-            regexp = prefs.json[r];
-            break;
-          }
-        }
-        catch (e) {}
-      }
-      // install collector on all frames
+  const accuracy = elements.group.accurate.checked ? 'accurate' : (
+    elements.group.calc.checked ? 'partial-accurate' : 'no-accurate'
+  );
+  /* collect images */
+  let regexp = '';
+  chrome.storage.local.get({
+    'json': {}
+  }, async prefs => {
+    for (const r of Object.keys(prefs.json)) {
       try {
-        const [{result}] = await chrome.scripting.executeScript({
-          target: {tabId},
-          func: () => [...document.querySelectorAll('iframe')]
-            .map(a => a.src)
-            .filter(a => a && a.toLowerCase().startsWith('javascript:')).length
-        });
+        if ((new RegExp(r)).test(args.get('href'))) {
+          regexp = prefs.json[r];
+          break;
+        }
+      }
+      catch (e) {}
+    }
+    // install collector on all frames
+    try {
+      const [{result}] = await chrome.scripting.executeScript({
+        target: {tabId},
+        func: () => [...document.querySelectorAll('iframe')]
+          .map(a => a.src)
+          .filter(a => a && a.toLowerCase().startsWith('javascript:')).length
+      });
 
-        const target = {
-          tabId,
-          // TO-DO: remove when injection to "javascript:" is fixed
-          allFrames: result ? false : true
-        };
-        await chrome.scripting.executeScript({
-          target,
-          files: ['/data/collector.js']
-        });
-        await chrome.scripting.executeScript({
-          target,
-          files: ['/data/size.js']
-        });
-        await chrome.scripting.executeScript({
-          target,
-          func: (deep, accuracy, regexp, custom) => {
-            window.deep = deep;
-            window.accuracy = accuracy || 'partial-accurate';
-            window.custom = custom || 'id';
-            try {
-              if (regexp && typeof regexp === 'string') {
-                window.regexp = [new RegExp(regexp)];
-              }
-              if (regexp && Array.isArray(regexp)) {
-                window.regexp = regexp.map(r => new RegExp(r));
-              }
+      const target = {
+        tabId,
+        // TO-DO: remove when injection to "javascript:" is fixed
+        allFrames: result ? false : true
+      };
+      await chrome.scripting.executeScript({
+        target,
+        files: ['/data/collector.js']
+      });
+      await chrome.scripting.executeScript({
+        target,
+        files: ['/data/size.js']
+      });
+      await chrome.scripting.executeScript({
+        target,
+        func: (deep, accuracy, regexp, custom) => {
+          window.deep = deep;
+          window.accuracy = accuracy || 'partial-accurate';
+          window.custom = custom || 'id';
+          try {
+            if (regexp && typeof regexp === 'string') {
+              window.regexp = [new RegExp(regexp)];
             }
-            catch (e) {
-              console.warn('cannot use the provided JSON rules', e);
+            if (regexp && Array.isArray(regexp)) {
+              window.regexp = regexp.map(r => new RegExp(r));
             }
-            window.collector.loop();
-          },
-          args: [Number(elements.deep.level.value), accuracy, regexp, custom]
-        });
-      }
-      catch (e) {
-        console.warn(e);
-        alert(e.message);
-      }
-    });
+          }
+          catch (e) {
+            console.warn('cannot use the provided JSON rules', e);
+          }
+          window.collector.loop();
+        },
+        args: [Number(elements.deep.level.value), accuracy, regexp, custom]
+      });
+    }
+    catch (e) {
+      console.warn(e);
+      alert(e.message);
+    }
   });
 };
 
@@ -451,6 +444,13 @@ elements.deep.level.addEventListener('change', search);
 // commands
 document.addEventListener('click', ({target}) => {
   const cmd = target.dataset.cmd;
+  if (cmd === 'stop' || cmd === 'save' || cmd === 'save-dir') {
+    chrome.runtime.sendMessage({
+      cmd: 'stop'
+    });
+    elements.counter.progress.dataset.visible = false;
+  }
+  //
   if (cmd === 'save' || cmd === 'save-dir') {
     document.querySelector('[data-cmd=save]').disabled = true;
     document.querySelector('[data-cmd=save-dir]').disabled = true;
@@ -501,12 +501,6 @@ document.addEventListener('click', ({target}) => {
   }
   else if (cmd === 'gallery') {
     window.parent.to.gallery();
-  }
-  else if (cmd === 'stop') {
-    chrome.runtime.sendMessage({
-      cmd: 'stop'
-    });
-    elements.counter.progress.dataset.visible = false;
   }
   else if (cmd === 'insert') {
     const input = target.closest('.list').parentNode.querySelector('input');

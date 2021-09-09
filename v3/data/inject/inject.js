@@ -66,6 +66,9 @@ chrome.storage.local.get({
     z-index: 10000000000;
     box-shadow: 0 0 0 10000px rgba(0, 0, 0, 0.3);
   `);
-  window.myframe.src = chrome.runtime.getURL('data/inject/core/index.html?tabId=' + tabId);
+  window.myframe.src = chrome.runtime.getURL('data/inject/core/index.html?' +
+    'tabId=' + tabId +
+    '&title=' + encodeURIComponent(document.title) +
+    '&href=' + encodeURIComponent(location.href));
   document.body.appendChild(window.myframe);
 });

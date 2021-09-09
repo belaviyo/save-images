@@ -150,6 +150,10 @@ document.addEventListener('click', e => {
     document.dispatchEvent(new Event('change'));
   }
   else if (cmd === 'download' || cmd === 'copy') {
+    chrome.runtime.sendMessage({
+      cmd: 'stop'
+    });
+
     const images = [...document.querySelectorAll('.entry :checked')].map(i => {
       const div = i.closest('div');
       const info = div.info;

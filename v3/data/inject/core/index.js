@@ -22,7 +22,7 @@ gallery.addEventListener('load', () => gallery.dataset.loading = false);
 window.addEventListener('load', () => {
   document.body.dataset.loading = false;
   setTimeout(() => {
-    ui.src = '/data/ui/index.html?tabId=' + tabId;
+    ui.src = '/data/ui/index.html' + location.search;
   }, 100);
 });
 
@@ -30,7 +30,7 @@ window.to = {
   gallery: () => {
     gallery.dataset.loading = true;
     document.body.dataset.mode = 'gallery';
-    gallery.src = '/data/gallery/index.html?tabId=' + tabId;
+    gallery.src = '/data/gallery/index.html' + location.search;
   },
   ui: () => {
     document.body.dataset.mode = 'ui';

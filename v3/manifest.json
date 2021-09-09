@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "version": "0.9.2",
+  "version": "0.9.3",
   "name": "Download All Images",
   "description": "__MSG_app_description__",
   "default_locale": "en",
@@ -10,7 +10,8 @@
     "scripting",
     "notifications",
     "downloads",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "declarativeNetRequest"
   ],
   "host_permissions": [
     "<all_urls>"

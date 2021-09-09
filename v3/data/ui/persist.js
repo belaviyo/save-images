@@ -7,7 +7,7 @@
  * Home: https://add0n.com/save-images.html
  * GitHub: https://github.com/belaviyo/save-images/ */
 
-/* globals search, accurate, elements */
+/* globals search, accurate, elements, args, tabId */
 'use strict';
 
 const persist = {};
@@ -64,7 +64,31 @@ document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get({pe
   }
   elements.group.accurate.dataset.checked = elements.group.accurate.checked;
   accurate();
-  search();
+
+  // install network
+  chrome.declarativeNetRequest.updateSessionRules({
+    addRules: [{
+      'id': tabId,
+      'priority': 1,
+      'action': {
+        'type': 'modifyHeaders',
+        'requestHeaders': [{
+          'operation': 'set',
+          'header': 'referer',
+          'value': args.get('href')
+        }],
+        'responseHeaders': [{
+          'operation': 'set',
+          'header': 'access-control-allow-origin',
+          'value': '*'
+        }]
+      },
+      'condition': {
+        'resourceTypes': ['xmlhttprequest', 'image'],
+        'tabIds': [tabId]
+      }
+    }]
+  }, search);
 }));
 
 document.addEventListener('click', ({target}) => {

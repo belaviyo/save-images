@@ -26,14 +26,7 @@ chrome.action.onClicked.addListener(async tab => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
-  if (request.cmd === 'who-am-i') {
-    response({
-      href: sender.tab.url,
-      name: sender.tab.title,
-      tabId: sender.tab.id
-    });
-  }
-  else if (request.cmd === 'frame-id') {
+  if (request.cmd === 'frame-id') {
     response(sender.frameId);
   }
   else if (request.cmd === 'close-me') {
@@ -127,6 +120,11 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     return true;
   }
   //
+  if (request.cmd === 'close-me' || request.cmd === 'reload-me') {
+    chrome.declarativeNetRequest.updateSessionRules({
+      removeRuleIds: [sender.tab.id]
+    }).catch(() => {});
+  }
   if (request.cmd === 'stop' || request.cmd === 'close-me' || request.cmd === 'reload-me') {
     chrome.action.setBadgeText({
       tabId: sender.tab.id,
@@ -146,6 +144,10 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     });
   }
 });
+
+chrome.tabs.onRemoved.addListener(tabId => chrome.declarativeNetRequest.updateSessionRules({
+  removeRuleIds: [tabId]
+}).catch(() => {}));
 
 /* delete all indexedDBs*/
 {

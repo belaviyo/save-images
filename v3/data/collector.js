@@ -633,7 +633,6 @@ collector.loop = function() {
     cmd: 'frame-id'
   }, uid => {
     window.uid = uid;
-    console.log(uid);
     collector.inspect(document, location, 'one', {
       bg: true,
       links: true,
