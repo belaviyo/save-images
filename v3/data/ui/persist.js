@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get({pe
 
   // install network
   chrome.declarativeNetRequest.updateSessionRules({
+    removeRuleIds: [tabId],
     addRules: [{
       'id': tabId,
       'priority': 1,

@@ -61,6 +61,7 @@ const get = o => {
     };
     return new Promise((resolve, reject) => {
       get.cache[id] = {resolve, reject};
+      setTimeout(() => reject(Error('timeout')), 10000);
       chrome.scripting.executeScript({
         target,
         func: (href, id, bg) => {
