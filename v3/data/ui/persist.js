@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get({pe
 document.addEventListener('click', ({target}) => {
   const cmd = target.dataset.cmd;
   if (cmd === 'reset' && window.confirm('Are you sure you want to reset all the settings to the defaults?')) {
-    chrome.storage.local.remove('persist', () => chrome.runtime.sendMessage({
+    chrome.storage.local.remove('persist', () => parent.commands({
       cmd: 'reload-me'
     }));
   }

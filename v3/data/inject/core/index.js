@@ -4,6 +4,11 @@
 const args = new URLSearchParams(location.search);
 const tabId = Number(args.get('tabId'));
 
+Object.assign(document.querySelector('body > div').style, {
+  width: (args.get('width') || 750) + 'px',
+  height: (args.get('height') || 650) + 'px'
+});
+
 const notify = e => chrome.storage.local.get({
   notify: true
 }, prefs => prefs.notify && chrome.notifications.create({
@@ -67,18 +72,18 @@ const get = o => {
         func: (href, id, bg) => {
           fetch(href).then(r => r.blob()).then(b => {
             const href = URL.createObjectURL(b);
-            chrome.runtime.sendMessage({
+            window.myframe.contentWindow.postMessage({
               cmd: 'fetched-on-frame',
               href,
               id
-            });
-          }).catch(e => chrome.runtime.sendMessage({
+            }, '*');
+          }).catch(e => window.myframe.contentWindow.postMessage({
             cmd: 'fetched-on-frame',
             id,
             error: e.message,
             bg,
             href
-          }));
+          }, '*'));
         },
         // if o.meta.fetch !== 'me' and o.meta.fetch !== 'bg' -> try to get from "bg" if "me" failed
         args: [o.src, id, o.meta.fetch !== 'me']
@@ -111,7 +116,7 @@ const perform = async (request, one) => {
       tabId,
       text: (n / request.images.length * 100).toFixed(0) + '%'
     });
-    chrome.runtime.sendMessage({
+    window.commands({
       cmd: 'progress',
       value: request.images.length - n
     });
@@ -138,7 +143,7 @@ const perform = async (request, one) => {
 
     await new Promise(resolve => setTimeout(resolve, prefs['download-delay']));
   }
-  chrome.runtime.sendMessage({
+  window.commands({
     cmd: 'progress',
     value: 0
   });
@@ -180,7 +185,7 @@ class ZIP {
           conflictAction: 'uniquify',
           saveAs: request.saveAs
         }).then(() => {
-          chrome.runtime.sendMessage({
+          window.commands({
             cmd: 'close-me'
           });
           setTimeout(() => URL.revokeObjectURL(url), 10000);
@@ -193,99 +198,146 @@ class ZIP {
   }
 }
 
-chrome.runtime.onMessage.addListener((request, sender) => {
-  if (sender.tab && sender.tab.id === tabId) {
-    // save to directory (1/2)
-    if (request.cmd === 'save-images' && request.directory) {
-      chrome.scripting.executeScript({
-        target: {tabId},
-        func: async request => {
-          try {
-            const d = window.directory = await window.showDirectoryPicker();
-            // fake; make sure we have write access
-            await d.getFileHandle('README.txt', {
-              create: true
-            }).then(file => file.createWritable()).then(writable => {
-              const blob = new Blob([`Downloaded by "${chrome.runtime.getManifest().name}" extension
+/* in-app communication */
+window.commands = request => {
+  if (request.cmd === 'stop' || request.cmd === 'close-me' || request.cmd === 'reload-me') {
+    chrome.action.setBadgeText({
+      tabId,
+      text: ''
+    });
+    chrome.declarativeNetRequest.updateSessionRules({
+      removeRuleIds: [tabId]
+    }).catch(() => {});
+    chrome.scripting.executeScript({
+      target: {
+        tabId,
+        allFrames: true
+      },
+      func: remove => {
+        try {
+          window.collector.active = false;
+          if (remove) {
+            window.myframe.remove();
+            window.myframe = null;
+          }
+        }
+        catch (e) {}
+      },
+      args: [request.cmd === 'close-me']
+    });
+    console.log('dine');
+  }
+
+  /**/
+  if (request.cmd === 'reload-me') {
+    location.reload();
+  }
+  else if (request.cmd === 'progress' || request.cmd === 'close-me') {
+    ui.contentWindow.commands(request);
+    try {
+      gallery.contentWindow.commands(request);
+    }
+    catch (e) {}
+  }
+  else if (request.cmd === 'images' || request.cmd === 'links') {
+    ui.contentWindow.commands(request);
+  }
+  // save to directory (1/2)
+  else if (request.cmd === 'save-images' && request.directory) {
+    chrome.scripting.executeScript({
+      target: {tabId},
+      func: async request => {
+        try {
+          const d = window.directory = await window.showDirectoryPicker();
+          // fake; make sure we have write access
+          await d.getFileHandle('README.txt', {
+            create: true
+          }).then(file => file.createWritable()).then(writable => {
+            const blob = new Blob([`Downloaded by "${chrome.runtime.getManifest().name}" extension
 
 Page: ${location.href}
 Date: ${new Date().toLocaleString()}
 `], {
-                type: 'text/plain'
-              });
-              const response = new Response(blob);
-              return response.body.pipeTo(writable);
+              type: 'text/plain'
             });
+            const response = new Response(blob);
+            return response.body.pipeTo(writable);
+          });
 
-            request.cmd = 'directory-ready';
-            chrome.runtime.sendMessage(request);
-          }
-          catch (e) {
-            alert(e.message);
-          }
-        },
-        args: [request]
-      });
-    }
-    // save to directory (2/2)
-    else if (request.cmd === 'directory-ready') {
-      perform(request, async (filename, image) => {
-        let href = image.src;
-        if (image.meta.fetch === 'bg') {
-          href = await fetch(href).then(r => r.blob()).then(b => URL.createObjectURL(b));
+          request.cmd = 'directory-ready';
+          window.myframe.contentWindow.postMessage(request, '*');
         }
-        await chrome.scripting.executeScript({
-          target: {tabId},
-          func: (filename, href) => {
-            Promise.all([
-              fetch(href),
-              window.directory.getFileHandle(filename, {
-                create: true
-              }).then(file => file.createWritable())
-            ]).then(([response, writable]) => {
-              writable.truncate(0).then(() => response.body.pipeTo(writable)).finally(() => URL.revokeObjectURL(href));
-            }).catch(e => console.warn(e));
-          },
-          args: [filename, href]
-        });
-      }).then(() => chrome.runtime.sendMessage({
-        cmd: 'close-me'
-      }));
-    }
-    // save to IndexedDB
-    else if (request.cmd === 'save-images' && request.zip) {
-      const z = new ZIP();
-      z.perform(request).then(() => chrome.runtime.sendMessage({
-        cmd: 'close-me'
-      }));
-    }
-    // save using download manager
-    else if (request.cmd === 'save-images') {
-      perform(request, (filename, image) => {
-        const path = request.filename.split('/');
-        path.pop();
-        path.push(image.filename);
-
-        return nd({
-          url: image.src,
-          filename: path.join('/'),
-          conflictAction: 'uniquify',
-          saveAs: false
-        });
-      }).then(() => chrome.runtime.sendMessage({
-        cmd: 'close-me'
-      }));
-    }
-    // internal get response
-    else if (request.cmd === 'fetched-on-frame') {
-      const {resolve, reject} = get.cache[request.id];
-      if (request.error && request.bg === false) {
-        reject(Error(request.error));
-      }
-      else {
-        resolve(request.href);
-      }
-      delete get.cache[request.id];
-    }
+        catch (e) {
+          alert(e.message);
+        }
+      },
+      args: [request]
+    });
   }
-});
+  // save to directory (2/2)
+  else if (request.cmd === 'directory-ready') {
+    perform(request, async (filename, image) => {
+      let href = image.src;
+      if (image.meta.fetch === 'bg') {
+        href = await fetch(href).then(r => r.blob()).then(b => URL.createObjectURL(b));
+      }
+      await chrome.scripting.executeScript({
+        target: {tabId},
+        func: (filename, href) => {
+          Promise.all([
+            fetch(href),
+            window.directory.getFileHandle(filename, {
+              create: true
+            }).then(file => file.createWritable())
+          ]).then(([response, writable]) => {
+            writable.truncate(0).then(() => response.body.pipeTo(writable)).finally(() => URL.revokeObjectURL(href));
+          }).catch(e => console.warn(e));
+        },
+        args: [filename, href]
+      });
+    }).then(() => window.commands({
+      cmd: 'close-me'
+    }));
+  }
+  // save to IndexedDB
+  else if (request.cmd === 'save-images' && request.zip) {
+    const z = new ZIP();
+    z.perform(request).then(() => window.commands({
+      cmd: 'close-me'
+    }));
+  }
+  // save using download manager
+  else if (request.cmd === 'save-images') {
+    perform(request, (filename, image) => {
+      const path = request.filename.split('/');
+      path.pop();
+      path.push(image.filename);
+
+      return nd({
+        url: image.src,
+        filename: path.join('/'),
+        conflictAction: 'uniquify',
+        saveAs: false
+      });
+    }).then(() => window.commands({
+      cmd: 'close-me'
+    }));
+  }
+  // internal get response
+  else if (request.cmd === 'fetched-on-frame') {
+    const {resolve, reject} = get.cache[request.id];
+    if (request.error && request.bg === false) {
+      reject(Error(request.error));
+    }
+    else {
+      resolve(request.href);
+    }
+    delete get.cache[request.id];
+  }
+};
+window.addEventListener('message', e => window.commands(e.data));
+
+document.addEventListener('click', () => window.commands({
+  cmd: 'close-me'
+}));
+

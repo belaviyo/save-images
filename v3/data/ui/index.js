@@ -288,11 +288,8 @@ function update() {
   document.querySelector('[data-cmd=gallery]').disabled = index === 0;
 }
 
-chrome.runtime.onMessage.addListener((request, sender, response) => {
+window.commands = request => {
   if (request.cmd === 'images') {
-    if (sender.tab) { // prevent duplication; we need the one from bg
-      return;
-    }
     request.images.filter(img => img.type.startsWith('image/')).forEach(img => {
       if (images[img.src]) {
         return;
@@ -316,23 +313,23 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     });
     update();
   }
-  // open gallery view on a separate window
-  else if (request.cmd === 'build') {
-    response(build());
+  else if (request.cmd === 'progress') { // for downloading
+    elements.counter.progress.dataset.visible = request.value !== 0;
+    elements.counter.progress.value = elements.counter.progress.max - request.value;
   }
-  else if (sender.tab && sender.tab.id === tabId) {
-    if (request.cmd === 'progress') { // for downloading
-      elements.counter.progress.dataset.visible = request.value !== 0;
-      elements.counter.progress.value = elements.counter.progress.max - request.value;
+  else if (request.cmd === 'links') {
+    total += request.length;
+    elements.counter.total.textContent = total;
+    elements.counter.progress.max = total;
+    if (request.filters) {
+      elements.counter.filters.textContent = ` (filters: ${request.filters})`;
     }
-    else if (request.cmd === 'links') {
-      total += request.length;
-      elements.counter.total.textContent = total;
-      elements.counter.progress.max = total;
-      if (request.filters) {
-        elements.counter.filters.textContent = ` (filters: ${request.filters})`;
-      }
-    }
+  }
+};
+chrome.runtime.onMessage.addListener((request, sender, response) => {
+  // open gallery view on a separate window
+  if (request.cmd === 'build') {
+    response(build());
   }
 });
 
@@ -445,7 +442,7 @@ elements.deep.level.addEventListener('change', search);
 document.addEventListener('click', ({target}) => {
   const cmd = target.dataset.cmd;
   if (cmd === 'stop' || cmd === 'save' || cmd === 'save-dir') {
-    chrome.runtime.sendMessage({
+    parent.commands({
       cmd: 'stop'
     });
     elements.counter.progress.dataset.visible = false;
@@ -466,7 +463,7 @@ document.addEventListener('click', ({target}) => {
     const save = () => {
       elements.counter.progress.value = 0;
       elements.counter.progress.max = len;
-      chrome.runtime.sendMessage(obj);
+      parent.commands(obj);
     };
     if (len > Number(elements.prefs.max.value)) {
       if (vconfirm(`Are you sure you want to download "${len}" images?`)) {
@@ -482,18 +479,16 @@ document.addEventListener('click', ({target}) => {
     }
   }
   else if (cmd === 'copy') {
-    const content = Object.keys(images).join('\n');
+    const links = Object.keys(images);
     chrome.scripting.executeScript({
       target: {tabId},
-      func: content => {
-        navigator.clipboard.writeText(content).catch(e => alert(e.message));
+      func: links => {
+        navigator.clipboard.writeText(links.join('\n')).catch(e => alert(e.message));
+        const t = document.title;
+        document.title = links.length + ' link(s) copied to the clipboard';
+        setTimeout(() => document.title = t, 750);
       },
-      args: [content]
-    });
-  }
-  else if (cmd === 'close') {
-    chrome.runtime.sendMessage({
-      cmd: 'close-me'
+      args: [links]
     });
   }
   else if (cmd === 'restart') {

@@ -29,16 +29,6 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.cmd === 'frame-id') {
     response(sender.frameId);
   }
-  else if (request.cmd === 'close-me') {
-    chrome.tabs.sendMessage(sender.tab.id, request);
-  }
-  else if (request.cmd === 'images') {
-    // we need to use the same frame to fetch the content later
-    for (const image of request.images) {
-      image.frameId = sender.frameId;
-    }
-    chrome.tabs.sendMessage(sender.tab.id, request);
-  }
   else if (request.cmd === 'read-headers') {
     chrome.storage.local.get({
       'head-timeout': 30 * 1000
@@ -118,30 +108,6 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     });
 
     return true;
-  }
-  //
-  if (request.cmd === 'close-me' || request.cmd === 'reload-me') {
-    chrome.declarativeNetRequest.updateSessionRules({
-      removeRuleIds: [sender.tab.id]
-    }).catch(() => {});
-  }
-  if (request.cmd === 'stop' || request.cmd === 'close-me' || request.cmd === 'reload-me') {
-    chrome.action.setBadgeText({
-      tabId: sender.tab.id,
-      text: ''
-    });
-    chrome.scripting.executeScript({
-      target: {
-        tabId: sender.tab.id,
-        allFrames: true
-      },
-      func: () => {
-        try {
-          window.collector.active = false;
-        }
-        catch (e) {}
-      }
-    });
   }
 });
 

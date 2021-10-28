@@ -150,7 +150,7 @@ document.addEventListener('click', e => {
     document.dispatchEvent(new Event('change'));
   }
   else if (cmd === 'download' || cmd === 'copy') {
-    chrome.runtime.sendMessage({
+    parent.commands({
       cmd: 'stop'
     });
 
@@ -169,7 +169,7 @@ document.addEventListener('click', e => {
       progress.dataset.visible = true;
       progress.max = images.length;
 
-      chrome.runtime.sendMessage({
+      parent.commands({
         cmd: 'save-images',
         custom: resp.custom,
         filename: resp.filename,
@@ -179,17 +179,22 @@ document.addEventListener('click', e => {
       });
     }
     else {
-      const content = images.map(o => o.src).join('\n');
+      const links = images.map(o => o.src);
+      const copy = links => {
+        navigator.clipboard.writeText(links.join('\n')).catch(e => alert(e.message));
+        const t = document.title;
+        document.title = links.length + ' link(s) copied to the clipboard';
+        setTimeout(() => document.title = t, 750);
+      };
+
       if (window.top === window) {
-        navigator.clipboard.writeText(content).catch(e => alert(e.message));
+        copy(links);
       }
       else {
         chrome.scripting.executeScript({
           target: {tabId},
-          func: content => {
-            navigator.clipboard.writeText(content).catch(e => alert(e.message));
-          },
-          args: [content]
+          func: copy,
+          args: [links]
         });
       }
     }
@@ -218,12 +223,11 @@ document.addEventListener('input', e => {
   e.target.dataset.modified = e.target.value ? true : false;
 });
 
-
-chrome.runtime.onMessage.addListener(request => {
+window.commands = request => {
   if (request.cmd === 'progress') {
     progress.value = progress.max - request.value;
   }
   else if (request.cmd === 'close-me') {
     progress.dataset.visible = false;
   }
-});
+};

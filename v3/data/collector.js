@@ -40,6 +40,13 @@ var dsize = r => {
   return 0;
 };
 
+var post = request => {
+  try {
+    window.myframe.contentWindow.postMessage(request, '*');
+  }
+  catch (e) {}
+};
+
 var dtype = (p, o) => {
   if (o.type && o.type.startsWith('text/')) {
     return o.type;
@@ -64,7 +71,7 @@ var collector = {
 
 var report = () => {
   if (collector.active) {
-    chrome.runtime.sendMessage({
+    post({
       cmd: 'progress',
       value: collector.feeds['1'].length + collector.feeds['2'].length + collector.feeds['3'].length +
         collector['raw-images'].length +
@@ -75,13 +82,16 @@ var report = () => {
 
 collector.events = {
   image(o) { // called when new image is listed
-    chrome.runtime.sendMessage({
+    // we need to use the same frame to fetch the content later
+    o.frameId = window.uid;
+
+    post({
       cmd: 'images',
       images: [o]
     });
   },
   feed(length) { // called when a new link is listed
-    chrome.runtime.sendMessage({
+    post({
       cmd: 'links',
       filters: (window.regexp || []).length,
       length
