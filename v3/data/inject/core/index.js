@@ -1,4 +1,4 @@
-/* global InZIP */
+/* global InZIP, post */
 'use strict';
 
 const args = new URLSearchParams(location.search);
@@ -72,12 +72,12 @@ const get = o => {
         func: (href, id, bg) => {
           fetch(href).then(r => r.blob()).then(b => {
             const href = URL.createObjectURL(b);
-            window.myframe.contentWindow.postMessage({
+            post({
               cmd: 'fetched-on-frame',
               href,
               id
             }, '*');
-          }).catch(e => window.myframe.contentWindow.postMessage({
+          }).catch(e => post({
             cmd: 'fetched-on-frame',
             id,
             error: e.message,
@@ -205,9 +205,6 @@ window.commands = request => {
       tabId,
       text: ''
     });
-    chrome.declarativeNetRequest.updateSessionRules({
-      removeRuleIds: [tabId]
-    }).catch(() => {});
     chrome.scripting.executeScript({
       target: {
         tabId,
@@ -225,7 +222,12 @@ window.commands = request => {
       },
       args: [request.cmd === 'close-me']
     });
-    console.log('dine');
+    //
+    if (request.cmd === 'close-me') {
+      chrome.declarativeNetRequest.updateSessionRules({
+        removeRuleIds: [tabId]
+      }).catch(() => {});
+    }
   }
 
   /**/
@@ -265,7 +267,7 @@ Date: ${new Date().toLocaleString()}
           });
 
           request.cmd = 'directory-ready';
-          window.myframe.contentWindow.postMessage(request, '*');
+          post(request, '*');
         }
         catch (e) {
           alert(e.message);
@@ -335,7 +337,14 @@ Date: ${new Date().toLocaleString()}
     delete get.cache[request.id];
   }
 };
+// top-frame requests
 window.addEventListener('message', e => window.commands(e.data));
+// frame requests
+chrome.runtime.onMessage.addListener(request => {
+  if (request.cmd === 'message') {
+    window.commands(request.request);
+  }
+});
 
 document.addEventListener('click', () => window.commands({
   cmd: 'close-me'

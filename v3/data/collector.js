@@ -42,7 +42,15 @@ var dsize = r => {
 
 var post = request => {
   try {
-    window.myframe.contentWindow.postMessage(request, '*');
+    if (window.top === window) {
+      window.myframe.contentWindow.postMessage(request, '*');
+    }
+    else {
+      chrome.runtime.sendMessage({
+        cmd: 'send-to-core',
+        request
+      });
+    }
   }
   catch (e) {}
 };

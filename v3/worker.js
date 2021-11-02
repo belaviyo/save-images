@@ -29,6 +29,10 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.cmd === 'frame-id') {
     response(sender.frameId);
   }
+  else if (request.cmd === 'send-to-core') {
+    request.cmd = 'message';
+    chrome.tabs.sendMessage(sender.tab.id, request);
+  }
   else if (request.cmd === 'read-headers') {
     chrome.storage.local.get({
       'head-timeout': 30 * 1000
