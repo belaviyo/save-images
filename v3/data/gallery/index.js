@@ -49,7 +49,7 @@ function humanFileSize(bytes) {
       const clone = document.importNode(t.content, true);
       const img = clone.querySelector('img');
       img.src = obj.src;
-      clone.querySelector('div').info = obj;
+      clone.querySelector('label').info = obj;
       img.alt = clone.querySelector('input[type=text]').value = obj.filename;
 
       const a = clone.querySelector('a');
@@ -128,7 +128,7 @@ document.addEventListener('click', e => {
     const entries = [...document.querySelectorAll('.entry :checked')];
     const o = -1 * String(offset + entries.length + 1).length;
     entries.forEach((e, i) => {
-      const input = e.closest('div').querySelector('input[type=text]');
+      const input = e.closest('label').querySelector('input[type=text]');
       let index = input.value.lastIndexOf('.');
       if (index === -1) {
         index = input.value.length;
@@ -155,7 +155,7 @@ document.addEventListener('click', e => {
     });
 
     const images = [...document.querySelectorAll('.entry :checked')].map(i => {
-      const div = i.closest('div');
+      const div = i.closest('label');
       const info = div.info;
       const input = div.querySelector('input[type=text]');
       // in gallery mode we use the name as it is
