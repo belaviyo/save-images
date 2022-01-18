@@ -25,6 +25,10 @@ ui.addEventListener('load', () => ui.dataset.loading = false);
 gallery.addEventListener('load', () => gallery.dataset.loading = false);
 
 window.addEventListener('load', () => {
+  chrome.action.setBadgeText({
+    tabId,
+    text: ''
+  });
   document.body.dataset.loading = false;
   setTimeout(() => {
     ui.src = '/data/ui/index.html' + location.search;
@@ -186,7 +190,8 @@ class ZIP {
           saveAs: request.saveAs
         }).then(() => {
           window.commands({
-            cmd: 'close-me'
+            cmd: 'close-me',
+            badge: 'done'
           });
           setTimeout(() => URL.revokeObjectURL(url), 10000);
         });
@@ -203,7 +208,7 @@ window.commands = request => {
   if (request.cmd === 'stop' || request.cmd === 'close-me' || request.cmd === 'reload-me') {
     chrome.action.setBadgeText({
       tabId,
-      text: ''
+      text: request.badge === 'done' ? '✓' : ''
     });
     chrome.scripting.executeScript({
       target: {
@@ -298,14 +303,16 @@ Date: ${new Date().toLocaleString()}
         args: [filename, href]
       });
     }).then(() => window.commands({
-      cmd: 'close-me'
+      cmd: 'close-me',
+      badge: 'done'
     }));
   }
   // save to IndexedDB
   else if (request.cmd === 'save-images' && request.zip) {
     const z = new ZIP();
     z.perform(request).then(() => window.commands({
-      cmd: 'close-me'
+      cmd: 'close-me',
+      badge: 'done'
     }));
   }
   // save using download manager
@@ -322,7 +329,8 @@ Date: ${new Date().toLocaleString()}
         saveAs: false
       });
     }).then(() => window.commands({
-      cmd: 'close-me'
+      cmd: 'close-me',
+      badge: 'done'
     }));
   }
   // internal get response
