@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2021 Joe Ertaba
+/* Copyright (C) 2014-2022 Joe Ertaba
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7,7 +7,7 @@
  * Home: https://add0n.com/save-images.html
  * GitHub: https://github.com/belaviyo/save-images/ */
 
-/* global guess */
+/* global utils */
 
 'use strict';
 
@@ -109,9 +109,7 @@ let total = 0;
 
 function build() {
   const custom = elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_');
-  let filename = elements.save.filename.value
-    .replace(/\.zip/g, '')
-    .replace(/[`~!@#$%^&*()|+=?;:'",.<>{}[\]\\/]/gi, '-') + '.zip';
+  let filename = utils.rename(elements.save.filename.value.replace(/\.zip/g, '')) + '.zip';
 
   filename = custom ? custom + '/' + filename : filename;
 
@@ -300,7 +298,7 @@ window.commands = request => {
       catch (e) {}
       img.hostname = img.hostname || 'local';
 
-      const {filename, name} = guess(img, elements.files.mask.value, elements.type.noType.checked);
+      const {filename, name} = utils.guess(img, elements.files.mask.value, elements.type.noType.checked);
 
       img.filename = filename;
       if (img.size) {
