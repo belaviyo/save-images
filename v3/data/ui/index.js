@@ -340,8 +340,19 @@ const filename = () => {
     navigation = new Date(performance.timing.domInteractive);
   }
 
+  let o = {};
+  try {
+    o = new URL(args.get('href'));
+  }
+  catch (e) {}
+
   elements.save.filename.value = (elements.save.format.value || elements.save.format.placeholder)
-    .replace('[title]', title)
+    .replace('[href]', args.get('href') || 'NA')
+    .replace('[href-hostname]', o.hostname || 'NA')
+    .replace('[href-pathname]', o.pathname || 'NA')
+    .replace('[href-search]', o.search || 'NA')
+    .replace('[href-hash]', o.hash || 'NA')
+    .replace('[title]', title || 'NA')
     .replace('[date]', current.toLocaleDateString())
     .replace('[current-date]', current.toLocaleDateString())
     .replace('[time]', current.toLocaleTimeString())
