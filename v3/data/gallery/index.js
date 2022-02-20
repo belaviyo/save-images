@@ -133,9 +133,9 @@ document.addEventListener('click', e => {
       if (index === -1) {
         index = input.value.length;
       }
-      const extension = (input.value.substr(index) || '').substr(0, 10);
+      const extension = (input.value.slice(index) || '').slice(0, 10);
       const name = pattern
-        .replace(/\[#=*\d*\]/gi, ('000000' + (i + offset)).substr(o))
+        .replace(/\[#=*\d*\]/gi, ('000000' + (i + offset)).slice(o))
         .replace(/\[extension\]/gi, extension);
       input.value = name;
       input.dispatchEvent(new Event('input'));

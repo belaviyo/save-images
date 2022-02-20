@@ -36,7 +36,7 @@ function guess(img, mask, noType = true) {
     for (const ext of ['jpeg', 'jpg', 'png', 'gif', 'bmp', 'webp']) {
       const i = page.toLowerCase().indexOf('.' + ext);
       if (i !== -1 && size > 500 * 1024) {
-        name = page.substr(0, i).split('/').pop();
+        name = page.slice(0, i).split('/').pop();
         break;
       }
     }
@@ -74,11 +74,11 @@ function guess(img, mask, noType = true) {
   if (index === -1) {
     index = name.length;
   }
-  let extension = name.substr(index).substr(0, 10);
+  let extension = name.slice(index).slice(0, 10);
   if (extension.length == 0 && noType) {
     extension = '.jpg';
   }
-  name = name.substr(0, index);
+  name = name.slice(0, index);
   if (name.startsWith('%')) {
     name = decodeURIComponent(name);
   }
@@ -103,7 +103,7 @@ function guess(img, mask, noType = true) {
     // make sure filename is acceptable
     .replace(/[`~!@#$%^&*()|+=?;:'",.<>{}[\]\\/]/gi, '-')
     // limit length of each section to 60 chars
-    .substr(0, 60)).join(extension);
+    .slice(0, 60)).join(extension);
 
   return {
     filename,
