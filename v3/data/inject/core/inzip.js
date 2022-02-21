@@ -168,7 +168,7 @@ class InZIP {
     crc = crc ^ (-1);
     for (let i = 0, iTop = uint8a.byteLength; i < iTop; i++) {
       y = (crc ^ uint8a[i]) & 0xFF;
-      x = '0x' + this.config.CRCTables.substr(y * 9, 8);
+      x = '0x' + this.config.CRCTables.slice(y * 9, y * 9 + 8);
       crc = (crc >>> 8) ^ x;
     }
     return crc ^ (-1);

@@ -10,7 +10,7 @@ var hex = (uint8a, start, end) => {
 // https://github.com/image-size/image-size/blob/main/lib/types/png.ts
 type.png = uint8a => {
   const b = String.fromCharCode(...uint8a.slice(0, 10));
-  if (b.substr(1, 7) === 'PNG\r\n\x1a\n') {
+  if (b.slice(1, 8) === 'PNG\r\n\x1a\n') {
     return true;
   }
 
@@ -20,7 +20,7 @@ size.png = uint8a => {
   const b = String.fromCharCode(...uint8a.slice(0, 40));
   const view = new DataView(uint8a.buffer);
 
-  if (b.substr(12, 4) === 'CgBI') {
+  if (b.slice(12, 16) === 'CgBI') {
     return {
       type: 'image/png',
       width: view.getUint32(36, false),
@@ -68,9 +68,9 @@ size.bmp = uint8a => {
 // https://github.com/image-size/image-size/blob/main/lib/types/webp.ts
 type.webp = uint8a => {
   const b = String.fromCharCode(...uint8a.slice(0, 16));
-  const riffHeader = 'RIFF' === b.substr(0, 4);
-  const webpHeader = 'WEBP' === b.substr(8, 4);
-  const vp8Header = 'VP8' === b.substr(12, 3);
+  const riffHeader = 'RIFF' === b.slice(0, 4);
+  const webpHeader = 'WEBP' === b.slice(8, 12);
+  const vp8Header = 'VP8' === b.slice(12, 15);
 
   return (riffHeader && webpHeader && vp8Header);
 };
