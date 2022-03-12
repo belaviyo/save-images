@@ -31,7 +31,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   }
   else if (request.cmd === 'send-to-core') {
     request.cmd = 'message';
-    chrome.tabs.sendMessage(sender.tab.id, request);
+    chrome.tabs.sendMessage(sender.tab.id, request, () => chrome.runtime.lastError);
   }
   else if (request.cmd === 'read-headers') {
     chrome.storage.local.get({
@@ -56,7 +56,6 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
         }
       }).catch(() => response({}));
     });
-
 
     return true;
   }

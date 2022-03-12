@@ -49,7 +49,7 @@ var post = request => {
       chrome.runtime.sendMessage({
         cmd: 'send-to-core',
         request
-      });
+      }, () => chrome.runtime.lastError);
     }
   }
   catch (e) {}

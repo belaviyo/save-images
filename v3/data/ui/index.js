@@ -281,7 +281,16 @@ function update() {
   const index = elements.counter.save.value =
     elements.counter.save.textContent = filtered().length;
   document.querySelector('[data-cmd=save]').disabled = index === 0;
-  document.querySelector('[data-cmd=save-dir]').disabled = index === 0 || !('showDirectoryPicker' in window);
+
+  chrome.scripting.executeScript({
+    target: {
+      tabId
+    },
+    func: () => 'showDirectoryPicker' in window
+  }).then(a => {
+    document.querySelector('[data-cmd=save-dir]').disabled = a[0].result === false;
+  });
+
   document.querySelector('[data-cmd=copy]').disabled = index === 0;
   document.querySelector('[data-cmd=gallery]').disabled = index === 0;
 }
@@ -474,7 +483,7 @@ document.addEventListener('click', ({target}) => {
       elements.counter.progress.max = len;
       parent.commands(obj);
     };
-    if (len > Number(elements.prefs.max.value)) {
+    if (len > Number(elements.prefs.max.value) && cmd === 'save') {
       if (vconfirm(`Are you sure you want to download "${len}" images?`)) {
         save();
       }

@@ -147,8 +147,9 @@ a {
   background-color: #eee;
 }
 
+:disabled,
 .disabled {
-  opacity: 0.5;
+  opacity: 0.7;
   pointer-events: none;
 }
 
