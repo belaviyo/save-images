@@ -58,8 +58,6 @@ self.utils = {
         }
         try {
           name = decodeURIComponent(name.split('?')[0].split('&')[0]) || 'image';
-          // make sure name is writable
-          name = self.utils.rename(name);
         }
         catch (e) {}
       }
