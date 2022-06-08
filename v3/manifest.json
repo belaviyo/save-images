@@ -16,9 +16,6 @@
   "host_permissions": [
     "<all_urls>"
   ],
-  "optional_permissions": [
-    "clipboardWrite"
-  ],
   "background": {
     "service_worker": "worker.js"
   },

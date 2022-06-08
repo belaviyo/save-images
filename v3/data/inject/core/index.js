@@ -251,6 +251,8 @@ window.commands = request => {
   }
   // save to directory (1/2)
   else if (request.cmd === 'save-images' && request.directory) {
+    console.log(request.images);
+
     chrome.scripting.executeScript({
       target: {tabId},
       func: async request => {
@@ -264,6 +266,10 @@ window.commands = request => {
 
 Page: ${location.href}
 Date: ${new Date().toLocaleString()}
+
+Name, Link
+----------
+${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
 `], {
               type: 'text/plain'
             });
