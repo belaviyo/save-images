@@ -1,0 +1,296 @@
+{
+  "app_description": {
+    "message": "Könnyen menthetsz le képeket számos testreszabási lehetőséggel, például fájlmérettel, méretekkel és képtípussal."
+  },
+  "gallery_title": {
+    "message": "Képgaléria"
+  },
+  "gallery_select_all": {
+    "message": "Összes kiválasztása; Tartomány kiválasztásához először töröld az összes kijelölését, majd válaszd ki az első elemet, aztán Shift+kattintással az utolsó elemet"
+  },
+  "gallery_select_none": {
+    "message": "Nincs kiválasztás"
+  },
+  "gallery_download": {
+    "message": "Kiválasztott képek letöltése"
+  },
+  "gallery_copy": {
+    "message": "A kiválasztott képek URL-címének vágólapra másolása"
+  },
+  "gallery_window": {
+    "message": "Megnyitás új lapon"
+  },
+  "gallery_rename": {
+    "message": "Átnevezés"
+  },
+  "gallery_pattern": {
+    "message": "kép-[#=1][kiterjesztés]"
+  },
+  "ui_statistics": {
+    "message": "Statisztikák"
+  },
+  "ui_total": {
+    "message": "Összes:"
+  },
+  "ui_total_title": {
+    "message": "Az elemzett linkek teljes száma (a link lehet kép vagy nem kép is)"
+  },
+  "ui_images_title": {
+    "message": "Az elérhető képek teljes száma"
+  },
+  "ui_saving_title": {
+    "message": "A szűrők alapján mentett képek összes száma"
+  },
+  "ui_images": {
+    "message": "Képek:"
+  },
+  "ui_saving": {
+    "message": "Mentés:"
+  },
+  "ui_deep_search_title": {
+    "message": "0: ne bontsa ki a hivatkozott képeket (gyors)\n1: A hivatkozott képek kibontása (lassú)\n2: A hivatkozott képek kibontása és a cél HTML-dokumentumok (képek) elemzése (túl lassú)\n 3: A hivatkozott képek kibontása és a cél HTML-dokumentumok elemzése (képek+linkek) (túl lassú; egyéni szűrőkkel használd)"
+  },
+  "ui_deep_search": {
+    "message": "Mélykeresés"
+  },
+  "ui_level": {
+    "message": "Szint"
+  },
+  "ui_file_size": {
+    "message": "Fájlméret (lassú)"
+  },
+  "ui_min": {
+    "message": "Min"
+  },
+  "ui_bytes": {
+    "message": "bájt"
+  },
+  "ui_max": {
+    "message": "Max"
+  },
+  "ui_unkown": {
+    "message": "Ha ismeretlen"
+  },
+  "ui_skip": {
+    "message": "Kihagyás"
+  },
+  "ui_dimension": {
+    "message": "Méretek (képpontok)"
+  },
+  "ui_min_width": {
+    "message": "Min szélesség"
+  },
+  "ui_max_width": {
+    "message": "Max szélesség"
+  },
+  "ui_min_height": {
+    "message": "Min magasság"
+  },
+  "ui_max_height": {
+    "message": "Max magasság"
+  },
+  "ui_image_types": {
+    "message": "Képtípus"
+  },
+  "ui_all_images": {
+    "message": "Minden kép"
+  },
+  "ui_Selection": {
+    "message": "Kiválasztás"
+  },
+  "ui_jpg_images": {
+    "message": "JP(E)G képek"
+  },
+  "ui_png_images": {
+    "message": "PNG képek"
+  },
+  "ui_gif_images": {
+    "message": "GIF képek"
+  },
+  "ui_bmp_images": {
+    "message": "BMP képek"
+  },
+  "ui_webp_images": {
+    "message": "WebP képek"
+  },
+  "ui_no_extension": {
+    "message": "Ha nincs kiterjesztés, mentés JPG-ként"
+  },
+  "ui_regexp": {
+    "message": "Reguláris kifejezés"
+  },
+  "ui_regexp_desc": {
+    "message": "A képek URL-jén alapuló reguláris kifejezés (csak az egyező képeket menti a rendszer)"
+  },
+  "ui_blacklist": {
+    "message": "Kizárandó kulcsszavak"
+  },
+  "ui_blacklist_desc": {
+    "message": "A kizárandó kulcsszavak vesszővel elválasztott listája (a megfelelő képek NEM kerülnek mentésre)"
+  },
+  "ui_misc": {
+    "message": "Vegyes"
+  },
+  "ui_same_domain": {
+    "message": "Csak a kiválasztott lap URL-címével azonos domainről/szerverről mentse a képeket"
+  },
+  "ui_unique": {
+    "message": "Próbálja meg kizárni az azonos képeket"
+  },
+  "ui_separate": {
+    "message": "Minden kép letöltése külön-külön (lassú)"
+  },
+  "ui_accurate": {
+    "message": "Erősítse meg a MIME-típusokat és találja ki a fájlneveket a szerverről"
+  },
+  "ui_calc": {
+    "message": "Az összes kép szélesség- és magasságméretének megkeresése"
+  },
+  "ui_sl_re": {
+    "message": "(lassú) (újraindítás szükséges)"
+  },
+  "ui_mask": {
+    "message": "Fájlmaszk"
+  },
+  "ui_mask_desc": {
+    "message": "Ebben a részben átnevezheted a képfájlneveket a kívánt formátumra"
+  },
+  "ui_mask_keywords": {
+    "message": "A kívánt kulcsszót zárt zárójelek közé kell tenni, például [név][kiterjesztés]"
+  },
+  "ui_keywords": {
+    "message": "Kulcsszó"
+  },
+  "ui_save_in_1": {
+    "message": "Mentés és DIR mentés"
+  },
+  "ui_save_in_2": {
+    "message": "Mentés"
+  },
+  "ui_dialog": {
+    "message": "A böngésző mentési párbeszédablakának megjelenítése a célkönyvtár kiválasztásához"
+  },
+  "ui_save_dialog": {
+    "message": "Mentési párbeszédablak"
+  },
+  "ui_delay": {
+    "message": "A lekérés hossza mp-ekben, mielőtt automatikusan leállításra kerül (5-120 mp)"
+  },
+  "detection_delay": {
+    "message": "Egy-egy szerveroldali képészlelés utáni szüneteltetés mp-ben (sebességkorlát)"
+  },
+  "download_delay": {
+    "message": "Egy-egy szerveroldali képletöltés utáni szüneteltetés mp-ben (sebességkorlát)"
+  },
+  "ui_format": {
+    "message": "Formátum"
+  },
+  "ui_zip": {
+    "message": "ZIP fájlnév"
+  },
+  "ui_directory": {
+    "message": "Könyvtár"
+  },
+  "ui_relative": {
+    "message": "egyéni könyvtár az alapértelmezett letöltési könyvtárhoz helyett"
+  },
+  "ui_reset": {
+    "message": "Visszaállítás"
+  },
+  "ui_restart": {
+    "message": "Újraindítás"
+  },
+  "ui_stop": {
+    "message": "Leállítás"
+  },
+  "ui_gallery": {
+    "message": "Galéria"
+  },
+  "ui_copy": {
+    "message": "Másolás"
+  },
+  "ui_save": {
+    "message": "Mentés"
+  },
+  "ui_save_dir": {
+    "message": "DIR mentés"
+  },
+  "ui_cancel": {
+    "message": "Mégse"
+  },
+  "ui_reset_title": {
+    "message": "Beállítások visszaállítása az alapértelmezett értékekre"
+  },
+  "ui_restart_title": {
+    "message": "Képgyűjteményt újraindítása"
+  },
+  "ui_stop_title": {
+    "message": "További képek keresésének leállítása"
+  },
+  "ui_gallery_title": {
+    "message": "A kiválasztott képek megnyitása galéria módban"
+  },
+  "ui_copy_title": {
+    "message": "A kiválasztott képek másolása a vágólapra"
+  },
+  "ui_save_title": {
+    "message": "A kiválasztott képeket mentése az alapértelmezett letöltési könyvtárba"
+  },
+  "ui_save_dir_title": {
+    "message": "[Kísérleti funkció] A kiválasztott képek mentése egy egyéni könyvtárba anélkül, hogy először hozzáadná őket egy ZIP-archívumhoz. Csak HTTPS-oldalakon érhető el, ha a böngésző támogatja a natív fájlrendszert"
+  },
+  "ui_cancel_title": {
+    "message": "Az ablak bezárása"
+  },
+  "ui_preferences": {
+    "message": "Tulajdonságok"
+  },
+  "ui_prefs_zip_warning": {
+    "message": "Megerősítő üzenet megjelenítése, ha a \"Minden kép külön-külön letöltése\" be van jelölve és a képek összes száma több mint"
+  },
+  "ui_prefs_max_warning": {
+    "message": "Megerősítő üzenet megjelenítése, ha az összes kép több mint"
+  },
+  "options_title": {
+    "message": "Opciók :: Minden kép letöltése"
+  },
+  "options_width": {
+    "message": "Interfész szélessége pixelben:"
+  },
+  "options_height": {
+    "message": "Interfész magassága pixelben:"
+  },
+  "options_notify": {
+    "message": "Asztali értesítés megjelenítése a képmentésről"
+  },
+  "options_faqs": {
+    "message": "GYIK oldal megnyitása a frissítésekről"
+  },
+  "options_rule": {
+    "message": "Egyéni szabály:"
+  },
+  "options_save": {
+    "message": "Opciók mentése"
+  },
+  "options_support": {
+    "message": "Fejlesztők támogatása"
+  },
+  "options_tutorial": {
+    "message": "Használati előnézet"
+  },
+  "options_sample": {
+    "message": "Tesztoldal megnyitása"
+  },
+  "options_head_delay": {
+    "message": "Késleltetés ezredmásodpercben minden kép metaadat-olvasása után"
+  },
+  "options_head_timeout": {
+    "message": "Időtúllépés mp-ben a kép metaadat-kérésének megszakításához"
+  },
+  "options_dig_delay": {
+    "message": "Késleltetés ezredmásodpercben minden HTML-dokumentum elemzése után"
+  },
+  "options_dig_timeout": {
+    "message": "Időtúllépés mp-ben a HTML-dokumentum elemzésére való várakozáshoz"
+  }
+}
