@@ -1,4 +1,4 @@
-/* global InZIP, post */
+/* global InZIP */
 'use strict';
 
 const args = new URLSearchParams(location.search);
@@ -47,7 +47,7 @@ window.to = {
   }
 };
 
-/* download */
+/* native download */
 const nd = (options, filename = 'images.zip') => new Promise(resolve => chrome.downloads.download(options, id => {
   if (chrome.runtime.lastError) {
     options.filename = filename;
@@ -58,54 +58,39 @@ const nd = (options, filename = 'images.zip') => new Promise(resolve => chrome.d
   }
 }));
 
-const get = o => {
-  if (o.meta.fetch === 'bg') {
-    return fetch(o.src).then(r => r.arrayBuffer());
-  }
-  else {
-    const id = Math.random();
-    const target = {
-      tabId,
-      frameIds: [o.frameId]
-    };
-    return new Promise((resolve, reject) => {
-      get.cache[id] = {resolve, reject};
-      setTimeout(() => reject(Error('timeout')), 10000);
-      chrome.scripting.executeScript({
-        target,
-        func: (href, id, bg) => {
-          fetch(href).then(r => r.blob()).then(b => {
-            const href = URL.createObjectURL(b);
-            post({
-              cmd: 'fetched-on-frame',
-              href,
-              id
-            }, '*');
-          }).catch(e => post({
-            cmd: 'fetched-on-frame',
-            id,
-            error: e.message,
-            bg,
-            href
-          }, '*'));
-        },
-        // if o.meta.fetch !== 'me' and o.meta.fetch !== 'bg' -> try to get from "bg" if "me" failed
-        args: [o.src, id, o.meta.fetch !== 'me']
-      });
-    }).then(href => {
-      return fetch(href).then(r => r.arrayBuffer()).then(b => {
-        chrome.scripting.executeScript({
-          target,
-          func: href => URL.revokeObjectURL(href),
-          args: [href]
-        });
-
-        return b;
-      });
-    });
-  }
-};
-get.cache = {};
+/* get content from frame if failed get from extension's context */
+const get = (o, type = 'ab') => new Promise((resolve, reject) => {
+  const port = communication.ports[o.frameId];
+  const uid = Math.random();
+  communication[uid] = async res => {
+    if (type === 'ab') {
+      try {
+        try {
+          const r = await fetch(res.href);
+          resolve(await r.arrayBuffer());
+        }
+        catch (e) {
+          const r = await fetch(o.src);
+          resolve(await r.arrayBuffer());
+        }
+      }
+      catch (e) {
+        reject(e);
+      }
+      if (res.href) {
+        URL.revokeObjectURL(res.href);
+      }
+    }
+    else {
+      resolve(res.href || o.src);
+    }
+  };
+  port.postMessage({
+    cmd: 'download-image',
+    src: o.src,
+    uid
+  });
+});
 
 const perform = async (request, one) => {
   const indices = {};
@@ -210,23 +195,12 @@ window.commands = request => {
       tabId,
       text: request.badge === 'done' ? '✓' : ''
     });
-    chrome.scripting.executeScript({
-      target: {
-        tabId,
-        allFrames: true
-      },
-      func: remove => {
-        try {
-          window.collector.active = false;
-          if (remove) {
-            window.myframe.remove();
-            window.myframe = null;
-          }
-        }
-        catch (e) {}
-      },
-      args: [request.cmd === 'close-me']
-    });
+    for (const port of Object.values(communication.ports)) {
+      port.postMessage({
+        cmd: 'stop-collector',
+        remove: request.cmd === 'close-me'
+      });
+    }
     //
     if (request.cmd === 'close-me') {
       chrome.declarativeNetRequest.updateSessionRules({
@@ -249,69 +223,36 @@ window.commands = request => {
   else if (request.cmd === 'images' || request.cmd === 'links') {
     ui.contentWindow.commands(request);
   }
-  // save to directory (1/2)
+  // save to directory
   else if (request.cmd === 'save-images' && request.directory) {
-    console.log(request.images);
+    const uid = Math.random();
+    communication[uid] = () => perform(request, async (filename, image) => {
+      const href = await get(image, false);
 
-    chrome.scripting.executeScript({
-      target: {tabId},
-      func: async request => {
-        try {
-          const d = window.directory = await window.showDirectoryPicker();
-          // fake; make sure we have write access
-          await d.getFileHandle('README.txt', {
-            create: true
-          }).then(file => file.createWritable()).then(writable => {
-            const blob = new Blob([`Downloaded by "${chrome.runtime.getManifest().name}" extension
-
-Page: ${location.href}
-Date: ${new Date().toLocaleString()}
-
-Name, Link
-----------
-${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
-`], {
-              type: 'text/plain'
-            });
-            const response = new Response(blob);
-            return response.body.pipeTo(writable);
-          });
-
-          request.cmd = 'directory-ready';
-          post(request, '*');
-        }
-        catch (e) {
-          alert(e.message);
-        }
-      },
-      args: [request]
-    });
-  }
-  // save to directory (2/2)
-  else if (request.cmd === 'directory-ready') {
-    perform(request, async (filename, image) => {
-      let href = image.src;
-      if (image.meta.fetch === 'bg') {
-        href = await fetch(href).then(r => r.blob()).then(b => URL.createObjectURL(b));
-      }
-      await chrome.scripting.executeScript({
-        target: {tabId},
-        func: (filename, href) => {
-          Promise.all([
-            fetch(href),
-            window.directory.getFileHandle(filename, {
-              create: true
-            }).then(file => file.createWritable())
-          ]).then(([response, writable]) => {
-            writable.truncate(0).then(() => response.body.pipeTo(writable)).finally(() => URL.revokeObjectURL(href));
-          }).catch(e => console.warn(e));
-        },
-        args: [filename, href]
+      communication.ports[0].postMessage({
+        cmd: 'image-to-directory',
+        href,
+        filename
       });
     }).then(() => window.commands({
       cmd: 'close-me',
       badge: 'done'
     }));
+
+    communication.ports[0].postMessage({
+      uid,
+      cmd: 'create-directory',
+      name: 'README.txt',
+      content: `Downloaded by "${chrome.runtime.getManifest().name}" extension
+
+Page: ${args.get('href')}
+Date: ${new Date().toLocaleString()}
+
+Name, Link
+----------
+${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
+`
+    });
   }
   // save to IndexedDB
   else if (request.cmd === 'save-images' && request.zip) {
@@ -339,28 +280,31 @@ ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
       badge: 'done'
     }));
   }
-  // internal get response
-  else if (request.cmd === 'fetched-on-frame') {
-    const {resolve, reject} = get.cache[request.id];
-    if (request.error && request.bg === false) {
-      reject(Error(request.error));
+};
+
+const communication = (request, frameId) => {
+  // we need to use the same frame to fetch the content later
+  if (request.cmd === 'images') {
+    request.images.forEach(i => i.frameId = frameId);
+  }
+
+  window.commands(request, frameId);
+};
+communication.ports = {};
+chrome.runtime.onConnect.addListener(port => {
+  communication.ports[port.sender.frameId] = port;
+  port.onMessage.addListener(request => {
+    if (request.uid) {
+      communication[request.uid](request);
+      delete communication[request.uid];
     }
     else {
-      resolve(request.href);
+      communication(request, port.sender.frameId);
     }
-    delete get.cache[request.id];
-  }
-};
-// top-frame requests
-window.addEventListener('message', e => window.commands(e.data));
-// frame requests
-chrome.runtime.onMessage.addListener(request => {
-  if (request.cmd === 'message') {
-    window.commands(request.request);
-  }
+  });
 });
 
+// closing
 document.addEventListener('click', () => window.commands({
   cmd: 'close-me'
 }));
-

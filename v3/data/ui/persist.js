@@ -66,30 +66,41 @@ document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get({pe
   accurate();
 
   // install network
-  chrome.declarativeNetRequest.updateSessionRules({
-    removeRuleIds: [tabId],
-    addRules: [{
-      'id': tabId,
-      'priority': 1,
-      'action': {
-        'type': 'modifyHeaders',
-        'requestHeaders': [{
-          'operation': 'set',
-          'header': 'referer',
-          'value': args.get('href')
-        }],
-        'responseHeaders': [{
-          'operation': 'set',
-          'header': 'access-control-allow-origin',
-          'value': '*'
-        }]
-      },
-      'condition': {
-        'resourceTypes': ['xmlhttprequest', 'image'],
-        'tabIds': [tabId]
-      }
-    }]
-  }, search);
+  {
+    const requestHeaders = elements.group.referer.checked ? [{
+      'operation': 'remove',
+      'header': 'referer'
+    }, {
+      'operation': 'remove',
+      'header': 'origin'
+    }] : [{
+      'operation': 'set',
+      'header': 'referer',
+      'value': args.get('href')
+    }];
+    const responseHeaders = elements.group.cors.checked ? [{
+      'operation': 'set',
+      'header': 'access-control-allow-origin',
+      'value': '*'
+    }] : undefined;
+
+    chrome.declarativeNetRequest.updateSessionRules({
+      removeRuleIds: [tabId],
+      addRules: [{
+        'id': tabId,
+        'priority': 1,
+        'action': {
+          type: 'modifyHeaders',
+          requestHeaders,
+          responseHeaders
+        },
+        'condition': {
+          'resourceTypes': ['xmlhttprequest', 'image'],
+          'tabIds': [tabId]
+        }
+      }]
+    }, search);
+  }
 }));
 
 document.addEventListener('click', ({target}) => {

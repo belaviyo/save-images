@@ -251,6 +251,12 @@
   "ui_prefs_max_warning": {
     "message": "Display a confirmation when the total number of images is more than"
   },
+  "ui_networ_referer": {
+    "message": "Remove \"referer\" and \"origin\" headers from images"
+  },
+  "ui_networ_cors": {
+    "message": "Bypass network CORS error"
+  },
   "options_title": {
     "message": "Options :: Download all Images"
   },

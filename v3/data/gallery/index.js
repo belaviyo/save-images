@@ -209,7 +209,7 @@ document.addEventListener('click', e => {
       window.close();
     }
     else {
-      window.parent.to.ui();
+      parent.to.ui();
     }
   }
   last = target;

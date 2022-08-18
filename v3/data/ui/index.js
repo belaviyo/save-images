@@ -49,7 +49,10 @@ const elements = {
     regexp: document.getElementById('group-regexp'),
     blacklist: document.getElementById('group-blacklist'),
     origin: document.getElementById('group-origin'),
-    identical: document.getElementById('group-identical')
+    identical: document.getElementById('group-identical'),
+    cors: document.getElementById('network-cors'),
+    referer: document.getElementById('network-referer')
+
   },
   files: {
     mask: document.getElementById('file-mask')
@@ -117,11 +120,11 @@ function build() {
   // sort images
   const stats = {};
   for (const img of images) {
-    stats[img.uid] = (stats[img.uid] || 0) + 1;
+    stats[img.frameId] = (stats[img.frameId] || 0) + 1;
   }
   const keys = Object.keys(stats).map(Number);
   for (const img of images) {
-    const p = keys.indexOf(img.uid);
+    const p = keys.indexOf(img.frameId);
     const offset = keys.slice(0, p).reduce((p, c) => p + stats[c], 0);
     img.order = offset + img.position;
   }
@@ -333,6 +336,7 @@ window.commands = request => {
     }
   }
 };
+
 chrome.runtime.onMessage.addListener((request, sender, response) => {
   // open gallery view on a separate window
   if (request.cmd === 'build') {
@@ -417,6 +421,14 @@ const search = () => {
         // TO-DO: remove when injection to "javascript:" is fixed
         allFrames: result ? false : true
       };
+      await chrome.scripting.executeScript({
+        target,
+        files: ['/data/utils.js']
+      });
+      await chrome.scripting.executeScript({
+        target,
+        files: ['/data/port.js']
+      });
       await chrome.scripting.executeScript({
         target,
         files: ['/data/collector.js']

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title></title>
+  <title>Test Page</title>
 </head>
 <body>
   <iframe src="javascript:void(0);" style="display: none;"></iframe>
@@ -62,9 +62,12 @@
     </picture>
   </div>
   <div>
-  <div>
     <p>Detect Image from unknown Extension</p>
-    <a href="noextension">link</a>
+    <a href="noextension">Image Link</a> | <a href="https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-11.4.0-amd64-netinst.iso">Big ISO Link</a>
+  </div>
+  <div>
+    <p>No preview with the "referer" header</p>
+    <a href="https://img70.imgspice.com/i/05754/mikv06sv7g1v.jpg"></a>
   </div>
   <div>
     <p>Unicode filenames</p>
@@ -74,6 +77,15 @@
   <div>
     <p>Text Image</p>
     <pre>http://127.0.0.1:8000/text.png</pre>
+  </div>
+  <div>
+    <p>Test Image Extraction from inputs</p>
+    <textarea>https://www.debian.org/Pics/openlogo-50.png</textarea>
+    <input type="text" value="https://www.debian.org/Pics/admon-important.png">
+  </div>
+  <div>
+    <p>Detect SVG</p>
+    <svg width=32 viewBox="0 0 24 24"><g><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h10v4h8v10z"></path></g></svg>
   </div>
 
   <div>

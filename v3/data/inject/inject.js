@@ -32,7 +32,6 @@ window.myframe.setAttribute('style', `
   z-index: 10000000000;
 `);
 
-
 chrome.storage.local.get({
   width: 750,
   height: 650

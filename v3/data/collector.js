@@ -9,7 +9,7 @@
 
 /* eslint no-var: 0 */
 
-/* global type, size */
+/* global type, size, post, utils */
 
 /*
   accuracy: accurate -> force calculate size, width, height
@@ -18,51 +18,6 @@
 */
 
 'use strict';
-
-var dsize = r => {
-  const size = Number(r.headers.get('content-length'));
-  if (size && isNaN(size) === false) {
-    return size;
-  }
-  if (r.url && r.url.startsWith('data:')) {
-    const [header, ...bodies] = r.url.split(',');
-    const body = bodies.join(',');
-    if (header && header.indexOf('base64') !== -1) {
-      try {
-        return atob(body).length;
-      }
-      catch (e) {}
-    }
-    if (header) {
-      return body.length;
-    }
-  }
-  return 0;
-};
-
-var post = request => {
-  try {
-    if (window.top === window) {
-      window.myframe.contentWindow.postMessage(request, '*');
-    }
-    else {
-      chrome.runtime.sendMessage({
-        cmd: 'send-to-core',
-        request
-      }, () => chrome.runtime.lastError);
-    }
-  }
-  catch (e) {}
-};
-
-var dtype = (p, o) => {
-  if (o.type && o.type.startsWith('text/')) {
-    return o.type;
-  }
-  // prefer type from URL, rather than type that is returned by server.
-  // Some servers return "application/..." for image types
-  return p.type || o.type || '';
-};
 
 var collector = {
   'active': true,
@@ -90,9 +45,6 @@ var report = () => {
 
 collector.events = {
   image(o) { // called when new image is listed
-    // we need to use the same frame to fetch the content later
-    o.frameId = window.uid;
-
     post({
       cmd: 'images',
       images: [o]
@@ -118,43 +70,10 @@ collector.events = {
 
 // try to pass this step as fast as possible
 collector.meta = async function(o) {
-  const extensions = {
-    'css': 'text/css',
-    'html': 'text/html',
-    'js': 'text/javascript',
-    // video
-    'flv': 'video/flv',
-    'mp4': 'video/mp4',
-    'm3u8': 'application/x-mpegURL',
-    'ts': 'video/MP2T',
-    '3gp': 'video/3gpp',
-    'mov': 'video/quicktime',
-    'avi': 'video/x-msvideo',
-    'wmv': 'video/x-ms-wmv',
-    // audio
-    'm4a': 'audio/mp4',
-    'mp3': 'audio/mpeg',
-    'ogg': 'audio/x-mpegurl',
-    'wav': 'audio/vnd.wav',
-    // image
-    'png': 'image/png',
-    'jpeg': 'image/jpeg',
-    'jpg': 'image/jpg',
-    'bmp': 'image/bmp',
-    'cur': 'image/cur',
-    'gif': 'image/gif',
-    'ico': 'image/ico',
-    'icns': 'image/icns',
-    'psd': 'image/psd',
-    'svg': 'image/svg',
-    'tiff': 'image/tiff',
-    'webp': 'image/webp'
-  };
-
   // try to use this fast method when we are going to fetch the image later to get width and height
   let im;
 
-  for (const [ext, type] of Object.entries(extensions)) {
+  for (const [ext, type] of Object.entries(utils.EXTENSIONS)) {
     if (
       o.src.toLowerCase().endsWith('.' + ext) ||
       (o.width && o.src.toLowerCase().indexOf('.' + ext) !== -1) || // e.g. http:../3522.jpg/0
@@ -183,48 +102,13 @@ collector.meta = async function(o) {
     return {};
   }
 
-  const prefs = await new Promise(resolve => chrome.storage.local.get({
-    'head-timeout': 30 * 1000
-  }, resolve));
-
   try {
-    const controller = new AbortController();
-    setTimeout(() => controller.abort(), prefs['head-timeout']);
-
-    const r = await fetch(o.src, {
-      signal: controller.signal
-    });
-    if (r.ok) {
-      setTimeout(() => controller.abort(), 0);
-      return {
-        meta: {
-          // some websites return binary mime for image types
-          type: im ? im.meta.type : (r.headers.get('content-type') || ''),
-          size: dsize(r),
-          disposition: r.headers.get('content-disposition')
-        },
-        origin: 'internal.fetch',
-        fetch: 'me'
-      };
-    }
-    else {
-      throw Error('failed');
-    }
-  }
-  catch (e) {}
-  try {
-    const meta = (await new Promise(resolve => chrome.runtime.sendMessage({
-      cmd: 'read-headers',
-      href: o.src
-    }, resolve))) || {};
-    if (im) {
-      meta.type = dtype(im.meta, meta);
-    }
+    const meta = await utils.response.heads(o.src);
+    meta.type = utils.type(im?.meta, meta);
 
     return {
       meta,
-      origin: 'bg.fetch',
-      fetch: 'bg'
+      origin: 'bg.fetch'
     };
   }
   catch (e) {
@@ -236,7 +120,7 @@ collector.meta = async function(o) {
 
 /* collect images */
 collector.inspect = function(doc, loc, name, policies) {
-  // find images; part 1/1
+  // find images; part 1/3
   for (const img of [...doc.images]) {
     collector.push({
       width: img.naturalWidth,
@@ -254,7 +138,7 @@ collector.inspect = function(doc, loc, name, policies) {
       }
     });
   }
-  // find images; part 1/2
+  // find images; part 2/3
   for (const source of [...doc.querySelectorAll('source')]) {
     if (source.srcset) {
       collector.push({
@@ -266,6 +150,20 @@ collector.inspect = function(doc, loc, name, policies) {
         }
       });
     }
+  }
+  // find images; part 3/3
+  for (const svg of doc.querySelectorAll('svg')) {
+    const e = svg.cloneNode(true);
+    e.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+    collector.push({
+      src: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(e.outerHTML),
+      type: 'image/svg+xml',
+      page: loc.href,
+      meta: {
+        origin: name + ' - svg.query'
+      }
+    });
   }
   // find background images; part 2
   if (policies.bg) {
@@ -302,24 +200,25 @@ collector.inspect = function(doc, loc, name, policies) {
   // find hard-coded links; part 4
   if (window.deep > 0 && policies.extract) {
     const r = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/ig;
-    // decode html special characters; &amp;
-    (doc.documentElement.innerHTML.match(r) || [])
-      .map(s => {
-        return s.replace(/&amp;/g, '&')
-          .replace(/&quot;/g, '"')
-          .replace(/\\+$/, '')
-          .split(/['")]/)[0]
-          .split('</')[0];
-      })
-      .forEach(src => {
-        collector.push({
-          src,
-          page: loc.href,
-          meta: {
-            origin: name + ' - regex.hard-coded.link'
-          }
-        });
+    // "textContent" can extract data from input elements
+    const content = doc.documentElement.innerHTML + '\n\n' + doc.textContent;
+
+    (content.match(r) || []).map(s => {
+      // decode html special characters; &amp;
+      return s.replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/\\+$/, '')
+        .split(/['")]/)[0]
+        .split('</')[0];
+    }).forEach(src => {
+      collector.push({
+        src,
+        page: loc.href,
+        meta: {
+          origin: name + ' - regex.hard-coded.link'
+        }
       });
+    });
   }
 };
 
@@ -330,7 +229,6 @@ collector.push = function(o) {
     }
     // try to arrange items
     o.position = collector.position ++;
-    o.uid = window.uid;
 
     // convert relative path to absolute and remove hash section (to prevent duplicates)
     try {
@@ -376,10 +274,15 @@ collector.addImage = function(o) {
   if (window.accuracy === 'accurate' || window.accuracy === 'partial-accurate') {
     if (!o.width) {
       collector['raw-images'].push(o);
-
       collector.head();
       return;
     }
+  }
+  // we are not sure this is an image file
+  if (!o.type.startsWith('image/')) {
+    collector['raw-images'].push(o);
+    collector.head();
+    return;
   }
   collector['processed-images'].push(o);
   collector.events.image(o);
@@ -401,75 +304,25 @@ collector.head = async function() {
     collector.head.jobs += 1;
 
     try {
-      const controller = new AbortController();
+      const r = await utils.response.segment(o.src);
 
-      const next = value => {
-        for (const name of ['bmp', 'png', 'gif', 'webp', 'jpg']) {
-          if (type[name](value)) {
-            const meta = size[name](value);
-            if (meta) {
-              Object.assign(o, meta);
-              o.meta.size = 'size.js';
-              break;
-            }
+      o.size = r.size;
+      o.type = utils.type(o, r);
+      o.disposition = r.disposition;
+
+      // detect type
+      for (const name of ['bmp', 'png', 'gif', 'webp', 'jpg']) {
+        if (type[name](r.segment)) {
+          const meta = size[name](r.segment);
+          if (meta) {
+            Object.assign(o, meta);
+            o.meta.size = 'size.js';
+            break;
           }
         }
-        if (!o.width) {
-          throw Error('size detection failed');
-        }
-      };
-      const remote = async () => {
-        const res = await new Promise(resolve => chrome.runtime.sendMessage({
-          cmd: 'fetch-segment',
-          href: o.src
-        }, resolve));
-
-        if (res && res.ok) {
-          o.size = res.size;
-          o.type = dtype(o, res);
-          o.disposition = res.disposition;
-          o.meta.fetch = 'bg';
-          next(new Uint8Array(res.segment));
-        }
-        else {
-          throw Error('cannot fetch from bg');
-        }
-      };
-
-      let r;
-      try {
-        // do not try to fetch locally when we know it will fail
-        if (o.meta.fetch === 'bg') {
-          throw Error('ignore');
-        }
-
-        setTimeout(() => controller.abort(), prefs['head-timeout']);
-        r = await fetch(o.src, {
-          signal: controller.signal
-        });
       }
-      catch (e) {
-        await remote();
-      }
-      if (r) {
-        if (r.ok === false) {
-          await remote();
-        }
-        else {
-          // lets keep whatever needed
-          o.size = dsize(r);
-          o.type = dtype(o, {
-            type: r.headers.get('content-type') || ''
-          });
-          o.disposition = r.headers.get('content-disposition');
-          o.meta.fetch = 'me';
-
-          const reader = r.body.getReader();
-          const {value} = await reader.read();
-          controller.abort();
-
-          next(value);
-        }
+      if (!o.width) {
+        throw Error('size detection failed' + o.src);
       }
     }
     catch (e) {
@@ -478,16 +331,13 @@ collector.head = async function() {
         img.onload = () => {
           o.width = img.naturalWidth;
           o.height = img.naturalHeight;
-          o.type = dtype(o, {
+          o.type = utils.type(o, {
             type: 'image/unknown'
           });
           o.meta.size = 'size.img.element';
           resolve();
         };
         img.onerror = () => {
-          o.type = dtype(o, {
-            type: 'image/unknown'
-          });
           o.meta.size = 'error';
           resolve();
         };
@@ -495,9 +345,10 @@ collector.head = async function() {
       });
     }
 
-    collector['processed-images'].push(o);
-    collector.events.image(o);
-
+    if (o.type.startsWith('image/')) {
+      collector['processed-images'].push(o);
+      collector.events.image(o);
+    }
 
     // lazy done
     setTimeout(() => {
@@ -524,19 +375,22 @@ collector.validate = async function() {
     collector.validate.jobs += 1;
 
     try {
-      const {meta, origin, fetch} = await collector.meta(o);
+      const {meta, origin} = await collector.meta(o);
 
       Object.assign(o, meta);
       o.meta.type = origin;
-      o.meta.fetch = fetch;
-      rm = fetch ? true : false;
 
-      if (o.type && o.type.startsWith('image/')) {
-        collector.addImage(o);
-      }
-      if (o.type && o.type.startsWith('text/html')) {
-        collector.document(o);
-        rm = true;
+      if (o.type) {
+        if (o.type.startsWith('image/')) {
+          collector.addImage(o);
+        }
+        else if (o.type.startsWith('application/')) {
+          collector.addImage(o);
+        }
+        else if (o.type.startsWith('text/html')) {
+          collector.document(o);
+          rm = true;
+        }
       }
     }
     catch (e) {
@@ -591,27 +445,7 @@ collector.dig = async function() {
     collector.dig.jobs += 1;
 
     try {
-      let content;
-
-      try {
-        const controller = new AbortController();
-        setTimeout(() => controller.abort(), prefs['dig-timeout']);
-
-        content = await fetch(href, {
-          signal: controller.signal
-        }).then(r => {
-          if (r.ok) {
-            return r.text();
-          }
-          throw Error('not ok');
-        });
-      }
-      catch (e) {
-        content = await new Promise(resolve => chrome.runtime.sendMessage({
-          cmd: 'get-content',
-          href
-        }, resolve));
-      }
+      const content = await utils.response.text(href);
 
       if (content) {
         const parser = new DOMParser();
@@ -647,20 +481,15 @@ collector.dig = async function() {
 collector.dig.jobs = 0;
 
 collector.loop = function() {
-  chrome.runtime.sendMessage({
-    cmd: 'frame-id'
-  }, uid => {
-    window.uid = uid;
-    collector.inspect(document, location, 'one', {
-      bg: true,
-      links: true,
-      extract: true
-    });
-
-    collector.validate();
-    collector.validate();
-    collector.validate();
-    collector.validate();
-    collector.validate();
+  collector.inspect(document, location, 'one', {
+    bg: true,
+    links: true,
+    extract: true
   });
+
+  collector.validate();
+  collector.validate();
+  collector.validate();
+  collector.validate();
+  collector.validate();
 };

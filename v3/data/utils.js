@@ -117,5 +117,119 @@ self.utils = {
       filename,
       name
     };
+  },
+  size(r) {
+    const size = Number(r.headers.get('content-length'));
+    if (size && isNaN(size) === false) {
+      return size;
+    }
+    if (r.url && r.url.startsWith('data:')) {
+      const [header, ...bodies] = r.url.split(',');
+      const body = bodies.join(',');
+      if (header && header.indexOf('base64') !== -1) {
+        try {
+          return atob(body).length;
+        }
+        catch (e) {}
+      }
+      if (header) {
+        return body.length;
+      }
+    }
+    return 0;
+  },
+  type(img = {}, response) {
+    if (response.type && response.type.startsWith('text/')) {
+      return response.type;
+    }
+
+    // prefer type from URL, rather than type that is returned by server.
+    // Some servers return "application/..." for image types
+    return img.type || response.type || '';
   }
+};
+
+{
+  /* get response of a src */
+  const response = (src, timeout = 'default-timeout') => new Promise((resolve, reject) => {
+    chrome.storage.local.get({
+      [timeout]: 30 * 1000
+    }, prefs => {
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), prefs[timeout]);
+
+      fetch(src, {
+        signal: controller.signal
+      }).then(r => {
+        if (r.ok) {
+          resolve({
+            response: r,
+            controller
+          });
+        }
+        else {
+          throw Error('STATUS_CODE_' + r.status);
+        }
+      }).catch(reject);
+    });
+  });
+  response.text = src => response(src, 'dig-timeout')
+    .then(({response}) => response.text())
+    .catch(() => '');
+  response.segment = src => response(src, 'head-timeout').then(async o => {
+    const segment = (await o.response.body.getReader().read()).value;
+
+    setTimeout(() => o.controller.abort());
+    return {
+      ok: true,
+      type: o.response.headers.get('content-type') || '',
+      size: self.utils.size(o.response),
+      disposition: o.response.headers.get('content-disposition') || '',
+      segment
+    };
+  });
+  response.heads = src => response(src, 'head-timeout').then(o => {
+    setTimeout(() => o.controller.abort());
+    return {
+      ok: true,
+      type: o.response.headers.get('content-type') || '',
+      size: self.utils.size(o.response),
+      disposition: o.response.headers.get('content-disposition') || ''
+    };
+  }).catch(() => {});
+
+  self.utils.response = response;
+}
+
+self.utils.EXTENSIONS = {
+  'css': 'text/css',
+  'html': 'text/html',
+  'js': 'text/javascript',
+  // video
+  'flv': 'video/flv',
+  'mp4': 'video/mp4',
+  'm3u8': 'application/x-mpegURL',
+  'ts': 'video/MP2T',
+  '3gp': 'video/3gpp',
+  'mov': 'video/quicktime',
+  'avi': 'video/x-msvideo',
+  'wmv': 'video/x-ms-wmv',
+  // audio
+  'm4a': 'audio/mp4',
+  'mp3': 'audio/mpeg',
+  'ogg': 'audio/x-mpegurl',
+  'wav': 'audio/vnd.wav',
+  // image
+  'png': 'image/png',
+  'jpeg': 'image/jpeg',
+  'jpg': 'image/jpg',
+  'bmp': 'image/bmp',
+  'cur': 'image/cur',
+  'gif': 'image/gif',
+  'ico': 'image/ico',
+  'icns': 'image/icns',
+  'psd': 'image/psd',
+  'svg': 'image/svg',
+  'tiff': 'image/tiff',
+  'webp': 'image/webp'
 };
