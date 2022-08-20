@@ -280,6 +280,9 @@ ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
       badge: 'done'
     }));
   }
+  else if (request.cmd === 'alternative-image-may-work') {
+    ui.contentWindow.commands(request);
+  }
 };
 
 const communication = (request, frameId) => {

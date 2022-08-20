@@ -165,15 +165,24 @@ collector.inspect = function(doc, loc, name, policies) {
       }
     });
   }
+  const extract = content => {
+    const r = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/ig;
+    return content.match(r) || [];
+  };
+
+
   // find background images; part 2
   if (policies.bg) {
     try {
       [...doc.querySelectorAll('*')]
-        .map(e => window.getComputedStyle(e).backgroundImage)
-        .map(i => {
-          const e = /url\(['"]([^)]+)["']\)/.exec(i);
-          return e && e.length ? e[1] : null;
-        }).filter(s => s).forEach(src => {
+        .map(e => [
+          getComputedStyle(e).backgroundImage,
+          getComputedStyle(e, ':before').backgroundImage,
+          getComputedStyle(e, ':after').backgroundImage
+        ])
+        .flat()
+        .filter(s => s && s.includes('url('))
+        .map(s => extract(s)).flat().filter(s => s).forEach(src => {
           collector.push({
             src,
             page: loc.href,
@@ -199,11 +208,9 @@ collector.inspect = function(doc, loc, name, policies) {
   }
   // find hard-coded links; part 4
   if (window.deep > 0 && policies.extract) {
-    const r = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/ig;
     // "textContent" can extract data from input elements
     const content = doc.documentElement.innerHTML + '\n\n' + doc.textContent;
-
-    (content.match(r) || []).map(s => {
+    extract(content).map(s => {
       // decode html special characters; &amp;
       return s.replace(/&amp;/g, '&')
         .replace(/&quot;/g, '"')
@@ -326,6 +333,12 @@ collector.head = async function() {
       }
     }
     catch (e) {
+      // report resolving by alternative method. The user might need to toggle the "referer" header
+      if (e.message === 'STATUS_CODE_403') {
+        post({
+          cmd: 'alternative-image-may-work'
+        });
+      }
       await new Promise(resolve => {
         const img = new Image();
         img.onload = () => {

@@ -196,7 +196,7 @@ self.utils = {
       size: self.utils.size(o.response),
       disposition: o.response.headers.get('content-disposition') || ''
     };
-  }).catch(() => {});
+  }).catch(() => ({}));
 
   self.utils.response = response;
 }

@@ -176,6 +176,9 @@
   "ui_delay": {
     "message": "Number of seconds a request can take before automatically being terminated (a number between 5 to 120 seconds)"
   },
+  "ui_too_many_errors": {
+    "message": "Too many errors occurred during the search. Toggling the \"referer\" option may fix the issue."
+  },
   "detection_delay": {
     "message": "Number of seconds to pause after each server-side image detection (rate-limit)"
   },
@@ -252,10 +255,10 @@
     "message": "Display a confirmation when the total number of images is more than"
   },
   "ui_networ_referer": {
-    "message": "Remove \"referer\" and \"origin\" headers from images"
+    "message": "Remove \"referer\" and \"origin\" headers while searching (restart required)"
   },
   "ui_networ_cors": {
-    "message": "Bypass network CORS error"
+    "message": "Bypass network CORS while searching (restart required)"
   },
   "options_title": {
     "message": "Options :: Download all Images"

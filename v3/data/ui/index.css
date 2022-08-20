@@ -185,3 +185,14 @@ a {
 #custom-directory {
   width: 50%;
 }
+
+#notify {
+  color: #151210;
+  background-color: #fae6c6;
+  border: solid 1px #ffcd7d;
+  padding: 10px;
+  text-align: center;
+}
+#notify:empty {
+  display: none;
+}

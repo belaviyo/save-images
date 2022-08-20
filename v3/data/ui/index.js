@@ -32,6 +32,7 @@ const vconfirm = msg => {
 };
 
 const elements = {
+  notify: document.getElementById('notify'),
   counter: {
     filters: document.getElementById('filters'),
     images: document.getElementById('images-number'),
@@ -109,6 +110,7 @@ const title = args.get('title');
 
 const images = {};
 let total = 0;
+let errors = 0;
 
 function build() {
   const custom = elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_');
@@ -333,6 +335,13 @@ window.commands = request => {
     elements.counter.progress.max = total;
     if (request.filters) {
       elements.counter.filters.textContent = ` (filters: ${request.filters})`;
+    }
+  }
+  else if (request.cmd === 'alternative-image-may-work') {
+    errors += 1;
+
+    if (errors === 10) {
+      elements.notify.textContent = chrome.i18n.getMessage('ui_too_many_errors');
     }
   }
 };
