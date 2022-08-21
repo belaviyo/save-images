@@ -295,16 +295,18 @@ const communication = (request, frameId) => {
 };
 communication.ports = {};
 chrome.runtime.onConnect.addListener(port => {
-  communication.ports[port.sender.frameId] = port;
-  port.onMessage.addListener(request => {
-    if (request.uid) {
-      communication[request.uid](request);
-      delete communication[request.uid];
-    }
-    else {
-      communication(request, port.sender.frameId);
-    }
-  });
+  if (port.sender.tab.id === tabId) {
+    communication.ports[port.sender.frameId] = port;
+    port.onMessage.addListener(request => {
+      if (request.uid) {
+        communication[request.uid](request);
+        delete communication[request.uid];
+      }
+      else {
+        communication(request, port.sender.frameId);
+      }
+    });
+  }
 });
 
 // closing
