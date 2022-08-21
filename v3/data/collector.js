@@ -125,7 +125,7 @@ collector.inspect = function(doc, loc, name, policies) {
     collector.push({
       width: img.naturalWidth,
       height: img.naturalHeight,
-      src: img.src,
+      src: img.currentSrc || img.src,
       alt: img.alt,
       custom: img.getAttribute(window.custom) || '',
       // if image is verified, we dont have the image size. on accurate mode set it to false

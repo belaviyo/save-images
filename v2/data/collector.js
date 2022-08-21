@@ -165,13 +165,25 @@ var collector = {
     let images = [...document.images].map(img => ({
       width: img.width,
       height: img.height,
-      src: img.src,
+      src: img.currentSrc || img.src,
       alt: img.alt,
       custom: img.getAttribute(window.custom) || '',
       verified: true, // this is an image even if content-type cannot be resolved,
       page: location.href
     }));
     // find images; part 1/2
+    for (const source of document.querySelectorAll('source')) {
+      try {
+        const href = (source.srcset || '').split(' ')[0];
+        images.push({
+          src: (new URL(href, location.href)).href,
+          page: location.href
+        });
+      }
+      catch (e) {
+        console.warn('Cannot collect source images', e);
+      }
+    }
     images.push(...[...document.querySelectorAll('source')].filter(i => i.srcset).map(i => ({
       src: i.srcset.split(' ')[0],
       page: location.href
@@ -179,7 +191,12 @@ var collector = {
     // find background images; part 2
     try {
       [...document.querySelectorAll('*')]
-        .map(e => window.getComputedStyle(e).backgroundImage)
+        .map(e => [
+          getComputedStyle(e).backgroundImage,
+          getComputedStyle(e, ':before').backgroundImage,
+          getComputedStyle(e, ':after').backgroundImage
+        ])
+        .flat()
         .map(i => {
           const e = /url\(['"]([^)]+)["']\)/.exec(i);
           return e && e.length ? e[1] : null;
@@ -199,6 +216,22 @@ var collector = {
     catch (e) {
       console.warn('Cannot collect background images', e);
     }
+    // find SVGs
+    try {
+      for (const svg of document.querySelectorAll('svg')) {
+        const e = svg.cloneNode(true);
+        e.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+        images.push({
+          src: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(e.outerHTML),
+          page: location.href
+        });
+      }
+    }
+    catch (e) {
+      console.warn('Cannot collect SVG images', e);
+    }
+
     // find linked images; part 3
     if (window.deep > 0) {
       [...document.querySelectorAll('a')].map(a => a.href)
@@ -209,9 +242,11 @@ var collector = {
     }
     // find hard-coded links; part 4
     if (window.deep > 0) {
-      const r = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\\/%?=~_|!:,.;]*[-A-Z0-9+&@#\\/%=~_|])/gi;
+      const r = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/ig;
+      const content = document.documentElement.innerHTML + '\n' + document.body.textContent;
+
       // decode html special characters; &amp;
-      (document.documentElement.innerHTML.match(r) || [])
+      (content.match(r) || [])
         .map(s => s.replace(/&amp;/g, '&'))
         .forEach(src => images.push({
           src,
