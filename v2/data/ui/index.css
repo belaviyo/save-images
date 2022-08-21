@@ -142,6 +142,7 @@ progress[data-visible=false] {
   background-color: #eee;
 }
 
+:disabled,
 .disabled {
   opacity: 0.5;
   pointer-events: none;

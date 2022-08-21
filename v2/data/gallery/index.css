@@ -22,8 +22,6 @@ body > span {
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
-  /* fix scrolling issue in Windows */
-  /* transform: translate3d(0, 0, 0); */
   overscroll-behavior: contain;
 }
 
@@ -138,6 +136,7 @@ input[type=button]:active {
 }
 input:disabled {
   opacity: 0.3;
+  pointer-events: none;
 }
 
 body[data-top=true] [data-cmd=window] {
