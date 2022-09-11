@@ -12,6 +12,7 @@ Download all images from any web page you're on with this highly customizable ex
 
 ### Links:
   * FAQs page: https://add0n.com/save-images.html
+  * Usage Review: https://webextension.org/blog/2022/04/17/download-all-images-extension.html
   * Chrome Webstore: https://chrome.google.com/webstore/detail/download-all-images/nnffbdeachhbpfapjklmpnmjcgamcdmm
   * Firefox add-ons: https://addons.mozilla.org/firefox/addon/save-all-images-webextension/
   * Opera addons: https://addons.opera.com/en/extensions/details/save-all-images/
