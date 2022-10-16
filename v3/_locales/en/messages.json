@@ -29,6 +29,9 @@
   "ui_statistics": {
     "message": "Statistics"
   },
+  "ui_debug": {
+    "message": "debug"
+  },
   "ui_total": {
     "message": "Total:"
   },

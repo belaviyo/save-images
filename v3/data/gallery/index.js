@@ -27,6 +27,17 @@ const progress = document.getElementById('progress');
 
 let resp;
 
+const notify = msg => {
+  try {
+    parent.document.getElementById('toast').notify(msg, 'info', 750);
+  }
+  catch (e) {
+    const t = document.title;
+    document.title = msg;
+    setTimeout(() => document.title = t, 750);
+  }
+};
+
 function humanFileSize(bytes) {
   const thresh = 1024;
   if (Math.abs(bytes) < thresh) {
@@ -182,10 +193,8 @@ document.addEventListener('click', e => {
       const links = images.map(o => o.src);
       const copy = links => {
         navigator.clipboard.writeText(links.join('\n')).catch(e => alert(e.message));
-        const t = document.title;
-        document.title = links.length + ' link(s) copied to the clipboard';
-        setTimeout(() => document.title = t, 750);
       };
+
 
       if (window.top === window) {
         copy(links);
@@ -197,6 +206,7 @@ document.addEventListener('click', e => {
           args: [links]
         });
       }
+      notify(links.length + ` link${links.length === 1 ? '' : 's'} copied to the clipboard`);
     }
   }
   else if (cmd === 'window') {

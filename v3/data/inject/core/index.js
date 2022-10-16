@@ -4,11 +4,6 @@
 const args = new URLSearchParams(location.search);
 const tabId = Number(args.get('tabId'));
 
-Object.assign(document.querySelector('body > div').style, {
-  width: (args.get('width') || 750) + 'px',
-  height: (args.get('height') || 650) + 'px'
-});
-
 const notify = e => chrome.storage.local.get({
   notify: true
 }, prefs => prefs.notify && chrome.notifications.create({
@@ -213,7 +208,7 @@ window.commands = request => {
   if (request.cmd === 'reload-me') {
     location.reload();
   }
-  else if (request.cmd === 'progress' || request.cmd === 'close-me') {
+  else if (request.cmd === 'progress' || request.cmd === 'close-me' || request.cmd === 'release') {
     ui.contentWindow.commands(request);
     try {
       gallery.contentWindow.commands(request);
@@ -226,19 +221,27 @@ window.commands = request => {
   // save to directory
   else if (request.cmd === 'save-images' && request.directory) {
     const uid = Math.random();
-    communication[uid] = () => perform(request, async (filename, image) => {
-      const href = await get(image, false);
+    communication[uid] = o => {
+      if (o.error) {
+        window.commands({
+          cmd: 'release'
+        });
+      }
+      else {
+        return perform(request, async (filename, image) => {
+          const href = await get(image, false);
 
-      communication.ports[0].postMessage({
-        cmd: 'image-to-directory',
-        href,
-        filename
-      });
-    }).then(() => window.commands({
-      cmd: 'close-me',
-      badge: 'done'
-    }));
-
+          communication.ports[0].postMessage({
+            cmd: 'image-to-directory',
+            href,
+            filename
+          });
+        }).then(() => window.commands({
+          cmd: 'close-me',
+          badge: 'done'
+        }));
+      }
+    };
     communication.ports[0].postMessage({
       uid,
       cmd: 'create-directory',
@@ -308,8 +311,3 @@ chrome.runtime.onConnect.addListener(port => {
     });
   }
 });
-
-// closing
-document.addEventListener('click', () => window.commands({
-  cmd: 'close-me'
-}));

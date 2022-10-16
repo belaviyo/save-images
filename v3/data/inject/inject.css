@@ -1,0 +1,18 @@
+dialog.daimages {
+  --width: 750px;
+  --height: 650px;
+
+  padding: 0;
+  border: none;
+  background-color: #eee;
+}
+dialog.daimages::backdrop {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+dialog.daimages iframe {
+  color-scheme: none;
+  border: none;
+  background-color: transparent;
+  width: min(90vw, var(--width));
+  height: min(80vh, var(--height));
+}

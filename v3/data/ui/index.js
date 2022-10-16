@@ -31,6 +31,10 @@ const vconfirm = msg => {
   return r;
 };
 
+const notify = msg => {
+  parent.document.getElementById('toast').notify(msg, 'info', 750);
+};
+
 const elements = {
   notify: document.getElementById('notify'),
   counter: {
@@ -344,6 +348,10 @@ window.commands = request => {
       elements.notify.textContent = chrome.i18n.getMessage('ui_too_many_errors');
     }
   }
+  else if (request.cmd === 'release') {
+    document.querySelector('[data-cmd=save]').disabled = false;
+    document.querySelector('[data-cmd=save-dir]').disabled = false;
+  }
 };
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
@@ -518,17 +526,15 @@ document.addEventListener('click', ({target}) => {
     }
   }
   else if (cmd === 'copy') {
-    const links = Object.keys(images);
+    const links = build().images.map(s => s.src);
     chrome.scripting.executeScript({
       target: {tabId},
       func: links => {
         navigator.clipboard.writeText(links.join('\n')).catch(e => alert(e.message));
-        const t = document.title;
-        document.title = links.length + ' link(s) copied to the clipboard';
-        setTimeout(() => document.title = t, 750);
       },
       args: [links]
     });
+    notify(links.length + ` link${links.length === 1 ? '' : 's'} copied to the clipboard`);
   }
   else if (cmd === 'restart') {
     window.location.reload();
@@ -603,7 +609,12 @@ window.meta = (url, obj) => {
 // links
 for (const a of [...document.querySelectorAll('[data-href]')]) {
   if (a.hasAttribute('href') === false) {
-    a.href = chrome.runtime.getManifest().homepage_url + '#' + a.dataset.href;
+    if (a.dataset.href === 'debug') {
+      a.href = 'https://webbrowsertools.com/test-image-downloader/';
+    }
+    else {
+      a.href = chrome.runtime.getManifest().homepage_url + '#' + a.dataset.href;
+    }
   }
 }
 

@@ -14,9 +14,13 @@ chrome.action.onClicked.addListener(async tab => {
       func: tabId => window.tabId = tabId,
       args: [tab.id]
     });
+    await chrome.scripting.insertCSS({
+      target: {tabId: tab.id},
+      files: ['/data/inject/inject.css']
+    });
     await chrome.scripting.executeScript({
       target: {tabId: tab.id},
-      files: ['data/inject/inject.js']
+      files: ['/data/inject/inject.js']
     });
   }
   catch (e) {

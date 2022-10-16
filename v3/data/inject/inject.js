@@ -11,37 +11,33 @@
 'use strict';
 
 // remove the old iframe
-try {
-  window.myframe.remove();
+for (const e of document.querySelectorAll('dialog.daimages')) {
+  e.remove();
 }
-catch (e) {}
+{
+  const dialog = document.createElement('dialog');
+  dialog.classList.add('daimages');
+  dialog.onclose = dialog.onclick = () => self.onMessage({
+    cmd: 'stop-collector',
+    remove: true
+  });
 
-window.myframe = document.createElement('iframe');
+  const iframe = document.createElement('iframe');
+  dialog.append(iframe);
 
-window.myframe.setAttribute('style', `
-  color-scheme: none;
-  border: none;
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: transparent;
-  z-index: 10000000000;
-`);
+  chrome.storage.local.get({
+    width: 750,
+    height: 650
+  }, ({width, height}) => {
+    dialog.style.setProperty('--width', width + 'px');
+    dialog.style.setProperty('--height', height + 'px');
 
-chrome.storage.local.get({
-  width: 750,
-  height: 650
-}, ({width, height}) => {
-  window.myframe.src = chrome.runtime.getURL('data/inject/core/index.html?' +
-    'tabId=' + tabId +
-    '&width=' + width +
-    '&height=' + height +
-    '&title=' + encodeURIComponent(document.title) +
-    '&href=' + encodeURIComponent(location.href));
-  document.body.appendChild(window.myframe);
-});
+    iframe.src = chrome.runtime.getURL('data/inject/core/index.html?' +
+      'tabId=' + tabId +
+      '&title=' + encodeURIComponent(document.title) +
+      '&href=' + encodeURIComponent(location.href));
 
+    document.body.append(dialog);
+    dialog.showModal();
+  });
+}

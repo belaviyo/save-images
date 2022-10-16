@@ -39,6 +39,7 @@
   }],
   "homepage_url": "https://add0n.com/save-images.html",
   "options_ui": {
+    "open_in_tab": true,
     "page": "data/options/index.html"
   },
   "commands": {

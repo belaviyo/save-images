@@ -2,7 +2,7 @@
   const port = chrome.runtime.connect({
     name: 'page'
   });
-  port.onMessage.addListener(request => {
+  const onMessage = request => {
     if (request.cmd === 'download-image') {
       fetch(request.src).then(r => r.blob()).then(blob => {
         const href = URL.createObjectURL(blob);
@@ -30,7 +30,13 @@
         port.postMessage({
           uid: request.uid
         });
-      }).catch(e => alert(e.message));
+      }).catch(e => {
+        alert(e.message);
+        port.postMessage({
+          uid: request.uid,
+          error: e.message
+        });
+      });
     }
     else if (request.cmd === 'image-to-directory') {
       Promise.all([
@@ -53,12 +59,15 @@
       try {
         window.collector.active = false;
         if (request.remove) {
-          window.myframe.remove();
-          window.myframe = null;
+          for (const e of document.querySelectorAll('dialog.daimages')) {
+            e.remove();
+          }
         }
       }
       catch (e) {}
     }
-  });
+  };
+  port.onMessage.addListener(onMessage);
   self.post = request => port.postMessage(request);
+  self.onMessage = onMessage;
 }

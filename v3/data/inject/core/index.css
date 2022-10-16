@@ -12,10 +12,8 @@ body {
 }
 body > div {
   overflow: hidden;
-  width: 750px;
-  height: 650px;
-  max-width: 80%;
-  max-height: 90%;
+  width: 100vw;
+  height: 100vh;
   background-color: #f0f0f0;
   box-shadow: 0 0 0 10000px rgba(0, 0, 0, 0.3);
   white-space: nowrap;
