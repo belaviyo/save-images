@@ -31,7 +31,6 @@
           uid: request.uid
         });
       }).catch(e => {
-        alert(e.message);
         port.postMessage({
           uid: request.uid,
           error: e.message

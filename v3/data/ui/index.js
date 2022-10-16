@@ -31,10 +31,6 @@ const vconfirm = msg => {
   return r;
 };
 
-const notify = msg => {
-  parent.document.getElementById('toast').notify(msg, 'info', 750);
-};
-
 const elements = {
   notify: document.getElementById('notify'),
   counter: {
@@ -534,7 +530,7 @@ document.addEventListener('click', ({target}) => {
       },
       args: [links]
     });
-    notify(links.length + ` link${links.length === 1 ? '' : 's'} copied to the clipboard`);
+    parent.toast(links.length + ` link${links.length === 1 ? '' : 's'} copied to the clipboard`);
   }
   else if (cmd === 'restart') {
     window.location.reload();

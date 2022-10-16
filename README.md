@@ -19,3 +19,5 @@ Download all images from any web page you're on with this highly customizable ex
   * Edge add-ons: https://microsoftedge.microsoft.com/addons/detail/download-all-images/focinmnfmbmhknhdaamhppgdhahnbgif
 
 
+### Libraries
+  * notification-view: https://webextension.org/custom-component/notification-view/index.html

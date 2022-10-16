@@ -29,7 +29,7 @@ let resp;
 
 const notify = msg => {
   try {
-    parent.document.getElementById('toast').notify(msg, 'info', 750);
+    parent.toast(msg);
   }
   catch (e) {
     const t = document.title;

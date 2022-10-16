@@ -12,6 +12,9 @@ const notify = e => chrome.storage.local.get({
   message: e.message || e,
   iconUrl: '/data/icons/48.png'
 }));
+self.toast = (msg, timeout = 750, type = 'info') => {
+  document.getElementById('toast').notify(msg, type, timeout);
+};
 
 const ui = document.getElementById('ui');
 const gallery = document.getElementById('gallery');
@@ -223,6 +226,7 @@ window.commands = request => {
     const uid = Math.random();
     communication[uid] = o => {
       if (o.error) {
+        self.toast(o.error, 2000, 'error');
         window.commands({
           cmd: 'release'
         });
