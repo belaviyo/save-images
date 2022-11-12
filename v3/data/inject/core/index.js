@@ -149,6 +149,16 @@ class ZIP {
       const zip = new InZIP();
       await zip.open();
 
+      // write README.txt
+      await zip.add('README.txt', new TextEncoder().encode(`Downloaded by "${chrome.runtime.getManifest().name}" extension
+
+Page: ${args.get('href')}
+Date: ${new Date().toLocaleString()}
+
+Name, Link
+----------
+${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
+`));
       await perform(request, async (filename, image) => {
         let content;
         try {
