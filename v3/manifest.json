@@ -42,6 +42,7 @@
     "open_in_tab": true,
     "page": "data/options/index.html"
   },
+  "incognito": "split",
   "commands": {
     "_execute_action": {
       "description": "Press the action button"
