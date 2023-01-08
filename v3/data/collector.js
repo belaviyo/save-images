@@ -120,7 +120,7 @@ collector.meta = async function(o) {
 
 /* collect images */
 collector.inspect = function(doc, loc, name, policies) {
-  // find images; part 1/3
+  // find images; part 1/4
   for (const img of [...doc.images]) {
     collector.push({
       width: img.naturalWidth,
@@ -137,8 +137,24 @@ collector.inspect = function(doc, loc, name, policies) {
         type: 'skipped'
       }
     });
+
+    if (img.src && img.currentSrc !== img.src) {
+      collector.push({
+        src: img.src,
+        alt: img.alt,
+        custom: img.getAttribute(window.custom) || '',
+        // if image is verified, we dont have the image size. on accurate mode set it to false
+        verified: window.accuracy === 'accurate' ? false : true,
+        page: loc.href,
+        meta: {
+          origin: name + ' - document.images',
+          size: 'img.element',
+          type: 'skipped'
+        }
+      });
+    }
   }
-  // find images; part 2/3
+  // find images; part 2/4
   for (const source of [...doc.querySelectorAll('source')]) {
     if (source.srcset) {
       collector.push({
@@ -151,7 +167,7 @@ collector.inspect = function(doc, loc, name, policies) {
       });
     }
   }
-  // find images; part 3/3
+  // find images; part 3/4
   for (const svg of doc.querySelectorAll('svg')) {
     const e = svg.cloneNode(true);
     e.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
@@ -162,6 +178,22 @@ collector.inspect = function(doc, loc, name, policies) {
       page: loc.href,
       meta: {
         origin: name + ' - svg.query'
+      }
+    });
+  }
+  // find embedded images on SVG elements; part 4/4
+  for (const image of [...doc.querySelectorAll('image')]) {
+    collector.push({
+      src: image.href?.baseVal,
+      alt: image.alt,
+      custom: image.getAttribute(window.custom) || '',
+      // if image is verified, we dont have the image size. on accurate mode set it to false
+      verified: window.accuracy === 'accurate' ? false : true,
+      page: loc.href,
+      meta: {
+        origin: name + ' - svg.images',
+        size: 'img.element',
+        type: 'skipped'
       }
     });
   }
