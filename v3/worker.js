@@ -18,10 +18,14 @@ chrome.action.onClicked.addListener(async tab => {
       target: {tabId: tab.id},
       files: ['/data/inject/inject.css']
     });
-    await chrome.scripting.executeScript({
+    const r = await chrome.scripting.executeScript({
       target: {tabId: tab.id},
       files: ['/data/inject/inject.js']
     });
+
+    if (r && r[0].result === false) {
+      throw Error('Cannot attach panel to the document. Is this an HTML page?');
+    }
   }
   catch (e) {
     console.warn(e);

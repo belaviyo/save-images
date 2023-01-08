@@ -406,6 +406,9 @@ const search = () => {
   const accuracy = elements.group.accurate.checked ? 'accurate' : (
     elements.group.calc.checked ? 'partial-accurate' : 'no-accurate'
   );
+
+  console.log(1111);
+
   /* collect images */
   let regexp = '';
   chrome.storage.local.get({
@@ -442,10 +445,15 @@ const search = () => {
         target,
         files: ['/data/port.js']
       });
-      await chrome.scripting.executeScript({
+
+      console.log(111);
+
+      const r = await chrome.scripting.executeScript({
         target,
         files: ['/data/collector.js']
       });
+      console.log(r);
+
       await chrome.scripting.executeScript({
         target,
         files: ['/data/size.js']

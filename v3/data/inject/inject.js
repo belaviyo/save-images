@@ -25,19 +25,24 @@ for (const e of document.querySelectorAll('dialog.daimages')) {
   const iframe = document.createElement('iframe');
   dialog.append(iframe);
 
-  chrome.storage.local.get({
-    width: 750,
-    height: 650
-  }, ({width, height}) => {
-    dialog.style.setProperty('--width', width + 'px');
-    dialog.style.setProperty('--height', height + 'px');
+  if (dialog.style) {
+    chrome.storage.local.get({
+      width: 750,
+      height: 650
+    }, ({width, height}) => {
+      dialog.style.setProperty('--width', width + 'px');
+      dialog.style.setProperty('--height', height + 'px');
 
-    iframe.src = chrome.runtime.getURL('data/inject/core/index.html?' +
-      'tabId=' + tabId +
-      '&title=' + encodeURIComponent(document.title) +
-      '&href=' + encodeURIComponent(location.href));
+      iframe.src = chrome.runtime.getURL('data/inject/core/index.html?' +
+        'tabId=' + tabId +
+        '&title=' + encodeURIComponent(document.title) +
+        '&href=' + encodeURIComponent(location.href));
 
-    document.body.append(dialog);
-    dialog.showModal();
-  });
+      (document.body || document.documentElement).append(dialog);
+      dialog.showModal();
+    });
+  }
+
+  // eslint-disable-next-line semi
+  Boolean(dialog.style)
 }
