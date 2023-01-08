@@ -71,7 +71,6 @@ window.iframe = document.createElement('iframe');
   chrome.runtime.onMessage.addListener(onmessage);
 }
 
-
 chrome.storage.local.get({
   width: 750,
   height: 650
@@ -95,3 +94,6 @@ chrome.storage.local.get({
   window.iframe.src = chrome.runtime.getURL('data/inject/selector.html');
   document.body.appendChild(window.iframe);
 });
+
+// eslint-disable-next-line semi
+Boolean(document.body)

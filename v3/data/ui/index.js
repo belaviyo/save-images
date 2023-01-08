@@ -407,8 +407,6 @@ const search = () => {
     elements.group.calc.checked ? 'partial-accurate' : 'no-accurate'
   );
 
-  console.log(1111);
-
   /* collect images */
   let regexp = '';
   chrome.storage.local.get({
@@ -446,13 +444,10 @@ const search = () => {
         files: ['/data/port.js']
       });
 
-      console.log(111);
-
-      const r = await chrome.scripting.executeScript({
+      await chrome.scripting.executeScript({
         target,
         files: ['/data/collector.js']
       });
-      console.log(r);
 
       await chrome.scripting.executeScript({
         target,

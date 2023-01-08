@@ -109,6 +109,15 @@ var collector = {
         let {src} = img;
         // remove hash to prevent duplicates
         src = src.split('#')[0];
+
+        // fix src
+        if (src && (src.startsWith('http') === false && src.startsWith('data:') === false) && img.page) {
+          try {
+            img.src = src = (new URL(src, img.page)).href;
+          }
+          catch (e) {}
+        }
+
         if (src && (src.startsWith('http') || src.startsWith('ftp') || src.startsWith('data:'))) {
           if (collector.cache[src] === undefined) {
             collector.cache[src] = true;
@@ -161,17 +170,30 @@ var collector = {
         }
       });
     };
-    // find images; part 1/1
-    let images = [...document.images].map(img => ({
-      width: img.width,
-      height: img.height,
-      src: img.currentSrc || img.src,
-      alt: img.alt,
-      custom: img.getAttribute(window.custom) || '',
-      verified: true, // this is an image even if content-type cannot be resolved,
-      page: location.href
-    }));
-    // find images; part 1/2
+    // find images; part 1/3
+    let images = [];
+
+    for (const img of document.images) {
+      images.push({
+        width: img.width,
+        height: img.height,
+        src: img.currentSrc || img.src,
+        alt: img.alt,
+        custom: img.getAttribute(window.custom) || '',
+        verified: true, // this is an image even if content-type cannot be resolved,
+        page: location.href
+      });
+      if (img.src && img.currentSrc !== img.src) {
+        images.push({
+          src: img.src,
+          alt: img.alt,
+          custom: img.getAttribute(window.custom) || '',
+          verified: true, // this is an image even if content-type cannot be resolved,
+          page: location.href
+        });
+      }
+    }
+    // find images; part 2/3
     for (const source of document.querySelectorAll('source')) {
       try {
         const href = (source.srcset || '').split(' ')[0];
@@ -184,10 +206,22 @@ var collector = {
         console.warn('Cannot collect source images', e);
       }
     }
+    // find embedded images on SVG elements; part 3/3
+    for (const image of [...document.querySelectorAll('image')]) {
+      images.push({
+        src: image.href?.baseVal,
+        alt: image.alt,
+        custom: image.getAttribute(window.custom) || '',
+        // if image is verified, we dont have the image size. on accurate mode set it to false
+        verified: true,
+        page: location.href
+      });
+    }
     images.push(...[...document.querySelectorAll('source')].filter(i => i.srcset).map(i => ({
       src: i.srcset.split(' ')[0],
       page: location.href
     })));
+
     // find background images; part 2
     try {
       [...document.querySelectorAll('*')]
@@ -243,7 +277,7 @@ var collector = {
     // find hard-coded links; part 4
     if (window.deep > 0) {
       const r = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/ig;
-      const content = document.documentElement.innerHTML + '\n' + document.body.textContent;
+      const content = document.documentElement.innerHTML + '\n' + document.body?.textContent;
 
       // decode html special characters; &amp;
       (content.match(r) || [])

@@ -23,9 +23,12 @@ const onClicked = tab => {
     file: 'data/inject/inject.js',
     runAt: 'document_start',
     allFrames: false
-  }, () => {
+  }, r => {
     if (chrome.runtime.lastError) {
       notify('Cannot collect images on this tab\n\n' + chrome.runtime.lastError.message);
+    }
+    else if (r && r[0] === false) {
+      notify('Cannot collect images on this tab\n\n' + 'Is this an HTML page?');
     }
   });
 };
