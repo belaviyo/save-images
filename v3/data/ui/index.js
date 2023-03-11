@@ -291,6 +291,7 @@ function update() {
     target: {
       tabId
     },
+    injectImmediately: true,
     func: () => 'showDirectoryPicker' in window
   }).then(a => {
     document.querySelector('[data-cmd=save-dir]').disabled = a[0].result === false;
@@ -425,6 +426,7 @@ const search = () => {
     try {
       const [{result}] = await chrome.scripting.executeScript({
         target: {tabId},
+        injectImmediately: true,
         func: () => [...document.querySelectorAll('iframe')]
           .map(a => a.src)
           .filter(a => a && a.toLowerCase().startsWith('javascript:')).length
@@ -437,24 +439,29 @@ const search = () => {
       };
       await chrome.scripting.executeScript({
         target,
+        injectImmediately: true,
         files: ['/data/utils.js']
       });
       await chrome.scripting.executeScript({
         target,
+        injectImmediately: true,
         files: ['/data/port.js']
       });
 
       await chrome.scripting.executeScript({
         target,
+        injectImmediately: true,
         files: ['/data/collector.js']
       });
 
       await chrome.scripting.executeScript({
         target,
+        injectImmediately: true,
         files: ['/data/size.js']
       });
       await chrome.scripting.executeScript({
         target,
+        injectImmediately: true,
         func: (deep, accuracy, regexp, custom) => {
           window.deep = deep;
           window.accuracy = accuracy || 'partial-accurate';
@@ -528,6 +535,7 @@ document.addEventListener('click', ({target}) => {
     const links = build().images.map(s => s.src);
     chrome.scripting.executeScript({
       target: {tabId},
+      injectImmediately: true,
       func: links => {
         navigator.clipboard.writeText(links.join('\n')).catch(e => alert(e.message));
       },

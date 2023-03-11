@@ -98,13 +98,22 @@ collector.meta = async function(o) {
     return im;
   }
 
-  if (o.verified === true) {
-    return {};
-  }
+  // if (o.verified === true) {
+  //   return {
+  //     meta: {
+  //       type: 'image/unkown'
+  //     },
+  //     origin: 'guess'
+  //   };
+  // }
 
   try {
     const meta = await utils.response.heads(o.src);
+
     meta.type = utils.type(im?.meta, meta);
+    if (o.verified && !meta.type) {
+      meta.type = 'image/unknown';
+    }
 
     return {
       meta,
@@ -134,9 +143,6 @@ collector.findRoots = function(doc, list = []) {
 collector.inspect = function(doc, loc, name, policies) {
   const docs = [doc];
   collector.findRoots(doc, docs);
-
-  console.log(docs);
-
 
   // find images; part 1/4
   for (const doc of docs) {
@@ -306,11 +312,12 @@ collector.push = function(o) {
     try {
       const loc = new URL(o.src, o.page);
 
-      if (['http:', 'https:', 'file:', 'data:'].some(a => a === loc.protocol) === false) {
+      if (['http:', 'https:', 'file:', 'data:', 'blob:'].some(a => a === loc.protocol) === false) {
         return;
       }
 
       o.src = loc.href;
+
       // o.src = o.src.split('#')[0]; // dont use this
 
       if (collector.cache.has(o.src) === false) {
@@ -350,6 +357,7 @@ collector.addImage = function(o) {
       return;
     }
   }
+
   // we are not sure this is an image file
   if (!o.type.startsWith('image/')) {
     collector['raw-images'].push(o);

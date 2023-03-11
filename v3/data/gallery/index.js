@@ -202,6 +202,7 @@ document.addEventListener('click', e => {
       else {
         chrome.scripting.executeScript({
           target: {tabId},
+          injectImmediately: true,
           func: copy,
           args: [links]
         });

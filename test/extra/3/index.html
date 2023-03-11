@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+</head>
+<body>
+  <script type="module">
+    class ElementOne extends HTMLElement {
+      constructor() {
+        super();
+        this.shadow = this.attachShadow({ mode: "open" });
+        this.shadowRoot.innerHTML = `
+          <img src="js.png" width=32></img>
+          <element-two></element-two>
+          <img id="blob" width=32></img>
+        `;
+        const img = this.shadow.getElementById('blob');
+        fetch('doc.png').then(r => r.blob()).then(b => {
+          const href = URL.createObjectURL(b);
+          img.src = href;
+        })
+
+      }
+    }
+    customElements.define( 'element-one', ElementOne );
+    class ElementTwo extends HTMLElement {
+      constructor() {
+        super();
+        this.shadow = this.attachShadow({ mode: "closed" });
+        this.shadow.innerHTML = `<img src="book.jpg" width=32></img>`
+      }
+    }
+    customElements.define( 'element-two', ElementTwo );
+
+    document.open();
+    for (let n = 1; n < 10; n += 1) {
+      document.write('<element-one></element-one>');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    document.close();
+  </script>
+</body>
+</html>

@@ -11,6 +11,7 @@ chrome.action.onClicked.addListener(async tab => {
   try {
     await chrome.scripting.executeScript({
       target: {tabId: tab.id},
+      injectImmediately: true,
       func: tabId => window.tabId = tabId,
       args: [tab.id]
     });
@@ -20,6 +21,7 @@ chrome.action.onClicked.addListener(async tab => {
     });
     const r = await chrome.scripting.executeScript({
       target: {tabId: tab.id},
+      injectImmediately: true,
       files: ['/data/inject/inject.js']
     });
 
