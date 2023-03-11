@@ -38,7 +38,7 @@
     "data/ui/index.html",
     "data/gallery/index.html"
   ],
-  "homepage_url": "https://add0n.com/save-images.html",
+  "homepage_url": "https://webextension.org/listing/save-images.html",
   "options_ui": {
     "page": "data/options/index.html",
     "chrome_style": true

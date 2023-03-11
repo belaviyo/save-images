@@ -118,29 +118,34 @@ collector.meta = async function(o) {
   return {};
 };
 
+collector.findRoots = function(doc, list = []) {
+  for (const e of doc.querySelectorAll('*')) {
+    if (e.shadowRoot) {
+      try {
+        collector.findRoots(e.shadowRoot, list);
+        list.push(e.shadowRoot);
+      }
+      catch (e) {}
+    }
+  }
+};
+
 /* collect images */
 collector.inspect = function(doc, loc, name, policies) {
-  // find images; part 1/4
-  for (const img of [...doc.images]) {
-    collector.push({
-      width: img.naturalWidth,
-      height: img.naturalHeight,
-      src: img.currentSrc || img.src,
-      alt: img.alt,
-      custom: img.getAttribute(window.custom) || '',
-      // if image is verified, we dont have the image size. on accurate mode set it to false
-      verified: window.accuracy === 'accurate' ? false : true,
-      page: loc.href,
-      meta: {
-        origin: name + ' - document.images',
-        size: 'img.element',
-        type: 'skipped'
-      }
-    });
+  const docs = [doc];
+  collector.findRoots(doc, docs);
 
-    if (img.src && img.currentSrc !== img.src) {
+  console.log(docs);
+
+
+  // find images; part 1/4
+  for (const doc of docs) {
+    const images = doc.images || doc.querySelectorAll('img');
+    for (const img of [...images]) {
       collector.push({
-        src: img.src,
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+        src: img.currentSrc || img.src,
         alt: img.alt,
         custom: img.getAttribute(window.custom) || '',
         // if image is verified, we dont have the image size. on accurate mode set it to false
@@ -152,50 +157,72 @@ collector.inspect = function(doc, loc, name, policies) {
           type: 'skipped'
         }
       });
+
+      if (img.src && img.currentSrc !== img.src) {
+        collector.push({
+          src: img.src,
+          alt: img.alt,
+          custom: img.getAttribute(window.custom) || '',
+          // if image is verified, we dont have the image size. on accurate mode set it to false
+          verified: window.accuracy === 'accurate' ? false : true,
+          page: loc.href,
+          meta: {
+            origin: name + ' - document.images',
+            size: 'img.element',
+            type: 'skipped'
+          }
+        });
+      }
     }
   }
   // find images; part 2/4
-  for (const source of [...doc.querySelectorAll('source')]) {
-    if (source.srcset) {
+  for (const doc of docs) {
+    for (const source of [...doc.querySelectorAll('source')]) {
+      if (source.srcset) {
+        collector.push({
+          src: source.srcset.split(' ')[0],
+          type: source.type,
+          page: loc.href,
+          meta: {
+            origin: name + ' - source.element'
+          }
+        });
+      }
+    }
+  }
+  // find images; part 3/4
+  for (const doc of docs) {
+    for (const svg of doc.querySelectorAll('svg')) {
+      const e = svg.cloneNode(true);
+      e.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
       collector.push({
-        src: source.srcset.split(' ')[0],
-        type: source.type,
+        src: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(e.outerHTML),
+        type: 'image/svg+xml',
         page: loc.href,
         meta: {
-          origin: name + ' - source.element'
+          origin: name + ' - svg.query'
         }
       });
     }
   }
-  // find images; part 3/4
-  for (const svg of doc.querySelectorAll('svg')) {
-    const e = svg.cloneNode(true);
-    e.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-
-    collector.push({
-      src: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(e.outerHTML),
-      type: 'image/svg+xml',
-      page: loc.href,
-      meta: {
-        origin: name + ' - svg.query'
-      }
-    });
-  }
   // find embedded images on SVG elements; part 4/4
-  for (const image of [...doc.querySelectorAll('image')]) {
-    collector.push({
-      src: image.href?.baseVal,
-      alt: image.alt,
-      custom: image.getAttribute(window.custom) || '',
-      // if image is verified, we dont have the image size. on accurate mode set it to false
-      verified: window.accuracy === 'accurate' ? false : true,
-      page: loc.href,
-      meta: {
-        origin: name + ' - svg.images',
-        size: 'img.element',
-        type: 'skipped'
-      }
-    });
+  for (const doc of docs) {
+    for (const image of [...doc.querySelectorAll('image')]) {
+      collector.push({
+        src: image.href?.baseVal,
+        alt: image.alt,
+        custom: image.getAttribute(window.custom) || '',
+        // if image is verified, we dont have the image size. on accurate mode set it to false
+        verified: window.accuracy === 'accurate' ? false : true,
+        page: loc.href,
+        meta: {
+          origin: name + ' - svg.images',
+          size: 'img.element',
+          type: 'skipped'
+        }
+      });
+    }
   }
   const extract = content => {
     const r = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/ig;
@@ -205,59 +232,65 @@ collector.inspect = function(doc, loc, name, policies) {
 
   // find background images; part 2
   if (policies.bg) {
-    try {
-      [...doc.querySelectorAll('*')]
-        .map(e => [
-          getComputedStyle(e).backgroundImage,
-          getComputedStyle(e, ':before').backgroundImage,
-          getComputedStyle(e, ':after').backgroundImage
-        ])
-        .flat()
-        .filter(s => s && s.includes('url('))
-        .map(s => extract(s)).flat().filter(s => s).forEach(src => {
-          collector.push({
-            src,
-            page: loc.href,
-            meta: {
-              origin: name + ' - link'
-            }
+    for (const doc of docs) {
+      try {
+        [...doc.querySelectorAll('*')]
+          .map(e => [
+            getComputedStyle(e).backgroundImage,
+            getComputedStyle(e, ':before').backgroundImage,
+            getComputedStyle(e, ':after').backgroundImage
+          ])
+          .flat()
+          .filter(s => s && s.includes('url('))
+          .map(s => extract(s)).flat().filter(s => s).forEach(src => {
+            collector.push({
+              src,
+              page: loc.href,
+              meta: {
+                origin: name + ' - link'
+              }
+            });
           });
-        });
-    }
-    catch (e) {
-      console.warn('Cannot collect background images', e);
+      }
+      catch (e) {
+        console.warn('Cannot collect background images', e);
+      }
     }
   }
   // find linked images; part 3
   if (window.deep > 0 && policies.links) {
-    [...doc.querySelectorAll('a')].map(a => a.href).forEach(src => collector.push({
-      src,
-      page: loc.href,
-      meta: {
-        origin: name + ' - link.href'
-      }
-    }));
-  }
-  // find hard-coded links; part 4
-  if (window.deep > 0 && policies.extract) {
-    // "textContent" can extract data from input elements
-    const content = doc.documentElement.innerHTML + '\n\n' + doc.textContent;
-    extract(content).map(s => {
-      // decode html special characters; &amp;
-      return s.replace(/&amp;/g, '&')
-        .replace(/&quot;/g, '"')
-        .replace(/\\+$/, '')
-        .split(/['")]/)[0]
-        .split('</')[0];
-    }).forEach(src => {
-      collector.push({
+    for (const doc of docs) {
+      [...doc.querySelectorAll('a')].map(a => a.href).forEach(src => collector.push({
         src,
         page: loc.href,
         meta: {
-          origin: name + ' - regex.hard-coded.link'
+          origin: name + ' - link.href'
         }
+      }));
+    }
+  }
+  // find hard-coded links; part 4
+  if (window.deep > 0 && policies.extract) {
+    for (const doc of docs) {
+      // "textContent" can extract data from input elements
+      const content = (doc.documentElement?.innerHTML || '') + '\n\n' + doc.textContent;
+      extract(content).map(s => {
+        // decode html special characters; &amp;
+        return s.replace(/&amp;/g, '&')
+          .replace(/&quot;/g, '"')
+          .replace(/\\+$/, '')
+          .split(/['")]/)[0]
+          .split('</')[0];
+      }).forEach(src => {
+        collector.push({
+          src,
+          page: loc.href,
+          meta: {
+            origin: name + ' - regex.hard-coded.link'
+          }
+        });
       });
-    });
+    }
   }
 };
 

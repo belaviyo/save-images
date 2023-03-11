@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+</head>
+<body>
+  <picture>
+    <source srcset="large.jpeg 1x" media="(min-width: 75em)">
+    <source srcset="medium.jpeg 1x, large.jpeg 2x" media="(min-width: 40em)">
+    <img src="small.jpeg" alt="A description of the image." width="300" height="200" loading="lazy" decoding="async"
+      srcset="small.jpeg 1x, medium.jpeg 2x, large.jpeg 3x">
+  </picture>
+</body>
+</html>
