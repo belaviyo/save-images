@@ -150,7 +150,8 @@ class ZIP {
       await zip.open();
 
       // write README.txt
-      await zip.add('README.txt', new TextEncoder().encode(`Downloaded by "${chrome.runtime.getManifest().name}" extension
+      if (request.readme) {
+        await zip.add('README.txt', new TextEncoder().encode(`Downloaded by "${chrome.runtime.getManifest().name}" extension
 
 Page: ${args.get('href')}
 Date: ${new Date().toLocaleString()}
@@ -159,6 +160,8 @@ Name, Link
 ----------
 ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
 `));
+      }
+
       await perform(request, async (filename, image) => {
         let content;
         try {
@@ -260,6 +263,7 @@ window.commands = request => {
       uid,
       cmd: 'create-directory',
       name: 'README.txt',
+      readme: request.readme,
       content: `Downloaded by "${chrome.runtime.getManifest().name}" extension
 
 Page: ${args.get('href')}

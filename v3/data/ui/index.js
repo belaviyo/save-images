@@ -1,10 +1,10 @@
-/* Copyright (C) 2014-2022 Joe Ertaba
+/* Copyright (C) 2014-2023 Joe Ertaba
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
- * Home: https://add0n.com/save-images.html
+ * Home: https://webextension.org/listing/save-images.html
  * GitHub: https://github.com/belaviyo/save-images/ */
 
 /* global utils */
@@ -44,6 +44,7 @@ const elements = {
     size: document.getElementById('group-size'),
     dimension: document.getElementById('group-dimension'),
     zip: document.getElementById('group-zip'),
+    readme: document.getElementById('add-readme'),
     accurate: document.getElementById('accurate'),
     calc: document.getElementById('calc'),
     type: document.getElementById('group-type'),
@@ -509,7 +510,8 @@ document.addEventListener('click', ({target}) => {
       cmd: 'save-images',
       directory: cmd === 'save-dir',
       mask: elements.files.mask.value,
-      noType: elements.type.noType.checked
+      noType: elements.type.noType.checked,
+      readme: elements.group.readme.checked
     });
     // length after filtering
     const len = elements.counter.save.value;

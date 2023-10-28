@@ -30,10 +30,11 @@ body > span {
 #toolbar {
   padding: 5px;
   display: grid;
-  grid-template-columns: repeat(6, 65px) 1fr 65px;
+  grid-template-columns: repeat(6, min-content) 1fr min-content;
   grid-column-gap: 2px;
   grid-row-gap: 2px;
 }
+
 @media screen and (max-width: 600px) {
   #toolbar {
     grid-template-columns: repeat(5, 1fr);
@@ -43,6 +44,7 @@ body > span {
     grid-column-end: 5;
   }
 }
+
 @media screen and (max-width: 400px) {
   #toolbar {
     grid-template-columns: repeat(2, 1fr);

@@ -1,12 +1,12 @@
-/* Copyright (C) 2014-2022 Joe Ertaba
+/* Copyright (C) 2014-2023 Joe Ertaba
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
  * Description: ArrayBuffer based memory-efficient ZIP implementation
-                This code is based on https://github.com/mrananyan/ZipperJS/blob/master/zipper.js
- * Home: https://add0n.com/save-images.html
+   This code is based on https://github.com/mrananyan/ZipperJS/blob/master/zipper.js
+ * Home: https://webextension.org/listing/save-images.html
  * GitHub: https://github.com/belaviyo/save-images/ */
 
 // (async () => {

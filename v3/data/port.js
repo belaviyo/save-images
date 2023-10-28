@@ -18,15 +18,17 @@
     else if (request.cmd === 'create-directory') {
       window.showDirectoryPicker().then(async d => {
         window.directory = d;
-        const file = await d.getFileHandle(request.name, {
-          create: true
-        });
-        const writable = await file.createWritable();
-        const blob = new Blob([request.content], {
-          type: 'text/plain'
-        });
-        const response = new Response(blob);
-        await response.body.pipeTo(writable);
+        if (request.readme) {
+          const file = await d.getFileHandle(request.name, {
+            create: true
+          });
+          const writable = await file.createWritable();
+          const blob = new Blob([request.content], {
+            type: 'text/plain'
+          });
+          const response = new Response(blob);
+          await response.body.pipeTo(writable);
+        }
         port.postMessage({
           uid: request.uid
         });

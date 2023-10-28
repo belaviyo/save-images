@@ -143,6 +143,9 @@
   "ui_separate": {
     "message": "Download each image separately (slow)"
   },
+  "ui_readme": {
+    "message": "Generate README.txt file while downloading"
+  },
   "ui_accurate": {
     "message": "Confirm mime-types and guess filenames from server"
   },

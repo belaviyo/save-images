@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2022 Joe Ertaba
+/* Copyright (C) 2014-2023 Joe Ertaba
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -51,50 +51,6 @@ function humanFileSize(bytes) {
   }
   while (Math.abs(bytes) >= thresh && u < units.length - 1);
   return bytes.toFixed(1) + ' ' + units[u];
-}
-
-{
-  const init = r => {
-    resp = r;
-    Object.values(resp.images).forEach(obj => {
-      const clone = document.importNode(t.content, true);
-      const img = clone.querySelector('img');
-      img.src = obj.src;
-      clone.querySelector('label').info = obj;
-      img.alt = clone.querySelector('input[type=text]').value = obj.filename;
-
-      const a = clone.querySelector('a');
-      let title = obj.size ? humanFileSize(obj.size) : 'no size';
-      if (obj.width && obj.height) {
-        title += ' (' + obj.width + '✕' + obj.height + ')';
-      }
-      else {
-        img.onload = () => {
-          a.textContent += ' (' + img.naturalWidth + '✕' + img.naturalHeight + ')';
-          // set image size for the "ui" view
-          window.parent.ui.contentWindow.meta(obj.src, {
-            width: img.naturalWidth,
-            height: img.naturalHeight
-          });
-        };
-      }
-      a.textContent = title;
-      a.href = obj.src;
-
-      body.appendChild(clone);
-    });
-  };
-  if (window.top === window) {
-    document.body.dataset.top = true;
-
-    chrome.tabs.sendMessage(tabId, {
-      cmd: 'build'
-    }, init);
-  }
-  else {
-    const resp = window.parent.ui.contentWindow.build();
-    init(resp);
-  }
 }
 
 let last;
@@ -228,6 +184,9 @@ document.addEventListener('click', e => {
 
 document.addEventListener('change', () => {
   copy.disabled = rename.disabled = download.disabled = document.querySelector('.entry :checked') === null;
+
+  const n = document.querySelectorAll('.entry :checked').length;
+  download.value = 'Download' + (n ? ` (${n})` : '');
 });
 // make sure the user-defined name is used for the filename
 document.addEventListener('input', e => {
@@ -242,3 +201,48 @@ window.commands = request => {
     progress.dataset.visible = false;
   }
 };
+
+{
+  const init = r => {
+    resp = r;
+    Object.values(resp.images).forEach(obj => {
+      const clone = document.importNode(t.content, true);
+      const img = clone.querySelector('img');
+      img.src = obj.src;
+      clone.querySelector('label').info = obj;
+      img.alt = clone.querySelector('input[type=text]').value = obj.filename;
+
+      const a = clone.querySelector('a');
+      let title = obj.size ? humanFileSize(obj.size) : 'no size';
+      if (obj.width && obj.height) {
+        title += ' (' + obj.width + '✕' + obj.height + ')';
+      }
+      else {
+        img.onload = () => {
+          a.textContent += ' (' + img.naturalWidth + '✕' + img.naturalHeight + ')';
+          // set image size for the "ui" view
+          window.parent.ui.contentWindow.meta(obj.src, {
+            width: img.naturalWidth,
+            height: img.naturalHeight
+          });
+        };
+      }
+      a.textContent = title;
+      a.href = obj.src;
+
+      body.appendChild(clone);
+    });
+    document.dispatchEvent(new Event('change'));
+  };
+  if (window.top === window) {
+    document.body.dataset.top = true;
+
+    chrome.tabs.sendMessage(tabId, {
+      cmd: 'build'
+    }, init);
+  }
+  else {
+    const resp = window.parent.ui.contentWindow.build();
+    init(resp);
+  }
+}

@@ -1,10 +1,10 @@
-/* Copyright (C) 2014-2022 Joe Ertaba
+/* Copyright (C) 2014-2023 Joe Ertaba
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
- * Home: https://add0n.com/save-images.html
+ * Home: https://webextension.org/listing/save-images.html
  * GitHub: https://github.com/belaviyo/save-images/ */
 
 /* globals search, accurate, elements, args, tabId */
