@@ -104,6 +104,7 @@ fieldset {
 legend {
   font-weight: bold;
 }
+body.stopped progress,
 progress[data-visible=false] {
   display: none;
 }

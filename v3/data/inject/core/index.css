@@ -17,6 +17,7 @@ body > div {
   background-color: #f0f0f0;
   box-shadow: 0 0 0 10000px rgba(0, 0, 0, 0.3);
   white-space: nowrap;
+  display: flex;
 }
 body > div > div {
   border: none;
@@ -24,9 +25,9 @@ body > div > div {
   box-sizing: border-box;
   height: 100%;
   display: inline-flex;
+  transition-duration: 500ms;
 }
 body[data-mode=gallery] > div > div {
-  transition-duration: 500ms;
   transform: translateX(-100%);
 }
 iframe {

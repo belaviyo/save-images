@@ -33,14 +33,12 @@ var collector = {
 };
 
 var report = () => {
-  if (collector.active) {
-    post({
-      cmd: 'progress',
-      value: collector.feeds['1'].length + collector.feeds['2'].length + collector.feeds['3'].length +
-        collector['raw-images'].length +
-        collector.docs.length
-    });
-  }
+  post({
+    cmd: 'progress',
+    value: collector.feeds['1'].length + collector.feeds['2'].length + collector.feeds['3'].length +
+      collector['raw-images'].length +
+      collector.docs.length
+  });
 };
 
 collector.events = {
@@ -108,7 +106,7 @@ collector.meta = async function(o) {
   // }
 
   try {
-    const meta = await utils.response.heads(o.src);
+    const meta = await utils.response.heads(o);
 
     meta.type = utils.type(im?.meta, meta);
     if (o.verified && !meta.type) {
@@ -231,8 +229,14 @@ collector.inspect = function(doc, loc, name, policies) {
     }
   }
   const extract = content => {
-    const r = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/ig;
-    return content.match(r) || [];
+    try {
+      const r = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/ig;
+      return content.match(r) || [];
+    }
+    catch (e) {
+      console.info('link extraction failed', e);
+    }
+    return [];
   };
 
 
@@ -280,6 +284,7 @@ collector.inspect = function(doc, loc, name, policies) {
     for (const doc of docs) {
       // "textContent" can extract data from input elements
       const content = (doc.documentElement?.innerHTML || '') + '\n\n' + doc.textContent;
+
       extract(content).map(s => {
         // decode html special characters; &amp;
         return s.replace(/&amp;/g, '&')
@@ -384,7 +389,7 @@ collector.head = async function() {
     collector.head.jobs += 1;
 
     try {
-      const r = await utils.response.segment(o.src);
+      const r = await utils.response.segment(o);
 
       o.size = r.size;
       o.type = utils.type(o, r);
@@ -503,7 +508,7 @@ collector.document = function(o) {
   }
   // do not parse sub documents
   if (window.deep > 1 && o.meta.origin.startsWith('one')) {
-    collector.docs.push(o.src);
+    collector.docs.push(o);
 
     collector.dig();
     collector.dig();
@@ -526,22 +531,26 @@ collector.dig = async function() {
     'dig-timeout': 30 * 1000
   }, resolve));
 
-  const href = collector.docs.shift();
-  if (href) {
+  const o = collector.docs.shift();
+  if (o && o.src) {
     collector.dig.jobs += 1;
 
     try {
-      const content = await utils.response.text(href);
+      const content = await utils.response.text(o);
 
       if (content) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(content, 'text/html');
         // fix wrong base!
         const base = doc.createElement('base');
-        base.href = href;
+        base.href = o.src;
         doc.head.appendChild(base);
 
-        collector.inspect(doc, new URL(href), 'two', {
+        post({
+          cmd: 'new-frame'
+        });
+
+        collector.inspect(doc, new URL(o.src), 'two', {
           bg: window.deep === 3,
           links: window.deep === 3,
           extract: window.deep === 3

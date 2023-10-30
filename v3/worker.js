@@ -39,6 +39,53 @@ chrome.tabs.onRemoved.addListener(tabId => chrome.declarativeNetRequest.updateSe
   removeRuleIds: [tabId]
 }).catch(() => {}));
 
+chrome.runtime.onMessage.addListener((request, sender, response) => {
+  if (request.cmd === 'apply-referer') {
+    try {
+      const id = Math.floor(Math.random() * 1000000);
+      chrome.declarativeNetRequest.updateSessionRules({
+        addRules: [{
+          'id': id,
+          'priority': 1,
+          'action': {
+            type: 'modifyHeaders',
+            requestHeaders: [{
+              'operation': 'set',
+              'header': 'referer',
+              'value': request.referer
+            }, {
+              'operation': 'remove',
+              'header': 'origin'
+            }]
+          },
+          'condition': {
+            'urlFilter': request.src,
+            'resourceTypes': ['xmlhttprequest', 'image'],
+            'tabIds': [sender.tab.id]
+          }
+        }]
+      }).then(() => response(id), () => response(-1));
+
+      return true;
+    }
+    catch (e) {
+      response(-1);
+    }
+  }
+  else if (request.cmd === 'revoke-referer') {
+    if (request.id === -1) {
+      response();
+    }
+    else {
+      chrome.declarativeNetRequest.updateSessionRules({
+        removeRuleIds: [request.id]
+      }).then(() => response(), () => response());
+
+      return true;
+    }
+  }
+});
+
 /* delete all indexedDBs*/
 {
   const once = async () => {

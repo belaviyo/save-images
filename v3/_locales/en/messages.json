@@ -35,8 +35,14 @@
   "ui_total": {
     "message": "Total:"
   },
+  "ui_frames": {
+    "message": "Frames:"
+  },
   "ui_total_title": {
     "message": "Total number of parsed links (a link might be or might not be an image)"
+  },
+  "ui_frames_title": {
+    "message": "Total number of parsed documents"
   },
   "ui_images_title": {
     "message": "Total number of available images"
@@ -182,9 +188,6 @@
   "ui_delay": {
     "message": "Number of seconds a request can take before automatically being terminated (a number between 5 to 120 seconds)"
   },
-  "ui_too_many_errors": {
-    "message": "Too many errors occurred during the search. Toggling the \"referer\" option may fix the issue."
-  },
   "detection_delay": {
     "message": "Number of seconds to pause after each server-side image detection (rate-limit)"
   },
@@ -259,9 +262,6 @@
   },
   "ui_prefs_max_warning": {
     "message": "Display a confirmation when the total number of images is more than"
-  },
-  "ui_networ_referer": {
-    "message": "Remove \"referer\" and \"origin\" headers while searching (restart required)"
   },
   "ui_networ_cors": {
     "message": "Bypass network CORS while searching (restart required)"

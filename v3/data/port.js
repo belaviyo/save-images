@@ -2,9 +2,19 @@
   const port = chrome.runtime.connect({
     name: 'page'
   });
+  port.onDisconnect.addListener(() => {
+    try {
+      window.collector.active = false;
+    }
+    catch (e) {}
+  });
   const onMessage = request => {
     if (request.cmd === 'download-image') {
-      fetch(request.src).then(r => r.blob()).then(blob => {
+      fetch(request.src, {
+        headers: {
+          referer: request.referer
+        }
+      }).then(r => r.blob()).then(blob => {
         const href = URL.createObjectURL(blob);
         port.postMessage({
           uid: request.uid,
@@ -59,16 +69,22 @@
     else if (request.cmd === 'stop-collector') {
       try {
         window.collector.active = false;
-        if (request.remove) {
-          for (const e of document.querySelectorAll('dialog.daimages')) {
-            e.remove();
-          }
-        }
       }
       catch (e) {}
+      if (request.remove) {
+        for (const e of document.querySelectorAll('dialog.daimages')) {
+          e.remove();
+        }
+        port.disconnect();
+      }
     }
   };
   port.onMessage.addListener(onMessage);
-  self.post = request => port.postMessage(request);
+  self.post = request => {
+    try {
+      port.postMessage(request);
+    }
+    catch (e) {}
+  };
   self.onMessage = onMessage;
 }

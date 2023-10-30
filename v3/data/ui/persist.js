@@ -7,7 +7,7 @@
  * Home: https://webextension.org/listing/save-images.html
  * GitHub: https://github.com/belaviyo/save-images/ */
 
-/* globals search, accurate, elements, args, tabId */
+/* global search, accurate, elements, tabId */
 'use strict';
 
 const persist = {};
@@ -66,24 +66,7 @@ document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get({pe
   accurate();
 
   // install network
-  {
-    const requestHeaders = elements.group.referer.checked ? [{
-      'operation': 'remove',
-      'header': 'referer'
-    }, {
-      'operation': 'remove',
-      'header': 'origin'
-    }] : [{
-      'operation': 'set',
-      'header': 'referer',
-      'value': args.get('href')
-    }];
-    const responseHeaders = elements.group.cors.checked ? [{
-      'operation': 'set',
-      'header': 'access-control-allow-origin',
-      'value': '*'
-    }] : undefined;
-
+  if (elements.group.cors.checked) {
     chrome.declarativeNetRequest.updateSessionRules({
       removeRuleIds: [tabId],
       addRules: [{
@@ -91,8 +74,11 @@ document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get({pe
         'priority': 1,
         'action': {
           type: 'modifyHeaders',
-          requestHeaders,
-          responseHeaders
+          responseHeaders: [{
+            'operation': 'set',
+            'header': 'access-control-allow-origin',
+            'value': '*'
+          }]
         },
         'condition': {
           'resourceTypes': ['xmlhttprequest', 'image'],
@@ -100,6 +86,9 @@ document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get({pe
         }
       }]
     }, search);
+  }
+  else {
+    search();
   }
 }));
 

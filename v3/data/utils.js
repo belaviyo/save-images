@@ -151,15 +151,18 @@ self.utils = {
 
 {
   /* get response of a src */
-  const response = (src, timeout = 'default-timeout') => new Promise((resolve, reject) => {
+  const response = (o, timeout = 'default-timeout') => new Promise((resolve, reject) => {
     chrome.storage.local.get({
       [timeout]: 30 * 1000
     }, prefs => {
       const controller = new AbortController();
       setTimeout(() => controller.abort(), prefs[timeout]);
 
-      fetch(src, {
-        signal: controller.signal
+      fetch(o.src, {
+        signal: controller.signal,
+        headers: {
+          'referer': o.page
+        }
       }).then(r => {
         if (r.ok) {
           resolve({
@@ -173,10 +176,10 @@ self.utils = {
       }).catch(reject);
     });
   });
-  response.text = src => response(src, 'dig-timeout')
+  response.text = o => response(o, 'dig-timeout')
     .then(({response}) => response.text())
     .catch(() => '');
-  response.segment = src => response(src, 'head-timeout').then(async o => {
+  response.segment = o => response(o, 'head-timeout').then(async o => {
     const segment = (await o.response.body.getReader().read()).value;
 
     setTimeout(() => o.controller.abort());
@@ -188,7 +191,7 @@ self.utils = {
       segment
     };
   });
-  response.heads = src => response(src, 'head-timeout').then(o => {
+  response.heads = o => response(o, 'head-timeout').then(o => {
     setTimeout(() => o.controller.abort());
     return {
       ok: true,

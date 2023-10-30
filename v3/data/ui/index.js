@@ -13,8 +13,10 @@
 
 // localization
 [...document.querySelectorAll('[data-i18n]')].forEach(e => {
-  const value = e.dataset.i18nValue || 'textContent';
-  e[value] = chrome.i18n.getMessage(e.dataset.i18n);
+  for (const m of e.dataset.i18n.split('|')) {
+    const [key, value] = m.split('@');
+    e[value || 'textContent'] = chrome.i18n.getMessage(key);
+  }
 });
 
 const args = new URLSearchParams(location.search);
@@ -36,6 +38,7 @@ const elements = {
   counter: {
     filters: document.getElementById('filters'),
     images: document.getElementById('images-number'),
+    frames: document.getElementById('frames-number'),
     save: document.getElementById('save-number'),
     total: document.getElementById('total-number'),
     progress: document.getElementById('progress')
@@ -52,8 +55,7 @@ const elements = {
     blacklist: document.getElementById('group-blacklist'),
     origin: document.getElementById('group-origin'),
     identical: document.getElementById('group-identical'),
-    cors: document.getElementById('network-cors'),
-    referer: document.getElementById('network-referer')
+    cors: document.getElementById('network-cors')
 
   },
   files: {
@@ -302,6 +304,7 @@ function update() {
   document.querySelector('[data-cmd=gallery]').disabled = index === 0;
 }
 
+let frames = 1;
 window.commands = request => {
   if (request.cmd === 'images') {
     request.images.filter(img => img.type.startsWith('image/')).forEach(img => {
@@ -341,14 +344,14 @@ window.commands = request => {
   }
   else if (request.cmd === 'alternative-image-may-work') {
     errors += 1;
-
-    if (errors === 10) {
-      elements.notify.textContent = chrome.i18n.getMessage('ui_too_many_errors');
-    }
   }
   else if (request.cmd === 'release') {
     document.querySelector('[data-cmd=save]').disabled = false;
     document.querySelector('[data-cmd=save-dir]').disabled = false;
+  }
+  else if (request.cmd === 'new-frame') {
+    frames += 1;
+    elements.counter.frames.textContent = frames;
   }
 };
 
@@ -425,19 +428,15 @@ const search = () => {
     }
     // install collector on all frames
     try {
-      const [{result}] = await chrome.scripting.executeScript({
-        target: {tabId},
-        injectImmediately: true,
-        func: () => [...document.querySelectorAll('iframe')]
-          .map(a => a.src)
-          .filter(a => a && a.toLowerCase().startsWith('javascript:')).length
-      });
-
       const target = {
         tabId,
-        // TO-DO: remove when injection to "javascript:" is fixed
-        allFrames: result ? false : true
+        allFrames: true
       };
+      await chrome.scripting.executeScript({
+        target,
+        injectImmediately: true,
+        files: ['/data/fetch.js']
+      });
       await chrome.scripting.executeScript({
         target,
         injectImmediately: true,
@@ -496,6 +495,7 @@ elements.deep.level.addEventListener('change', search);
 document.addEventListener('click', ({target}) => {
   const cmd = target.dataset.cmd;
   if (cmd === 'stop' || cmd === 'save' || cmd === 'save-dir') {
+    document.body.classList.add('stopped');
     parent.commands({
       cmd: 'stop'
     });

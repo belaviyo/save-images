@@ -10,13 +10,14 @@
     <fieldset flex=1>
       <legend><span data-i18n="ui_statistics"></span> (<a data-i18n="ui_debug" data-href="debug" target="_blank"></a>) <span id="filters"></span></legend>
       <div hbox align=center>
-        <span class="note" data-i18n="ui_total_title" data-i18n-value="title"><span data-i18n="ui_total"></span></span>&nbsp;<span id="total-number">-</span>,&nbsp;
-        <span class="note" data-i18n="ui_images_title" data-i18n-value="title"><span data-i18n="ui_images"></span></span>&nbsp;<span id="images-number">0</span>,&nbsp;
-        <span class="note" data-i18n="ui_saving_title" data-i18n-value="title"><span data-i18n="ui_saving"></span></span>&nbsp;<span id="save-number">0</span>&nbsp;
+        <span class="note" data-i18n="ui_total_title@title|ui_total"></span>&nbsp;<span id="total-number">0</span>,&nbsp;
+        <span class="note" data-i18n="ui_frames_title@title|ui_frames"></span>&nbsp;<span id="frames-number">1</span>,&nbsp;
+        <span class="note" data-i18n="ui_images_title@title|ui_images"></span>&nbsp;<span id="images-number">0</span>,&nbsp;
+        <span class="note" data-i18n="ui_saving_title@title|ui_saving"></span>&nbsp;<span id="save-number">0</span>&nbsp;
         <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
       </div>
     </fieldset>
-    <fieldset data-i18n="ui_deep_search_title" data-i18n-value="title">
+    <fieldset data-i18n="ui_deep_search_title@title">
       <legend><a data-href="faq17" target="_blank" data-i18n="ui_deep_search"></a></legend>
       <label>
         <span data-i18n="ui_level"></span>&nbsp;
@@ -186,10 +187,6 @@
             <td><label for="add-readme" data-i18n="ui_readme"></label></td>
           </tr>
           <tr>
-            <td><input type="checkbox" id="network-referer" checked="true"></td>
-            <td><label for="network-referer" data-i18n="ui_networ_referer"></label></td>
-          </tr>
-          <tr>
             <td><input type="checkbox" id="network-cors" checked="true"></td>
             <td><label for="network-cors" data-i18n="ui_networ_cors"></label></td>
           </tr>
@@ -213,7 +210,7 @@
         <legend data-i18n="ui_mask"></legend>
         <span data-i18n="ui_mask_desc"></span>
         <div hbox style="margin-top: 10px;">
-          <input type="text" id="file-mask" value="" placeholder="[name][extension]" flex="1"  data-i18n="ui_mask_keywords" data-i18n-value="title">
+          <input type="text" id="file-mask" value="" placeholder="[name][extension]" flex="1"  data-i18n="ui_mask_keywords@title">
           <div class="list" hbox align=center>
             <span data-i18n="ui_keywords"></span>
             <ul>
@@ -277,7 +274,7 @@
               </div>
             </td>
           </tr>
-          <tr data-i18n="ui_dialog" data-i18n-value="title">
+          <tr data-i18n="ui_dialog@title">
             <td><label for="open-save-dialog" data-i18n="ui_save_dialog"></label></td>
             <td><input type="checkbox" id="open-save-dialog"></td>
           </tr>
@@ -293,7 +290,7 @@
             <td data-i18n="ui_directory"></td>
             <td>
               <div hbox>
-                <input type="text" id="custom-directory" data-i18n="ui_relative" data-i18n-value="placeholder" flex="1">
+                <input type="text" id="custom-directory" data-i18n="ui_relative@placeholder" flex="1">
               </div>
             </td>
           </tr>
@@ -321,14 +318,14 @@
     </fieldset>
   </div>
   <footer>
-    <button data-i18n="ui_reset_title" data-i18n-value="title" data-cmd="reset"><span data-i18n="ui_reset"></span></button>
-    <button data-i18n="ui_restart_title" data-i18n-value="title" data-cmd="restart"><span data-i18n="ui_restart"></span></button>
-    <button data-i18n="ui_stop_title" data-i18n-value="title" data-cmd="stop"><span data-i18n="ui_stop"></span></button>
-    <button data-i18n="ui_gallery_title" data-i18n-value="title" data-cmd="gallery"><span data-i18n="ui_gallery"></span></button>
+    <button data-i18n="ui_reset_title@title|ui_reset" data-cmd="reset"></button>
+    <button data-i18n="ui_restart_title@title|ui_restart" data-cmd="restart"></button>
+    <button data-i18n="ui_stop_title@title|ui_stop" data-cmd="stop"></button>
+    <button data-i18n="ui_gallery_title@title|ui_gallery" data-cmd="gallery"></button>
 
-    <button data-i18n="ui_copy_title" data-i18n-value="title" data-cmd="copy"><span data-i18n="ui_copy"></span></button>
-    <button data-i18n="ui_save_dir_title" data-i18n-value="title" data-cmd="save-dir"><span data-i18n="ui_save_dir"></span></button>
-    <button data-i18n="ui_save_title" data-i18n-value="title" data-cmd="save"><span data-i18n="ui_save"></span></button>
+    <button data-i18n="ui_copy_title@title|ui_copy" data-cmd="copy"></button>
+    <button data-i18n="ui_save_dir_title@title|ui_save_dir" data-cmd="save-dir"></button>
+    <button data-i18n="ui_save_title@title|ui_save" data-cmd="save"></button>
   </footer>
 
   <script src="../utils.js"></script>

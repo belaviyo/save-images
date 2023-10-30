@@ -30,6 +30,8 @@ window.addEventListener('load', () => {
   document.body.dataset.loading = false;
   setTimeout(() => {
     ui.src = '/data/ui/index.html' + location.search;
+
+    gallery.src = '/data/gallery/index.html' + location.search;
   }, 100);
 });
 
@@ -86,6 +88,7 @@ const get = (o, type = 'ab') => new Promise((resolve, reject) => {
   port.postMessage({
     cmd: 'download-image',
     src: o.src,
+    referer: o.page,
     uid
   });
 });
@@ -223,6 +226,9 @@ window.commands = request => {
   /**/
   if (request.cmd === 'reload-me') {
     location.reload();
+  }
+  else if (request.cmd === 'new-frame') {
+    ui.contentWindow.commands(request);
   }
   else if (request.cmd === 'progress' || request.cmd === 'close-me' || request.cmd === 'release') {
     ui.contentWindow.commands(request);

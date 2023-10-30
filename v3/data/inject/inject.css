@@ -5,6 +5,9 @@ dialog.daimages {
   padding: 0;
   border: none;
   background-color: #eee;
+  width: min(90vw, var(--width));
+  height: min(80vh, var(--height));
+  display: flex;
 }
 dialog.daimages::backdrop {
   background-color: rgba(0, 0, 0, 0.3);
@@ -13,6 +16,6 @@ dialog.daimages iframe {
   color-scheme: none;
   border: none;
   background-color: transparent;
-  width: min(90vw, var(--width));
-  height: min(80vh, var(--height));
+  width: 100%;
+  height: 100%;
 }
