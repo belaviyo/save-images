@@ -30,8 +30,8 @@ for (const e of document.querySelectorAll('dialog.daimages')) {
       width: 750,
       height: 650
     }, ({width, height}) => {
-      dialog.style.setProperty('--width', CSS.px(width));
-      dialog.style.setProperty('--height', CSS.px(height));
+      dialog.style.setProperty('--width', width + 'px');
+      dialog.style.setProperty('--height', height + 'px');
 
       iframe.src = chrome.runtime.getURL('data/inject/core/index.html?' +
         'tabId=' + tabId +

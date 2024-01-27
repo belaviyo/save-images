@@ -224,6 +224,35 @@ var collector = {
         }
       }
     }
+    // find images from the loaded resources
+    for (const doc of docs) {
+      try {
+        for (const entry of doc.defaultView.performance.getEntriesByType('resource')) {
+          if (entry.initiatorType === 'css') {
+            // ignore fonts
+            if (
+              entry.name.includes('.ttf') || entry.name.includes('.eot') ||
+              entry.name.includes('.otf') || entry.name.includes('.woff')
+            ) {
+              continue;
+            }
+            images.push({
+              src: entry.name,
+              page: location.href
+            });
+          }
+          else if (entry.initiatorType === 'img') {
+            images.push({
+              src: entry.name,
+              verified: true,
+              page: location.href
+            });
+          }
+        }
+      }
+      catch (e) {}
+    }
+
     // find embedded images on SVG elements; part 3/3
     for (const doc of docs) {
       for (const image of [...doc.querySelectorAll('image')]) {

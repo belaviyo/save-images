@@ -210,6 +210,44 @@ collector.inspect = function(doc, loc, name, policies) {
       });
     }
   }
+  // find images from the loaded resources
+  for (const doc of docs) {
+    try {
+      for (const entry of doc.defaultView.performance.getEntriesByType('resource')) {
+        if (entry.initiatorType === 'css') {
+          // ignore fonts
+          if (
+            entry.name.includes('.ttf') || entry.name.includes('.eot') ||
+            entry.name.includes('.otf') || entry.name.includes('.woff')
+          ) {
+            continue;
+          }
+
+          collector.push({
+            src: entry.name,
+            type: '',
+            page: loc.href,
+            meta: {
+              origin: name + ' - ' + 'css.performance'
+            }
+          });
+        }
+        else if (entry.initiatorType === 'img') {
+          collector.push({
+            src: entry.name,
+            type: 'image/unknown',
+            verified: true,
+            page: loc.href,
+            meta: {
+              origin: name + ' - ' + 'img.performance'
+            }
+          });
+        }
+      }
+    }
+    catch (e) {}
+  }
+
   // find embedded images on SVG elements; part 4/4
   for (const doc of docs) {
     for (const image of [...doc.querySelectorAll('image')]) {
