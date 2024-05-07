@@ -488,8 +488,7 @@ const search = () => {
           window.deep = deep;
           window.accuracy = accuracy || 'partial-accurate';
           window.custom = custom || 'id';
-          window.cframe = cframe;
-          window.sframe = sframe;
+
           try {
             if (regexp && typeof regexp === 'string') {
               window.regexp = [new RegExp(regexp)];

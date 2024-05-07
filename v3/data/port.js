@@ -10,6 +10,24 @@
   });
   const onMessage = request => {
     if (request.cmd === 'download-image') {
+      // try to find the image on page and download it (it is useful specially if the image src is a dead blob)
+      const capture = () => {
+        const e = document.querySelector(`img[src="${request.src}"]`);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = e.naturalWidth;
+        canvas.height = e.naturalHeight;
+
+        ctx.drawImage(e, 0, 0, e.naturalWidth, e.naturalHeight);
+        const href = canvas.toDataURL();
+
+        return port.postMessage({
+          uid: request.uid,
+          href
+        });
+      };
+
       fetch(request.src, {
         headers: {
           referer: request.referer
@@ -20,10 +38,17 @@
           uid: request.uid,
           href
         });
-      }).catch(e => port.postMessage({
-        uid: request.uid,
-        error: e.message
-      }));
+      }).catch(e => {
+        try { // can we get the image from an image element
+          capture();
+        }
+        catch (ee) {
+          port.postMessage({
+            uid: request.uid,
+            error: e.message
+          });
+        }
+      });
     }
     else if (request.cmd === 'create-directory') {
       window.showDirectoryPicker().then(async d => {

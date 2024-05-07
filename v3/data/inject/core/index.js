@@ -89,6 +89,7 @@ const get = (o, type = 'ab') => new Promise((resolve, reject) => {
     cmd: 'download-image',
     src: o.src,
     referer: o.page,
+    capture: false,
     uid
   });
 });
