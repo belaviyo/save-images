@@ -143,6 +143,12 @@
   "ui_same_domain": {
     "message": "Only save images from the same domain/server as the selected tab's URL"
   },
+  "ui_exclude_cors_frames": {
+    "message": "Do not crawl cross-origin frames"
+  },
+  "ui_exclude_sorg_frames": {
+    "message": "Do not crawl same-origin frames"
+  },
   "ui_unique": {
     "message": "Try to exclude identical images"
   },

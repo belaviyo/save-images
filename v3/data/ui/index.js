@@ -54,6 +54,8 @@ const elements = {
     regexp: document.getElementById('group-regexp'),
     blacklist: document.getElementById('group-blacklist'),
     origin: document.getElementById('group-origin'),
+    cframe: document.getElementById('exclude-cors-frames'),
+    sframe: document.getElementById('exclude-sorg-frames'),
     identical: document.getElementById('group-identical'),
     cors: document.getElementById('network-cors')
 
@@ -430,7 +432,7 @@ const search = () => {
     try {
       const target = {
         tabId,
-        allFrames: true
+        allFrames: elements.group.cframe.checked && elements.group.sframe.checked ? false : true
       };
       await chrome.scripting.executeScript({
         target,
@@ -459,13 +461,35 @@ const search = () => {
         injectImmediately: true,
         files: ['/data/size.js']
       });
+
       await chrome.scripting.executeScript({
         target,
         injectImmediately: true,
-        func: (deep, accuracy, regexp, custom) => {
+        func: (deep, accuracy, regexp, custom, cframe, sframe) => {
+          // do not crawl cross-origin frames
+          if (cframe && parent !== window) {
+            try {
+              parent.location.href;
+            }
+            catch (e) {
+              console.log('skipped cors iframe', location.href);
+              return;
+            }
+          }
+          if (sframe && parent !== window) {
+            try {
+              parent.location.href;
+              console.log('skipped same-origin iframe', location.href);
+              return;
+            }
+            catch (e) {}
+          }
+
           window.deep = deep;
           window.accuracy = accuracy || 'partial-accurate';
           window.custom = custom || 'id';
+          window.cframe = cframe;
+          window.sframe = sframe;
           try {
             if (regexp && typeof regexp === 'string') {
               window.regexp = [new RegExp(regexp)];
@@ -479,7 +503,14 @@ const search = () => {
           }
           window.collector.loop();
         },
-        args: [Number(elements.deep.level.value), accuracy, regexp, custom]
+        args: [
+          Number(elements.deep.level.value),
+          accuracy,
+          regexp,
+          custom,
+          elements.group.cframe.checked,
+          elements.group.sframe.checked
+        ]
       });
     }
     catch (e) {
