@@ -189,16 +189,32 @@ var collector = {
     // find images; part 1/3
     for (const doc of docs) {
       for (const img of (doc.images || doc.querySelectorAll('img'))) {
-        images.push({
+        const src = img.currentSrc || img.src || img.dataset.src;
+
+        const o = {
           width: img.width,
           height: img.height,
           //  The "data-src" attribute is commonly used for lazy-loading images
-          src: img.currentSrc || img.src || img.dataset.src,
+          src,
           alt: img.alt,
           custom: img.getAttribute(window.custom) || '',
           verified: true, // this is an image even if content-type cannot be resolved,
           page: location.href
-        });
+        };
+        images.push(o);
+        if (src && src.startsWith('blob:')) {
+          // is the blob source dead
+          await fetch(src).catch(e => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+
+            ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
+            o.src = canvas.toDataURL();
+          }).catch(e => {});
+        }
         if (img.src && img.currentSrc !== img.src) {
           images.push({
             src: img.src,

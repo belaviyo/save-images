@@ -472,14 +472,12 @@ const search = () => {
               parent.location.href;
             }
             catch (e) {
-              console.log('skipped cors iframe', location.href);
               return;
             }
           }
           if (sframe && parent !== window) {
             try {
               parent.location.href;
-              console.log('skipped same-origin iframe', location.href);
               return;
             }
             catch (e) {}
