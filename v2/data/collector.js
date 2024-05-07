@@ -192,7 +192,8 @@ var collector = {
         images.push({
           width: img.width,
           height: img.height,
-          src: img.currentSrc || img.src,
+          //  The "data-src" attribute is commonly used for lazy-loading images
+          src: img.currentSrc || img.src || img.dataset.src,
           alt: img.alt,
           custom: img.getAttribute(window.custom) || '',
           verified: true, // this is an image even if content-type cannot be resolved,

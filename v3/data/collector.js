@@ -149,7 +149,7 @@ collector.inspect = function(doc, loc, name, policies) {
       collector.push({
         width: img.naturalWidth,
         height: img.naturalHeight,
-        //  The "data-src" attribute is commonly used for lazy-loading images,
+        //  The "data-src" attribute is commonly used for lazy-loading images
         src: img.currentSrc || img.src || img.dataset.src,
         alt: img.alt,
         custom: img.getAttribute(window.custom) || '',
