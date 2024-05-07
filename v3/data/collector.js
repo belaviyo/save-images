@@ -149,7 +149,8 @@ collector.inspect = function(doc, loc, name, policies) {
       collector.push({
         width: img.naturalWidth,
         height: img.naturalHeight,
-        src: img.currentSrc || img.src,
+        //  The "data-src" attribute is commonly used for lazy-loading images,
+        src: img.currentSrc || img.src || img.dataset.src,
         alt: img.alt,
         custom: img.getAttribute(window.custom) || '',
         // if image is verified, we dont have the image size. on accurate mode set it to false
