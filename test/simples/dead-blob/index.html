@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Blob Image</title>
+</head>
+<body>
+    <h1>SVG Blob Image Example</h1>
+    
+    <img id="blobImage" alt="SVG Blob Image" src="" />
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script>
+        // Create an SVG element dynamically
+        const svgContent = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                <circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />
+            </svg>
+        `;
+
+        // Create a Blob object from the SVG content
+        const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+
+        // Generate a data URL from the Blob
+        const url = URL.createObjectURL(blob);
+
+        // Set the data URL as the src for the image
+        const imageElement = document.getElementById('blobImage');
+        imageElement.onload = () => {
+          URL.revokeObjectURL(imageElement.src);
+
+          // Convert the original image to data URI
+          convertImageToDataURI(imageElement, function(dataURI) {
+              console.log('Data URI:', dataURI);
+          });
+        }
+        imageElement.src = url;
+
+        // Function to convert image to data URI using canvas
+        function convertImageToDataURI(image, callback) {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+
+            canvas.width = image.width;
+            canvas.height = image.height;
+
+            console.log(canvas);
+
+            ctx.drawImage(image, 0, 0, image.width, image.height);
+            const dataURI = canvas.toDataURL();
+            callback(dataURI);
+        }
+
+
+    </script>
+</body>
+</html>
