@@ -41,6 +41,9 @@ document.addEventListener('change', ({target}) => {
       else if (id === 'prefs-max-warning' || id === 'prefs-zip-warning') {
         value = Math.max(5, value);
       }
+      else if (id === 'prefs-stop-after') {
+        value = Math.max(0, value);
+      }
       persist[id] = value;
     }
     chrome.storage.local.set({

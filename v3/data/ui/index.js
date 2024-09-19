@@ -105,6 +105,7 @@ const elements = {
     progress: document.getElementById('deep-progress')
   },
   prefs: {
+    stop: document.getElementById('prefs-stop-after'),
     max: document.getElementById('prefs-max-warning'),
     zip: document.getElementById('prefs-zip-warning')
   }
@@ -287,7 +288,11 @@ function filtered() {
 }
 
 function update() {
-  elements.counter.images.textContent = Object.keys(images).length;
+  const count = Object.keys(images).length;
+  if (elements.prefs.stop.valueAsNumber > 0 && count >= elements.prefs.stop.valueAsNumber) {
+    document.querySelector('[data-cmd="stop"]').click();
+  }
+  elements.counter.images.textContent = count;
   const index = elements.counter.save.value =
     elements.counter.save.textContent = filtered().length;
   document.querySelector('[data-cmd=save]').disabled = index === 0;

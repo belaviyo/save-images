@@ -266,6 +266,9 @@
   "ui_prefs_zip_warning": {
     "message": "Display a confirmation when \"Download each image separately\" is checked and the total number of images is more than"
   },
+  "ui_prefs_stop_after": {
+    "message": "Stop searching for images once the number of detected images exceeds"
+  },
   "ui_prefs_max_warning": {
     "message": "Display a confirmation when the total number of images is more than"
   },
