@@ -118,18 +118,23 @@ var collector = {
       const list = [];
       for (const img of images) {
         let {src} = img;
+        // Make sure img src is defined
+        if (!src) {
+          continue;
+        }
+
         // remove hash to prevent duplicates
         src = src.split('#')[0];
 
         // fix src
-        if (src && (src.startsWith('http') === false && src.startsWith('data:') === false && src.startsWith('blob:') === false) && img.page) {
+        if ((src.startsWith('http') === false && src.startsWith('data:') === false && src.startsWith('blob:') === false) && img.page) {
           try {
             img.src = src = (new URL(src, img.page)).href;
           }
           catch (e) {}
         }
 
-        if (src && (src.startsWith('http') || src.startsWith('ftp') || src.startsWith('data:') || src.startsWith('blob:'))) {
+        if (src.startsWith('http') || src.startsWith('ftp') || src.startsWith('data:') || src.startsWith('blob:')) {
           if (collector.cache[src] === undefined) {
             collector.cache[src] = true;
             if (regexps && regexps.some(r => r.test(src)) === false) {
