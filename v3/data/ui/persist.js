@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
  * Home: https://webextension.org/listing/save-images.html
- * GitHub: https://github.com/belaviyo/save-images/ */
+ * GitHub: https://github.com/belaviyo/save-images/
+ */
 
 /* global search, accurate, elements, tabId */
 'use strict';

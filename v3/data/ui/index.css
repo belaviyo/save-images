@@ -60,11 +60,12 @@ footer button[data-cmd="copy"] {
     grid-template-columns: repeat(2, 1fr);
   }
 }
-
+select,
 button,
 input {
   outline: none;
 }
+select,
 input[type=number],
 input[type=text] {
   padding: 5px;
@@ -156,6 +157,10 @@ a {
 .disabled {
   opacity: 0.7;
   pointer-events: none;
+}
+
+.nowrap {
+  white-space: nowrap;
 }
 
 #body {

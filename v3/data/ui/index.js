@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
  * Home: https://webextension.org/listing/save-images.html
- * GitHub: https://github.com/belaviyo/save-images/ */
+ * GitHub: https://github.com/belaviyo/save-images/
+ */
 
 /* global utils */
 
@@ -83,7 +84,8 @@ const elements = {
       min: document.getElementById('dimension-height-min'),
       max: document.getElementById('dimension-height-max')
     },
-    ignore: document.getElementById('unknown-dimension-skip')
+    ignore: document.getElementById('unknown-dimension-skip'),
+    operation: document.getElementById('dimension-operation')
   },
   type: {
     jpeg: document.getElementById('type-jpeg'),
@@ -164,10 +166,10 @@ function filtered() {
       if (elements.group.size.checked) {
         const {min, max, ignore} = elements.size;
         if (img.size) {
-          if (Number(min.value) && Number(min.value) > img.size) {
+          if (min.valueAsNumber && min.valueAsNumber > img.size) {
             return false;
           }
-          if (Number(max.value) && Number(max.value) < img.size) {
+          if (max.valueAsNumber && max.valueAsNumber < img.size) {
             return false;
           }
           return true;
@@ -183,23 +185,38 @@ function filtered() {
     // dimension
     .filter(img => {
       if (elements.group.dimension.checked) {
-        const {width, height, ignore} = elements.dimension;
+        const {width, height, ignore, operation} = elements.dimension;
+
+        let wmatch = true;
         if (img.width) {
-          if (Number(width.min.value) && Number(width.min.value) > img.width) {
-            return false;
+          if (width.min.valueAsNumber && width.min.valueAsNumber > img.width) {
+            wmatch = false;
           }
-          if (Number(width.max.value) && Number(width.max.value) < img.width) {
-            return false;
+          if (width.max.valueAsNumber && width.max.valueAsNumber < img.width) {
+            wmatch = false;
           }
         }
+
+        let hmatch = true;
         if (img.height) {
-          if (Number(height.min.value) && Number(height.min.value) > img.height) {
-            return false;
+          if (height.min.valueAsNumber && height.min.valueAsNumber > img.height) {
+            hmatch = false;
           }
-          if (Number(height.max.value) && Number(height.max.value) < img.height) {
+          if (height.max.valueAsNumber && height.max.valueAsNumber < img.height) {
+            hmatch = false;
+          }
+        }
+        if (operation.value === 'and') {
+          if (wmatch === false || hmatch === false) {
             return false;
           }
         }
+        if (operation.value === 'or') {
+          if (wmatch === false && hmatch === false) {
+            return false;
+          }
+        }
+
         if (img.width && img.height) {
           return true;
         }
@@ -506,7 +523,7 @@ const search = () => {
           window.collector.loop();
         },
         args: [
-          Number(elements.deep.level.value),
+          elements.deep.level.valueAsNumber,
           accuracy,
           regexp,
           custom,
@@ -553,7 +570,7 @@ document.addEventListener('click', ({target}) => {
       elements.counter.progress.max = len;
       parent.commands(obj);
     };
-    if (len > Number(elements.prefs.max.value) && cmd === 'save') {
+    if (len > elements.prefs.max.valueAsNumber && cmd === 'save') {
       if (vconfirm(`Are you sure you want to download "${len}" images?`)) {
         save();
       }

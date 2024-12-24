@@ -275,6 +275,12 @@
   "ui_networ_cors": {
     "message": "Bypass network CORS while searching (restart required)"
   },
+  "ui_and": {
+    "message": "AND"
+  },
+  "ui_or": {
+    "message": "OR"
+  },
   "options_title": {
     "message": "Options :: Download all Images"
   },

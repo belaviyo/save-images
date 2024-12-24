@@ -11,7 +11,7 @@ const notify = e => chrome.storage.local.get({
   title: chrome.runtime.getManifest().name,
   message: e.message || e,
   iconUrl: '/data/icons/48.png'
-}));
+}, id => setTimeout(chrome.notifications.clear, 3000, id)));
 self.toast = (msg, timeout = 750, type = 'info') => {
   document.getElementById('toast').notify(msg, type, timeout);
 };
@@ -155,7 +155,7 @@ class ZIP {
 
       // write README.txt
       if (request.readme) {
-        await zip.add('README.txt', new TextEncoder().encode(`Downloaded by "${chrome.runtime.getManifest().name}" extension
+        const content = `Downloaded by "${chrome.runtime.getManifest().name}" extension
 
 Page: ${args.get('href')}
 Date: ${new Date().toLocaleString()}
@@ -163,7 +163,8 @@ Date: ${new Date().toLocaleString()}
 Name, Link
 ----------
 ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
-`));
+`;
+        await zip.add('README.txt', new TextEncoder().encode(content));
       }
 
       await perform(request, async (filename, image) => {

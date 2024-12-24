@@ -63,19 +63,27 @@
         <legend><label><input type="checkbox" id="group-dimension"><span data-i18n="ui_dimension"></span></label></legend>
         <table>
           <tr>
-            <td data-i18n="ui_min_width"></td>
+            <td data-i18n="ui_min_width" class="nowrap"></td>
             <td><input type="number" value="200" id="dimension-width-min"></td>
           </tr>
           <tr>
-            <td data-i18n="ui_max_width"></td>
+            <td data-i18n="ui_max_width" class="nowrap"></td>
             <td><input type="number" value="0" id="dimension-width-max"></td>
           </tr>
           <tr>
-            <td data-i18n="ui_min_height"></td>
+            <td colspan="2" style="text-align: end;">
+              <select id="dimension-operation">
+                <option value="and" data-i18n="ui_and"></option>
+                <option value="or" data-i18n="ui_or"></option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td data-i18n="ui_min_height" class="nowrap"></td>
             <td><input type="number" value="200" id="dimension-height-min"></td>
           </tr>
           <tr>
-            <td data-i18n="ui_max_height"></td>
+            <td data-i18n="ui_max_height" class="nowrap"></td>
             <td><input type="number" value="0" id="dimension-height-max"></td>
           </tr>
         </table>

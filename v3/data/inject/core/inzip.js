@@ -7,7 +7,8 @@
  * Description: ArrayBuffer based memory-efficient ZIP implementation
    This code is based on https://github.com/mrananyan/ZipperJS/blob/master/zipper.js
  * Home: https://webextension.org/listing/save-images.html
- * GitHub: https://github.com/belaviyo/save-images/ */
+ * GitHub: https://github.com/belaviyo/save-images/
+ */
 
 // (async () => {
 //   var a = new InZIP();
