@@ -338,14 +338,24 @@
     </fieldset>
   </div>
   <footer>
-    <button data-i18n="ui_reset_title@title|ui_reset" data-cmd="reset"></button>
-    <button data-i18n="ui_restart_title@title|ui_restart" data-cmd="restart"></button>
-    <button data-i18n="ui_stop_title@title|ui_stop" data-cmd="stop"></button>
-    <button data-i18n="ui_gallery_title@title|ui_gallery" data-cmd="gallery"></button>
+    <div id="profiles-container" data-i18n="ui_profiles_title@title">
+      <div>
+        <span data-i18n="ui_profile"></span>
+        <select id="profiles"></select>
+      </div>
+      <button data-cmd="delete-profile" disabled>Delete</button>
+      <button data-cmd="add-profile">Add New</button>
+    </div>
+    <div id="tools">
+      <button data-i18n="ui_reset_title@title|ui_reset" data-cmd="reset"></button>
+      <button data-i18n="ui_restart_title@title|ui_restart" data-cmd="restart"></button>
+      <button data-i18n="ui_stop_title@title|ui_stop" data-cmd="stop"></button>
+      <button data-i18n="ui_gallery_title@title|ui_gallery" data-cmd="gallery"></button>
 
-    <button data-i18n="ui_copy_title@title|ui_copy" data-cmd="copy"></button>
-    <button data-i18n="ui_save_dir_title@title|ui_save_dir" data-cmd="save-dir"></button>
-    <button data-i18n="ui_save_title@title|ui_save" data-cmd="save"></button>
+      <button data-i18n="ui_copy_title@title|ui_copy" data-cmd="copy"></button>
+      <button data-i18n="ui_save_dir_title@title|ui_save_dir" data-cmd="save-dir"></button>
+      <button data-i18n="ui_save_title@title|ui_save" data-cmd="save"></button>
+    </div>
   </footer>
 
   <script src="../utils.js"></script>

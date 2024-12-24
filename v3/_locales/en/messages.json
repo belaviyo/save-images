@@ -281,6 +281,15 @@
   "ui_or": {
     "message": "OR"
   },
+  "ui_profiles_title": {
+    "message": "All settings are automatically saved to the selected profile. You can create new profiles and switch between them to adjust configurations."
+  },
+  "ui_profile": {
+    "message": "Profile"
+  },
+  "ui_profiles_default": {
+    "message": "Default Profile"
+  },
   "options_title": {
     "message": "Options :: Download all Images"
   },

@@ -28,9 +28,19 @@ h2 {
 footer {
   margin-top: 10px;
   display: grid;
+  grid-gap: 10px;
+}
+footer > div {
+  display: grid;
   grid-template-columns: repeat(8, 1fr);
-  grid-row-gap: 2px;
-  grid-column-gap: 2px;
+  grid-gap: 2px;
+  align-items: center;
+}
+footer #profiles-container > div {
+  grid-column: 1/7;
+  display: flex;
+  gap: 5px;
+  align-items: center;
 }
 footer input {
   margin-top: 2px !important;
@@ -42,7 +52,7 @@ footer button[data-cmd="copy"] {
 }
 
 @media screen and (max-width: 700px) {
-  footer {
+  footer > div {
     grid-template-columns: repeat(4, 1fr);
   }
   footer button {
@@ -53,11 +63,19 @@ footer button[data-cmd="copy"] {
     grid-column-start: unset;
     grid-column-end: unset;
   }
+  footer #profiles-container > div {
+    grid-column: 1/3;
+    grid-row: 1/3;
+  }
 }
 
 @media screen and (max-width: 400px) {
-  footer {
+  footer > div {
     grid-template-columns: repeat(2, 1fr);
+  }
+  footer #profiles-container > div {
+    grid-column: 1/2;
+    grid-row: 1/3;
   }
 }
 select,

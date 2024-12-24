@@ -110,6 +110,11 @@ const elements = {
     stop: document.getElementById('prefs-stop-after'),
     max: document.getElementById('prefs-max-warning'),
     zip: document.getElementById('prefs-zip-warning')
+  },
+  profiles: {
+    select: document.getElementById('profiles'),
+    add: document.querySelector('button[data-cmd="add-profile"]'),
+    delete: document.querySelector('button[data-cmd="delete-profile"]')
   }
 };
 
