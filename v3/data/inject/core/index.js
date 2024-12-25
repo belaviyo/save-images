@@ -19,7 +19,11 @@ self.toast = (msg, timeout = 750, type = 'info') => {
 const ui = document.getElementById('ui');
 const gallery = document.getElementById('gallery');
 
-ui.addEventListener('load', () => ui.dataset.loading = false);
+ui.addEventListener('load', () => {
+  ui.dataset.loading = false;
+  // Load gallery when UI is ready
+  gallery.src = '/data/gallery/index.html' + location.search;
+});
 gallery.addEventListener('load', () => gallery.dataset.loading = false);
 
 window.addEventListener('load', () => {
@@ -30,8 +34,6 @@ window.addEventListener('load', () => {
   document.body.dataset.loading = false;
   setTimeout(() => {
     ui.src = '/data/ui/index.html' + location.search;
-
-    gallery.src = '/data/gallery/index.html' + location.search;
   }, 100);
 });
 
@@ -118,7 +120,7 @@ const perform = async (request, one) => {
         return;
       }
       // filename
-      let filename = image.filename;
+      let filename = image.filename || Math.random().toString(36).substring(2, 15);
       indices[filename] = indices[filename] || 0;
       indices[filename] += 1;
       if (indices[filename] > 1) {

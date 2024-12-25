@@ -85,7 +85,8 @@ const elements = {
       max: document.getElementById('dimension-height-max')
     },
     ignore: document.getElementById('unknown-dimension-skip'),
-    operation: document.getElementById('dimension-operation')
+    operation: document.getElementById('dimension-operation'),
+    exchange: document.getElementById('dimension-exchange')
   },
   type: {
     jpeg: document.getElementById('type-jpeg'),
@@ -190,7 +191,7 @@ function filtered() {
     // dimension
     .filter(img => {
       if (elements.group.dimension.checked) {
-        const {width, height, ignore, operation} = elements.dimension;
+        const {width, height, ignore, operation, exchange} = elements.dimension;
 
         let wmatch = true;
         if (img.width) {
@@ -211,14 +212,53 @@ function filtered() {
             hmatch = false;
           }
         }
+
+        // exchange
+        let whmatch = true;
+        let hwmatch = true;
+
+        if (exchange.value === 'allow') {
+          if (img.height) {
+            if (width.min.valueAsNumber && width.min.valueAsNumber > img.height) {
+              whmatch = false;
+            }
+            if (width.max.valueAsNumber && width.max.valueAsNumber < img.height) {
+              whmatch = false;
+            }
+          }
+          if (img.width) {
+            if (height.min.valueAsNumber && height.min.valueAsNumber > img.width) {
+              hwmatch = false;
+            }
+            if (height.max.valueAsNumber && height.max.valueAsNumber < img.width) {
+              hwmatch = false;
+            }
+          }
+        }
+
+        // logical operation
         if (operation.value === 'and') {
-          if (wmatch === false || hmatch === false) {
-            return false;
+          if (exchange.value === 'allow') {
+            if ((wmatch === false || hmatch === false) && (whmatch === false || hwmatch === false)) {
+              return false;
+            }
+          }
+          else {
+            if (wmatch === false || hmatch === false) {
+              return false;
+            }
           }
         }
         if (operation.value === 'or') {
-          if (wmatch === false && hmatch === false) {
-            return false;
+          if (exchange.value === 'allow') {
+            if ((wmatch === false && hmatch === false) && (whmatch === false && hwmatch === false)) {
+              return false;
+            }
+          }
+          else {
+            if (wmatch === false && hmatch === false) {
+              return false;
+            }
           }
         }
 
