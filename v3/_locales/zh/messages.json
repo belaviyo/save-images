@@ -1,0 +1,347 @@
+{
+    "app_description": {
+        "message": "轻松保存图片，提供多种自定义功能，如文件大小、尺寸和图片类型。"
+    },
+    "gallery_title": {
+        "message": "图片画廊"
+    },
+    "gallery_select_all": {
+        "message": "全选；若要选择范围，请先取消全选，然后选择第一项。按住 Shift + 单击选择最后一项"
+    },
+    "gallery_select_none": {
+        "message": "取消全选"
+    },
+    "gallery_download": {
+        "message": "下载选中图片"
+    },
+    "gallery_copy": {
+        "message": "将选中图片的URL复制到剪贴板"
+    },
+    "gallery_window": {
+        "message": "在浏览器标签页中打开"
+    },
+    "gallery_rename": {
+        "message": "重命名"
+    },
+    "gallery_pattern": {
+        "message": "image-[#=1][extension]"
+    },
+    "ui_statistics": {
+        "message": "统计"
+    },
+    "ui_debug": {
+        "message": "调试"
+    },
+    "ui_total": {
+        "message": "总计："
+    },
+    "ui_frames": {
+        "message": "框架："
+    },
+    "ui_total_title": {
+        "message": "已解析链接总数（链接可能是或不是图片）"
+    },
+    "ui_frames_title": {
+        "message": "已解析文档总数"
+    },
+    "ui_images_title": {
+        "message": "可用图片总数"
+    },
+    "ui_saving_title": {
+        "message": "根据筛选条件将保存的图片总数"
+    },
+    "ui_images": {
+        "message": "图片："
+    },
+    "ui_saving": {
+        "message": "保存："
+    },
+    "ui_deep_search_title": {
+        "message": "0: 不提取链接图片（快速）\n1: 提取链接图片（较慢）\n2: 提取链接图片并解析目标HTML文档（图片）（非常慢）\n3: 提取链接图片并解析目标HTML文档（图片+链接）（极慢；需配合自定义筛选器使用）"
+    },
+    "ui_deep_search": {
+        "message": "深度搜索"
+    },
+    "ui_level": {
+        "message": "级别"
+    },
+    "ui_file_size": {
+        "message": "文件大小（较慢）"
+    },
+    "ui_min": {
+        "message": "最小值"
+    },
+    "ui_bytes": {
+        "message": "字节"
+    },
+    "ui_max": {
+        "message": "最大值"
+    },
+    "ui_unkown": {
+        "message": "若未知"
+    },
+    "ui_skip": {
+        "message": "跳过"
+    },
+    "ui_dimension": {
+        "message": "尺寸（像素）"
+    },
+    "ui_min_width": {
+        "message": "最小宽度"
+    },
+    "ui_max_width": {
+        "message": "最大宽度"
+    },
+    "ui_min_height": {
+        "message": "最小高度"
+    },
+    "ui_max_height": {
+        "message": "最大高度"
+    },
+    "ui_image_types": {
+        "message": "图片类型"
+    },
+    "ui_all_images": {
+        "message": "所有图片"
+    },
+    "ui_Selection": {
+        "message": "选择"
+    },
+    "ui_jpg_images": {
+        "message": "JP(E)G图片"
+    },
+    "ui_png_images": {
+        "message": "PNG图片"
+    },
+    "ui_gif_images": {
+        "message": "GIF图片"
+    },
+    "ui_bmp_images": {
+        "message": "BMP图片"
+    },
+    "ui_webp_images": {
+        "message": "WebP图片"
+    },
+    "ui_no_extension": {
+        "message": "若无扩展名，保存为JPG"
+    },
+    "ui_regexp": {
+        "message": "正则表达式"
+    },
+    "ui_regexp_desc": {
+        "message": "基于图片URL的正则表达式（仅匹配的图片会被保存）"
+    },
+    "ui_blacklist": {
+        "message": "黑名单关键词"
+    },
+    "ui_blacklist_desc": {
+        "message": "逗号分隔的关键词列表，用于排除匹配的图片（匹配的图片将不被保存）"
+    },
+    "ui_misc": {
+        "message": "其他"
+    },
+    "ui_same_domain": {
+        "message": "仅保存与当前标签页同域名/服务器的图片"
+    },
+    "ui_exclude_cors_frames": {
+        "message": "不抓取跨域框架"
+    },
+    "ui_exclude_sorg_frames": {
+        "message": "不抓取同域框架"
+    },
+    "ui_unique": {
+        "message": "尝试排除重复图片"
+    },
+    "ui_separate": {
+        "message": "单独下载每张图片（较慢）"
+    },
+    "ui_readme": {
+        "message": "下载时生成README.txt文件"
+    },
+    "ui_accurate": {
+        "message": "确认MIME类型并根据服务器猜测文件名"
+    },
+    "ui_calc": {
+        "message": "获取所有图片的宽度和高度"
+    },
+    "ui_sl_re": {
+        "message": "（较慢）（需重启）"
+    },
+    "ui_mask": {
+        "message": "文件命名规则"
+    },
+    "ui_mask_desc": {
+        "message": "可通过此部分将图片文件名重命名为所需格式"
+    },
+    "ui_mask_keywords": {
+        "message": "需将关键词放在方括号内，如 [name][extension]"
+    },
+    "ui_keywords": {
+        "message": "关键词"
+    },
+    "ui_save_in_1": {
+        "message": "保存并选择目录"
+    },
+    "ui_save_in_2": {
+        "message": "保存"
+    },
+    "ui_dialog": {
+        "message": "显示浏览器保存对话框以选择目标目录"
+    },
+    "ui_save_dialog": {
+        "message": "保存对话框"
+    },
+    "ui_delay": {
+        "message": "请求超时秒数（5到120秒之间）"
+    },
+    "detection_delay": {
+        "message": "每次服务器端图片检测后暂停的秒数（限速）"
+    },
+    "download_delay": {
+        "message": "每次服务器端图片下载后暂停的秒数（限速）"
+    },
+    "ui_format": {
+        "message": "格式"
+    },
+    "ui_zip": {
+        "message": "ZIP文件名"
+    },
+    "ui_directory": {
+        "message": "目录"
+    },
+    "ui_relative": {
+        "message": "相对于默认下载目录的自定义目录"
+    },
+    "ui_reset": {
+        "message": "重置"
+    },
+    "ui_restart": {
+        "message": "重新开始"
+    },
+    "ui_stop": {
+        "message": "停止"
+    },
+    "ui_gallery": {
+        "message": "画廊"
+    },
+    "ui_copy": {
+        "message": "复制"
+    },
+    "ui_save": {
+        "message": "保存"
+    },
+    "ui_save_dir": {
+        "message": "保存目录"
+    },
+    "ui_cancel": {
+        "message": "取消"
+    },
+    "ui_reset_title": {
+        "message": "重置设置为默认值"
+    },
+    "ui_restart_title": {
+        "message": "重新开始图片收集"
+    },
+    "ui_stop_title": {
+        "message": "停止搜索更多图片"
+    },
+    "ui_gallery_title": {
+        "message": "以画廊模式打开选中图片"
+    },
+    "ui_copy_title": {
+        "message": "将选中图片复制到剪贴板"
+    },
+    "ui_save_title": {
+        "message": "将选中图片保存到默认下载目录"
+    },
+    "ui_save_dir_title": {
+        "message": "[实验性功能] 将选中图片保存到自定义目录，无需先添加到ZIP压缩包。仅在HTTPS页面可用，且浏览器需支持本地文件系统。"
+    },
+    "ui_cancel_title": {
+        "message": "关闭此窗口"
+    },
+    "ui_preferences": {
+        "message": "偏好设置"
+    },
+    "ui_prefs_zip_warning": {
+        "message": "当勾选“单独下载每张图片”且图片总数超过以下值时显示确认提示"
+    },
+    "ui_prefs_stop_after": {
+        "message": "当检测到的图片数量超过以下值时停止搜索"
+    },
+    "ui_prefs_max_warning": {
+        "message": "当图片总数超过以下值时显示确认提示"
+    },
+    "ui_networ_cors": {
+        "message": "搜索时绕过网络CORS（需重启）"
+    },
+    "ui_and": {
+        "message": "且"
+    },
+    "ui_or": {
+        "message": "或"
+    },
+    "ui_operation": {
+        "message": "逻辑操作（且/或）：要求宽高同时匹配，或允许任一匹配。"
+    },
+    "ui_allow_exchange": {
+        "message": "灵活方向"
+    },
+    "ui_deny_exchange": {
+        "message": "固定方向"
+    },
+    "ui_exchange": {
+        "message": "固定方向：严格按定义的宽高角色。不允许互换。\n灵活方向：允许宽高互换，使宽高比不受方向限制。"
+    },
+    "ui_profiles_title": {
+        "message": "所有设置将自动保存到所选配置文件中。可创建新配置文件并切换，以调整不同配置。"
+    },
+    "ui_profile": {
+        "message": "配置文件"
+    },
+    "ui_profiles_default": {
+        "message": "默认配置文件"
+    },
+    "options_title": {
+        "message": "选项 :: 下载所有图片"
+    },
+    "options_width": {
+        "message": "界面宽度（像素）："
+    },
+    "options_height": {
+        "message": "界面高度（像素）："
+    },
+    "options_notify": {
+        "message": "保存图片时显示桌面通知"
+    },
+    "options_faqs": {
+        "message": "更新时打开常见问题页面"
+    },
+    "options_rule": {
+        "message": "自定义规则："
+    },
+    "options_save": {
+        "message": "保存选项"
+    },
+    "options_support": {
+        "message": "支持开发"
+    },
+    "options_tutorial": {
+        "message": "使用预览"
+    },
+    "options_sample": {
+        "message": "打开测试页面"
+    },
+    "options_head_delay": {
+        "message": "每次读取图片元数据后的延迟（毫秒）"
+    },
+    "options_head_timeout": {
+        "message": "图片元数据请求超时时间（秒）"
+    },
+    "options_dig_delay": {
+        "message": "每次解析HTML文档后的延迟（毫秒）"
+    },
+    "options_dig_timeout": {
+        "message": "HTML文档解析超时时间（秒）"
+    }
+}
