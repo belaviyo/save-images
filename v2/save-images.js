@@ -267,11 +267,11 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     chrome.permissions.request({
       permissions: ['clipboardWrite']
     }, granted => {
-      if (granted) {
+      try {
         navigator.clipboard.writeText(request.content).then(() => {
           notify('Image links are copied to the clipboard');
           response(true);
-        }).catch(() => {
+        }).catch(e => {
           document.oncopy = e => {
             e.clipboardData.setData('text/plain', request.content);
             e.preventDefault();
@@ -285,7 +285,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
           }
         });
       }
-      else {
+      catch (e) {
         response(false);
       }
     });

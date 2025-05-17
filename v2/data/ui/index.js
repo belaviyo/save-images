@@ -486,21 +486,31 @@ window.meta = (url, obj) => {
   }
 };
 
-window.copy = content => chrome.runtime.sendMessage({
-  cmd: 'copy',
-  content
-}, resp => {
-  if (resp !== true) {
-    const blob = new Blob([content], {type: 'text/plain'});
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'links.txt');
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url));
-    chrome.runtime.sendMessage({
-      method: 'notify',
-      message: 'Image links are downloaded to the default download directory'
+window.copy = async content => {
+  try {
+    await navigator.clipboard.writeText(content).then(() => {
+      chrome.runtime.sendMessage({
+        method: 'notify',
+        message: 'Image links are copied to the clipboard'
+      });
     });
   }
-});
+  catch (e) {
+    chrome.runtime.sendMessage({
+      cmd: 'copy',
+      content
+    }, resp => {
+      if (resp !== true) {
+        const base64 = btoa(unescape(encodeURIComponent(content)));
+        const link = document.createElement('a');
+        link.href = `data:text/plain;base64,${base64}`;
+        link.setAttribute('download', 'links.txt');
+        link.click();
+        chrome.runtime.sendMessage({
+          method: 'notify',
+          message: 'Image links are downloaded to the default download directory'
+        });
+      }
+    });
+  }
+};
