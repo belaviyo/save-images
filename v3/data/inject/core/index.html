@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html translate="no">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="index.css">
+  <title>Core :: Image Downloader</title>
+</head>
+<body>
+  <body data-mode=ui>
+    <div>
+      <div><iframe data-loading=true id="ui"></iframe></div>
+      <div><iframe data-loading=false id="gallery"></iframe></div>
+    </div>
+    <notification-view id="toast"></notification-view>
+  </body>
+
+  <script src="components/notification-view/notification-view.js"></script>
+  <script src="inzip.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>

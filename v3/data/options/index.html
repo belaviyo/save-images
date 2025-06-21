@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title data-i18n="options_title"></title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="index.css">
+</head>
+
+<body>
+  <table width=100%>
+    <colgroup>
+      <col width=32>
+      <col>
+      <col>
+    </colgroup>
+    <tbody>
+      <tr>
+        <td></td>
+        <td><label for="width" data-i18n="options_width"></label></td>
+        <td><input id="width" type="number" min="300"></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td><label for="height" data-i18n="options_height"></label></td>
+        <td><input id="height" type="number" min="400"></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td><label for="head-delay" data-i18n="options_head_delay"></label></td>
+        <td><input id="head-delay" type="number" min="0"></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td><label for="head-timeout" data-i18n="options_head_timeout"></label></td>
+        <td><input type="number" id="head-timeout" min="5"></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td><label for="dig-delay" data-i18n="options_dig_delay"></label></td>
+        <td><input type="number" id="dig-delay" min="0"></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td><label for="dig-timeout" data-i18n="options_dig_timeout"></label></td>
+        <td><input type="number" id="dig-timeout" min="5"></td>
+      </tr>
+      <tr>
+        <td><input type="checkbox" id="notify"></td>
+        <td><label for="notify" data-i18n="options_notify"></label></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><input type="checkbox" id="faqs"></td>
+        <td><label for="faqs" data-i18n="options_faqs"></label></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <br>
+  <div>
+    <h3 data-i18n="options_rule"></h3>
+    JSON object to <a data-href="faq16" target="_blank">limit hostname matching per domain</a>.
+    <textarea id="json" rows="10"></textarea>
+  </div>
+
+  <p>
+    Rate "<b><a id="rate" href="https://chrome.google.com/webstore/detail/download-all-images/nnffbdeachhbpfapjklmpnmjcgamcdmm/reviews" style="text-decoration: none">Download all Images</a></b>" extension
+  </p>
+  <div id="explore" data-inc=50></div>
+  <p>
+    <button id="support" data-i18n="options_support"></button>
+    <button id="reset">Reset</button>
+  </p>
+  <p>
+    <button id="tutorial" data-i18n="options_tutorial"></button>
+    <button id="sample" data-i18n="options_sample"></button>
+    <button id="save" data-i18n="options_save"></button>
+    <span id="toast"></span>
+  </p>
+  <script src="index.js"></script>
+  <script async src="matched.js"></script>
+</body>
+</html>

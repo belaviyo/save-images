@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html translate="no">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <header hbox>
+    <fieldset flex=1>
+      <legend><span data-i18n="ui_statistics"></span> (<a data-i18n="ui_debug" data-href="debug" target="_blank"></a>) <span id="filters"></span></legend>
+      <div hbox align=center>
+        <span class="note" data-i18n="ui_total_title@title|ui_total"></span>&nbsp;<span id="total-number">0</span>,&nbsp;
+        <span class="note" data-i18n="ui_frames_title@title|ui_frames"></span>&nbsp;<span id="frames-number">1</span>,&nbsp;
+        <span class="note" data-i18n="ui_images_title@title|ui_images"></span>&nbsp;<span id="images-number">0</span>,&nbsp;
+        <span class="note" data-i18n="ui_saving_title@title|ui_saving"></span>&nbsp;<span id="save-number">0</span>&nbsp;
+        <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
+      </div>
+    </fieldset>
+    <fieldset data-i18n="ui_deep_search_title@title">
+      <legend><a data-href="faq17" target="_blank" data-i18n="ui_deep_search"></a></legend>
+      <label>
+        <span data-i18n="ui_level"></span>&nbsp;
+        <progress id="deep-progress" value="0" max="100" data-visible=false></progress>&nbsp;
+        <input type="number" value="1" id="deep-level" min="0" max="3">
+      </label>
+    </fieldset>
+  </header>
+  <div id="body">
+    <p id="notify"></p>
+    <div hbox>
+      <fieldset flex=1>
+        <legend><label><input type="checkbox" id="group-size"> <span data-i18n="ui_file_size"></span></label></legend>
+        <table>
+          <tr>
+            <td data-i18n="ui_min"></td>
+            <td><input type="number" value="4000" id="size-min"></td>
+            <td data-i18n="ui_bytes"></td>
+          </tr>
+          <tr>
+            <td data-i18n="ui_max"></td>
+            <td><input type="number" value="0" id="size-max"></td>
+            <td data-i18n="ui_bytes"></td>
+          </tr>
+        </table>
+
+        <fieldset>
+          <legend data-i18n="ui_unkown"></legend>
+          <table>
+            <tr>
+              <td><input type="radio" name="size" id="unknown-size-skip"></td>
+              <td><label for="unknown-size-skip" data-i18n="ui_skip"></label></td>
+            </tr>
+            <tr>
+              <td><input type="radio" name="size" id="unknown-size-save" checked="true"></td>
+              <td><label for="unknown-size-save" data-i18n="ui_save"></label></td>
+            </tr>
+          </table>
+        </fieldset>
+      </fieldset>
+
+      <fieldset flex=1>
+        <legend><label><input type="checkbox" id="group-dimension"><span data-i18n="ui_dimension"></span></label></legend>
+        <table>
+          <tr>
+            <td data-i18n="ui_min_width" class="nowrap"></td>
+            <td><input type="number" value="200" id="dimension-width-min"></td>
+          </tr>
+          <tr>
+            <td data-i18n="ui_max_width" class="nowrap"></td>
+            <td><input type="number" value="0" id="dimension-width-max"></td>
+          </tr>
+          <tr>
+            <td colspan="2" style="text-align: end;">
+              <select id="dimension-exchange" data-i18n="ui_exchange@title">
+                <option value="allow" data-i18n="ui_allow_exchange"></option>
+                <option value="deny" data-i18n="ui_deny_exchange"></option>
+              </select>
+              <select id="dimension-operation"  data-i18n="ui_operation@title">
+                <option value="and" data-i18n="ui_and"></option>
+                <option value="or" data-i18n="ui_or"></option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td data-i18n="ui_min_height" class="nowrap"></td>
+            <td><input type="number" value="200" id="dimension-height-min"></td>
+          </tr>
+          <tr>
+            <td data-i18n="ui_max_height" class="nowrap"></td>
+            <td><input type="number" value="0" id="dimension-height-max"></td>
+          </tr>
+        </table>
+
+        <fieldset>
+          <legend data-i18n="ui_unkown"></legend>
+          <table>
+            <tr>
+              <td><input type="radio" name="dimension" id="unknown-dimension-skip"></td>
+              <td><label for="unknown-dimension-skip" data-i18n="ui_skip"></label></td>
+            </tr>
+            <tr>
+              <td><input type="radio" name="dimension" id="unknown-dimension-save" checked=true></td>
+              <td><label for="unknown-dimension-save" data-i18n="ui_save"></label></td>
+            </tr>
+          </table>
+        </fieldset>
+      </fieldset>
+
+      <fieldset flex=1>
+        <legend><label><input type="checkbox" id="group-type" checked="true"><span data-i18n="ui_image_types"></span></label></legend>
+        <table>
+          <tr>
+            <td><input type="radio" name="type" id="type-all" checked=true></td>
+            <td><label for="type-all" data-i18n="ui_all_images"></label></td>
+          </tr>
+          <tr>
+            <td><input type="radio" name="type" id="type-selection"></td>
+            <td><label for="type-selection" data-i18n="ui_Selection"></label></td>
+          </tr>
+        </table>
+        <table class="indent" id="image-types">
+          <tr>
+            <td><input type="checkbox" id="type-jpeg"></td>
+            <td><label for="type-jpeg" data-i18n="ui_jpg_images"></label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="type-png"></td>
+            <td><label for="type-png" data-i18n="ui_png_images"></label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="type-gif"></td>
+            <td><label for="type-gif" data-i18n="ui_gif_images"></label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="type-bmp"></td>
+            <td><label for="type-bmp" data-i18n="ui_bmp_images"></label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="type-webp"></td>
+            <td><label for="type-webp" data-i18n="ui_webp_images"></label></td>
+          </tr>
+        </table>
+        <table>
+          <tr>
+            <td><input type="checkbox" id="no-type" checked="true"></td>
+            <td><label for="no-type" data-i18n="ui_no_extension"></label></td>
+          </tr>
+        </table>
+      </fieldset>
+    </div>
+
+    <div hbox>
+      <fieldset flex=1>
+        <legend data-i18n="ui_regexp"></legend>
+        <table width="100%">
+          <tr>
+            <td><input type="checkbox" id="group-regexp"></td>
+            <td><label for="group-regexp" data-i18n="ui_regexp_desc"></label></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td hbox><input type="text" id="regexp-input" flex=1 placeholder="e.g.: .*"></td>
+          </tr>
+        </table>
+      </fieldset>
+      <fieldset flex=1>
+        <legend data-i18n="ui_blacklist"></legend>
+        <table width="100%">
+          <tr>
+            <td><input type="checkbox" id="group-blacklist"></td>
+            <td><label for="group-blacklist" data-i18n="ui_blacklist_desc"></label></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td hbox><input type="text" id="blacklist-input" flex=1 placeholder="e.g.: word1, word2"></td>
+          </tr>
+        </table>
+      </fieldset>
+    </div>
+    <div hbox>
+      <fieldset flex=1>
+        <legend data-i18n="ui_misc"></legend>
+        <table width="100%">
+          <tr>
+            <td><input type="checkbox" id="group-origin"></td>
+            <td><label for="group-origin" data-i18n="ui_same_domain"></label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="exclude-cors-frames"></td>
+            <td><label for="exclude-cors-frames" data-i18n="ui_exclude_cors_frames"></label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="exclude-sorg-frames"></td>
+            <td><label for="exclude-sorg-frames" data-i18n="ui_exclude_sorg_frames"></label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="group-identical" checked="true"></td>
+            <td><label for="group-identical" data-i18n="ui_unique"></label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="group-zip"></td>
+            <td><label for="group-zip" data-i18n="ui_separate"></label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="add-readme"></td>
+            <td><label for="add-readme" data-i18n="ui_readme"></label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="network-cors" checked="true"></td>
+            <td><label for="network-cors" data-i18n="ui_networ_cors"></label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="calc" checked="true"></td>
+            <td><label for="calc">
+              <a data-i18n="ui_calc" data-href="faq18" target="_blank"></a>&nbsp;
+              <span data-i18n="ui_sl_re"></span>
+            </label></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" id="accurate"></td>
+            <td><label for="accurate">
+              <a data-i18n="ui_accurate" data-href="faq19" target="_blank"></a>&nbsp;
+              <span data-i18n="ui_sl_re"></span>
+            </label></td>
+          </tr>
+        </table>
+      </fieldset>
+      <fieldset flex=1>
+        <legend data-i18n="ui_mask"></legend>
+        <span data-i18n="ui_mask_desc"></span>
+        <div hbox style="margin-top: 10px;">
+          <input type="text" id="file-mask" value="" placeholder="[name][extension]" flex="1"  data-i18n="ui_mask_keywords@title">
+          <div class="list" hbox align=center>
+            <span data-i18n="ui_keywords"></span>
+            <ul>
+              <li data-cmd="insert" data-value="[name]">[name]</li>
+              <li data-cmd="insert" data-value="[type]">[type]</li>
+              <li data-cmd="insert" data-value="[disposition]">[disposition]</li>
+              <li data-cmd="insert" data-value="[extension]">[extension]</li>
+              <li data-cmd="insert" data-value="[order]">[order]</li>
+              <li data-cmd="insert" data-value="[index]">[index]</li>
+              <li data-cmd="insert" data-value="[alt]">[alt]</li>
+              <li data-cmd="insert" data-value="[custom=id]">[custom]</li>
+            </ul>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+
+<!--       <fieldset>
+      <legend data-i18n="ui_save_in_1"></legend>
+      <table width=100%>
+        <colgroup>
+          <col width="80">
+          <col>
+        </colgroup>
+        <tbody>
+
+        </tbody>
+      </table>
+    </fieldset> -->
+    <fieldset>
+      <legend data-i18n="ui_save_in_2"></legend>
+      <table width=100%>
+        <colgroup>
+          <col width="80">
+          <col>
+        </colgroup>
+        <tbody>
+          <tr>
+            <td data-i18n="ui_format"></td>
+            <td>
+              <div hbox>
+                <input type="text" id="format" value="[title] - [date] [time].zip" placeholder="[title] - [date] [time].zip" flex="1">
+                <div class="list" hbox align=center>
+                  <span data-i18n="ui_keywords"></span>
+                  <ul>
+                    <li data-cmd="insert" data-value="[title]">[title]</li>
+                    <li data-cmd="insert" data-value="[date]">[current-date]</li>
+                    <li data-cmd="insert" data-value="[time]">[current-time]</li>
+                    <li data-cmd="insert" data-value="[modified-date]">[modified-date]</li>
+                    <li data-cmd="insert" data-value="[modified-time]">[modified-time]</li>
+                    <li data-cmd="insert" data-value="[navigation-date]">[navigation-date]</li>
+                    <li data-cmd="insert" data-value="[navigation-time]">[navigation-time]</li>
+                    <li data-cmd="insert" data-value="[href]">[href]</li>
+                    <li data-cmd="insert" data-value="[href-hostname]">[href-hostname]</li>
+                    <li data-cmd="insert" data-value="[href-pathname]">[href-pathname]</li>
+                    <li data-cmd="insert" data-value="[href-search]">[href-search]</li>
+                    <li data-cmd="insert" data-value="[href-hash]">[href-hash]</li>
+                    <li data-cmd="insert" data-value=".zip">.zip</li>
+                  </ul>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr data-i18n="ui_dialog@title">
+            <td><label for="open-save-dialog" data-i18n="ui_save_dialog"></label></td>
+            <td><input type="checkbox" id="open-save-dialog"></td>
+          </tr>
+          <tr>
+            <td data-i18n="ui_zip"></td>
+            <td>
+              <div hbox>
+                <input type="text" id="filename" placeholder="Filename" flex="1">
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td data-i18n="ui_directory"></td>
+            <td>
+              <div hbox>
+                <input type="text" id="custom-directory" data-i18n="ui_relative@placeholder" flex="1">
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </fieldset>
+    <fieldset>
+      <legend><a href="#" data-i18n="ui_preferences" id="options"></a></legend>
+      <table width=100%>
+        <colgroup>
+          <col>
+          <col width="100">
+        </colgroup>
+        <tbody>
+          <tr>
+            <td data-i18n="ui_prefs_stop_after"></td>
+            <td align="right"><input type="number" min="5" id="prefs-stop-after" value="0"></td>
+          </tr>
+          <tr>
+            <td data-i18n="ui_prefs_max_warning"></td>
+            <td align="right"><input type="number" min="5" id="prefs-max-warning" value="30"></td>
+          </tr>
+          <tr>
+            <td data-i18n="ui_prefs_zip_warning"></td>
+            <td align="right"><input type="number" min="3" id="prefs-zip-warning" value="15"></td>
+          </tr>
+        </tbody>
+      </table>
+    </fieldset>
+  </div>
+  <footer>
+    <div id="profiles-container" data-i18n="ui_profiles_title@title">
+      <div>
+        <span data-i18n="ui_profile"></span>
+        <select id="profiles"></select>
+      </div>
+      <button data-cmd="delete-profile" disabled>Delete</button>
+      <button data-cmd="add-profile">Add New</button>
+    </div>
+    <div id="tools">
+      <button data-i18n="ui_reset_title@title|ui_reset" data-cmd="reset"></button>
+      <button data-i18n="ui_restart_title@title|ui_restart" data-cmd="restart"></button>
+      <button data-i18n="ui_stop_title@title|ui_stop" data-cmd="stop"></button>
+      <button data-i18n="ui_gallery_title@title|ui_gallery" data-cmd="gallery"></button>
+
+      <button data-i18n="ui_copy_title@title|ui_copy" data-cmd="copy"></button>
+      <button data-i18n="ui_save_dir_title@title|ui_save_dir" data-cmd="save-dir"></button>
+      <button data-i18n="ui_save_title@title|ui_save" data-cmd="save"></button>
+    </div>
+  </footer>
+
+  <script src="../utils.js"></script>
+  <script src="persist.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>
