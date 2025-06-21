@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html translate="no">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title data-i18n="gallery_title"></title>
+  <link rel="stylesheet" href="index.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <textarea id="clipboard" style="display: none;"></textarea>
+  <template id="entry">
+    <label class="entry">
+      <a href="#" target="_blank"></a>
+      <input type="checkbox" checked="true">
+      <input type="text" placeholder="detect name">
+      <img src="#" loading=lazy decoding='async' referrerpolicy="no-referrer">
+    </label>
+  </template>
+  <div id="body"></div>
+  <span></span>
+  <div id="toolbar">
+    <input type="button" data-cmd="close" value="Close">
+    <input type="button" data-cmd="select-all" data-i18n="gallery_select_all" data-i18n-value="title" value="Sel: All">
+    <input type="button" data-cmd="select-none" data-i18n="gallery_select_none" data-i18n-value="title" value="Sel: None">
+    <input type="button" data-cmd="download" data-i18n="gallery_download" data-i18n-value="title" value="Download">
+    <input type="button" data-cmd="copy" data-i18n="gallery_copy" data-i18n-value="title" value="Copy">
+    <input type="button" data-cmd="window" data-i18n="gallery_window" data-i18n-value="title" value="Detach">
+    <input type="text" id="pattern" data-i18n="gallery_pattern" data-i18n-value="value">
+    <input type="button" data-cmd="rename" data-i18n="gallery_rename" data-i18n-value="value" value="Rename">
+  </div>
+  <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
+  <script src="../utils.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>

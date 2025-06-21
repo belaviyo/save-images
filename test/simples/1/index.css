@@ -1,0 +1,11 @@
+body {
+
+}
+body::before {
+  content: '';
+  width: 32px;
+  aspect-ratio: 1;
+  display: block;
+  background-repeat: no-repeat;
+  background-image: linear-gradient(transparent, transparent), url(./edit.svg);
+}

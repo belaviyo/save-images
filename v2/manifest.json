@@ -1,0 +1,46 @@
+{
+  "manifest_version": 2,
+  "version": "0.8.3",
+  "name": "Download All Images",
+  "description": "__MSG_app_description__",
+  "default_locale": "en",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "notifications",
+    "<all_urls>",
+    "downloads",
+    "unlimitedStorage"
+  ],
+  "optional_permissions": [
+    "clipboardWrite"
+  ],
+  "background": {
+    "persistent": false,
+    "scripts": [
+      "background.js",
+      "inzip.js",
+      "data/ui/guess.js",
+      "save-images.js"
+    ]
+  },
+  "browser_action": {},
+  "icons": {
+    "16": "data/icons/16.png",
+    "32": "data/icons/32.png",
+    "64": "data/icons/64.png",
+    "128": "data/icons/128.png",
+    "256": "data/icons/256.png",
+    "512": "data/icons/512.png"
+  },
+  "web_accessible_resources": [
+    "data/inject/selector.html",
+    "data/ui/index.html",
+    "data/gallery/index.html"
+  ],
+  "homepage_url": "https://webextension.org/listing/save-images.html",
+  "options_ui": {
+    "page": "data/options/index.html",
+    "chrome_style": true
+  }
+}
