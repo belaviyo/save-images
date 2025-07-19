@@ -43,27 +43,46 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.cmd === 'apply-referer') {
     try {
       const id = Math.floor(Math.random() * 1000000);
+      const rule = {
+        'id': id,
+        'priority': 2,
+        'action': {
+          type: 'modifyHeaders',
+          requestHeaders: [{
+            'operation': 'set',
+            'header': 'referer',
+            'value': request.referer
+          }, {
+            'operation': 'remove',
+            'header': 'origin'
+          }]
+        },
+        'condition': {
+          'urlFilter': request.src,
+          'resourceTypes': ['xmlhttprequest', 'image'],
+          'tabIds': [sender.tab.id]
+        }
+      };
+      if (request.credentials === 'include') {
+        let o = request.referer;
+        try {
+          o = (new URL(request.referer)).origin;
+        }
+        catch (e) {}
+
+        rule.action.responseHeaders = [{
+          'operation': 'set',
+          'header': 'access-control-allow-origin',
+          'value': o
+        }, {
+          'operation': 'set',
+          'header': 'Access-Control-Allow-Credentials',
+          'value': 'true'
+        }];
+      }
+
       chrome.declarativeNetRequest.updateSessionRules({
-        addRules: [{
-          'id': id,
-          'priority': 1,
-          'action': {
-            type: 'modifyHeaders',
-            requestHeaders: [{
-              'operation': 'set',
-              'header': 'referer',
-              'value': request.referer
-            }, {
-              'operation': 'remove',
-              'header': 'origin'
-            }]
-          },
-          'condition': {
-            'urlFilter': request.src,
-            'resourceTypes': ['xmlhttprequest', 'image'],
-            'tabIds': [sender.tab.id]
-          }
-        }]
+        addRules: [rule]
       }).then(() => response(id), () => response(-1));
 
       return true;

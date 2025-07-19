@@ -320,6 +320,9 @@
   "options_rule": {
     "message": "Custom Rule:"
   },
+  "options_extensions": {
+    "message": "Custom Extensions:"
+  },
   "options_save": {
     "message": "Save Options"
   },

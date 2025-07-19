@@ -62,11 +62,17 @@
     JSON object to <a data-href="faq16" target="_blank">limit hostname matching per domain</a>.
     <textarea id="json" rows="10"></textarea>
   </div>
+  <div>
+    <h3 data-i18n="options_extensions"></h3>
+    <div>
+      Comma-separated file extensions treated as images. Read <a data-href="faq21" target="_blank">this FAQ</a> for more info.
+    </div>
+    <input id="custom-extensions" type="text" placeholder="e.g.: svg, png">
+  </div>
 
   <p>
     Rate "<b><a id="rate" href="https://chrome.google.com/webstore/detail/download-all-images/nnffbdeachhbpfapjklmpnmjcgamcdmm/reviews" style="text-decoration: none">Download all Images</a></b>" extension
   </p>
-  <div id="explore" data-inc=50></div>
   <p>
     <button id="support" data-i18n="options_support"></button>
     <button id="reset">Reset</button>
@@ -78,6 +84,5 @@
     <span id="toast"></span>
   </p>
   <script src="index.js"></script>
-  <script async src="matched.js"></script>
 </body>
 </html>

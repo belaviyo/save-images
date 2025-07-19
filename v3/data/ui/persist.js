@@ -131,6 +131,9 @@ document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get({
             'operation': 'set',
             'header': 'access-control-allow-origin',
             'value': '*'
+          }, {
+            'operation': 'remove',
+            'header': 'referrer-policy'
           }]
         },
         'condition': {

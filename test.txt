@@ -1,4 +1,6 @@
-1. https://www.cbr.com/dc-comics-solicitations-may-2019/
-2. "aHR0cDovL2tpdHR5LWthdHMubmV0L3RocmVhZHMvZWxsZS1iLXByZXNlbnRpbmctMDctMDItMjUteDE2MC0yOTEyeDQzNjhweC4yNjYyMTEzLw=="
+1. aHR0cHM6Ly93d3cuY2JyLmNvbS9kYy1jb21pY3Mtc29saWNpdGF0aW9ucy1tYXktMjAxOS8=
+2. aHR0cDovL2tpdHR5LWthdHMubmV0L3RocmVhZHMvZWxsZS1iLXByZXNlbnRpbmctMDctMDItMjUteDE2MC0yOTEyeDQzNjhweC4yNjYyMTEzLw==
   -> Image name from page URL
   -> Timeout when downloading images (each ~ 2MB)
+3. aHR0cHM6Ly9tLmhhcHB5bWguY29tL21hbmdhcmVhZC95SWpNNEFUTTNBVE16QVRNNEFUTXlBVE01UVRNPWdUT3ljVE0yQVRNMkFUTXhBVE0xVVRNMlVUTTVBVE13QVRNMEFUTTVRVE00UVRN
+  -> Requires credentials

@@ -10,7 +10,7 @@
 
 /* eslint no-var: 0 */
 
-/* global type, size, post, utils */
+/* global type, size, post, utils, sources */
 
 /*
   accuracy: accurate -> force calculate size, width, height
@@ -139,7 +139,11 @@ collector.findRoots = function(doc, list = []) {
 };
 
 /* collect images */
-collector.inspect = function(doc, loc, name, policies) {
+collector.inspect = async function(doc, loc, name, policies) {
+  const prefs = await chrome.storage.local.get({
+    'custom-extensions': ['pdf']
+  });
+
   const docs = [doc];
   collector.findRoots(doc, docs);
 
@@ -147,11 +151,14 @@ collector.inspect = function(doc, loc, name, policies) {
   for (const doc of docs) {
     const images = doc.images || doc.querySelectorAll('img');
     for (const img of [...images]) {
+      //  The "data-src" attribute is commonly used for lazy-loading images
+      const src = img.currentSrc || img.src || img.dataset.src;
+
+      sources.set(src, img);
       collector.push({
         width: img.naturalWidth,
         height: img.naturalHeight,
-        //  The "data-src" attribute is commonly used for lazy-loading images
-        src: img.currentSrc || img.src || img.dataset.src,
+        src,
         alt: img.alt,
         custom: img.getAttribute(window.custom) || '',
         // if image is verified, we dont have the image size. on accurate mode set it to false
@@ -165,6 +172,7 @@ collector.inspect = function(doc, loc, name, policies) {
       });
 
       if (img.src && img.currentSrc !== img.src) {
+        sources.set(img.src, img);
         collector.push({
           src: img.src,
           alt: img.alt,
@@ -185,8 +193,10 @@ collector.inspect = function(doc, loc, name, policies) {
   for (const doc of docs) {
     for (const source of [...doc.querySelectorAll('source')]) {
       if (source.srcset) {
+        const src = source.srcset.split(' ')[0];
+        sources.set(src, source);
         collector.push({
-          src: source.srcset.split(' ')[0],
+          src,
           type: source.type,
           page: loc.href,
           meta: {
@@ -253,8 +263,10 @@ collector.inspect = function(doc, loc, name, policies) {
   // find embedded images on SVG elements; part 4/4
   for (const doc of docs) {
     for (const image of [...doc.querySelectorAll('image')]) {
+      const src = image.href?.baseVal;
+      sources.set(src, image);
       collector.push({
-        src: image.href?.baseVal,
+        src,
         alt: image.alt,
         custom: image.getAttribute(window.custom) || '',
         // if image is verified, we dont have the image size. on accurate mode set it to false
@@ -341,6 +353,30 @@ collector.inspect = function(doc, loc, name, policies) {
           }
         });
       });
+    }
+  }
+  //
+  if (prefs['custom-extensions'].length) {
+    for (const doc of docs) {
+      for (const a of doc.querySelectorAll('a')) {
+        if (a.href && prefs['custom-extensions'].some(e => a.href.includes('.' + e))) {
+          collector.push({
+            width: 1,
+            height: 1,
+            src: a.href,
+            custom: a.getAttribute(window.custom) || '',
+            // if image is verified, we dont have the image size. on accurate mode set it to false
+            verified: true,
+            page: loc.href,
+            type: 'image/unknown',
+            meta: {
+              origin: name + ' - custom.extensions',
+              size: 'custom.extensions',
+              type: 'skipped'
+            }
+          });
+        }
+      }
     }
   }
 };
@@ -506,21 +542,27 @@ collector.validate = async function() {
     collector.validate.jobs += 1;
 
     try {
-      const {meta, origin} = await collector.meta(o);
+      // skip for custom extension
+      if (o.verified && o.meta.size === 'custom.extensions') {
+        collector.addImage(o);
+      }
+      else {
+        const {meta, origin} = await collector.meta(o);
 
-      Object.assign(o, meta);
-      o.meta.type = origin;
+        Object.assign(o, meta);
+        o.meta.type = origin;
 
-      if (o.type) {
-        if (o.type.startsWith('image/')) {
-          collector.addImage(o);
-        }
-        else if (o.type.startsWith('application/')) {
-          collector.addImage(o);
-        }
-        else if (o.type.startsWith('text/html')) {
-          collector.document(o);
-          rm = true;
+        if (o.type) {
+          if (o.type.startsWith('image/')) {
+            collector.addImage(o);
+          }
+          else if (o.type.startsWith('application/')) {
+            collector.addImage(o);
+          }
+          else if (o.type.startsWith('text/html')) {
+            collector.document(o);
+            rm = true;
+          }
         }
       }
     }
@@ -590,7 +632,7 @@ collector.dig = async function() {
           cmd: 'new-frame'
         });
 
-        collector.inspect(doc, new URL(o.src), 'two', {
+        await collector.inspect(doc, new URL(o.src), 'two', {
           bg: window.deep === 3,
           links: window.deep === 3,
           extract: window.deep === 3
@@ -615,8 +657,8 @@ collector.dig = async function() {
 };
 collector.dig.jobs = 0;
 
-collector.loop = function() {
-  collector.inspect(document, location, 'one', {
+collector.loop = async function() {
+  await collector.inspect(document, location, 'one', {
     bg: true,
     links: true,
     extract: true

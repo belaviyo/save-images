@@ -65,7 +65,10 @@ const get = (o, type = 'ab') => new Promise((resolve, reject) => {
   const port = communication.ports[o.frameId];
   const uid = Math.random();
   communication[uid] = async res => {
-    if (type === 'ab') {
+    if (res.error) {
+      reject(Error(res.error));
+    }
+    else if (type === 'ab') {
       try {
         try {
           const r = await fetch(res.href);

@@ -1,9 +1,10 @@
 {
-  const ap = (src, referer) => new Promise(resolve => {
+  const ap = (src, referer, credentials) => new Promise(resolve => {
     chrome.runtime.sendMessage({
       cmd: 'apply-referer',
       src,
-      referer
+      referer,
+      credentials
     }, resolve);
     setTimeout(resolve, 1000, -1);
   });
@@ -20,7 +21,7 @@
       if (src && src.startsWith('http') && props && props.headers?.referer) {
         const referer = props.headers.referer;
         if (referer.startsWith('http')) {
-          return ap(src, referer).then(id => {
+          return ap(src, referer, props.credentials).then(id => {
             return Reflect.apply(target, self, args).then(r => {
               re(id);
               return r;

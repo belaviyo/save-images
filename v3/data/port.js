@@ -10,9 +10,12 @@
   });
   const onMessage = request => {
     if (request.cmd === 'download-image') {
+      const img = self.sources.get(request.src);
+
       // try to find the image on page and download it (it is useful specially if the image src is a dead blob)
       const capture = () => {
-        const e = document.querySelector(`img[src="${request.src}"]`);
+        const e = img || document.querySelector(`img[src="${request.src}"]`);
+
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
@@ -28,26 +31,61 @@
         });
       };
 
-      fetch(request.src, {
+      const props = {
         headers: {
           referer: request.referer
         }
-      }).then(r => r.blob()).then(blob => {
+      };
+      if (img && request.referer) {
+        if (img.referrerPolicy) {
+          if (img.referrerPolicy === 'origin') {
+            try {
+              props.headers.referer = (new URL(request.referer)).origin + '/';
+            }
+            catch (e) {}
+          }
+          else if (img.referrerPolicy === 'no-referrer') {
+            delete props.headers.referer;
+          }
+        }
+      }
+
+      fetch(request.src, props).then(r => {
+        if (!r.ok) {
+          throw Error('STATUS_CODE_' + r.status);
+        }
+        return r.blob();
+      }).then(blob => {
         const href = URL.createObjectURL(blob);
         port.postMessage({
           uid: request.uid,
           href
         });
       }).catch(e => {
-        try { // can we get the image from an image element
-          capture();
-        }
-        catch (ee) {
+        // try to include credentials
+        props.credentials = 'include';
+        fetch(request.src, props).then(r => {
+          if (!r.ok) {
+            throw Error('STATUS_CODE_' + r.status);
+          }
+          return r.blob();
+        }).then(blob => {
+          const href = URL.createObjectURL(blob);
           port.postMessage({
             uid: request.uid,
-            error: e.message
+            href
           });
-        }
+        }).catch(e => {
+          try { // can we get the image from an image element
+            capture();
+          }
+          catch (ee) {
+            port.postMessage({
+              uid: request.uid,
+              error: e.message
+            });
+          }
+        });
       });
     }
     else if (request.cmd === 'create-directory') {
@@ -111,5 +149,6 @@
     }
     catch (e) {}
   };
+  self.sources = new Map();
   self.onMessage = onMessage;
 }
