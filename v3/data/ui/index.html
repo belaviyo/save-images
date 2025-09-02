@@ -9,11 +9,17 @@
   <header hbox>
     <fieldset flex=1>
       <legend><span data-i18n="ui_statistics"></span> (<a data-i18n="ui_debug" data-href="debug" target="_blank"></a>) <span id="filters"></span></legend>
-      <div hbox align=center>
-        <span class="note" data-i18n="ui_total_title@title|ui_total"></span>&nbsp;<span id="total-number">0</span>,&nbsp;
-        <span class="note" data-i18n="ui_frames_title@title|ui_frames"></span>&nbsp;<span id="frames-number">1</span>,&nbsp;
-        <span class="note" data-i18n="ui_images_title@title|ui_images"></span>&nbsp;<span id="images-number">0</span>,&nbsp;
-        <span class="note" data-i18n="ui_saving_title@title|ui_saving"></span>&nbsp;<span id="save-number">0</span>&nbsp;
+      <div id="states-container">
+        <div>
+          <span class="note" data-i18n="ui_total_title@title|ui_total"></span>
+          <span id="total-number">0</span>
+          <span class="note" data-i18n="ui_frames_title@title|ui_frames"></span>
+          <span id="frames-number">1</span>
+          <span class="note" data-i18n="ui_images_title@title|ui_images"></span>
+          <span id="images-number">0</span>
+          <span class="note" data-i18n="ui_saving_title@title|ui_saving"></span>
+          <span id="save-number">0</span>
+        </div>
         <progress id="progress" value="0" max="100" flex="1" data-visible=false></progress>
       </div>
     </fieldset>

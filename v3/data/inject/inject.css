@@ -3,12 +3,12 @@
     --width: 750px;
     --height: 650px;
 
-    padding: 0;
-    margin: auto;
-    border: none;
-    background-color: #eee;
-    width: min(90vw, var(--width));
-    height: min(80vh, var(--height));
+    padding: 0 !important;
+    margin: auto !important;
+    border: none !important;
+    background-color: #eee !important;
+    width: min(90vw, var(--width)) !important;
+    height: min(80vh, var(--height)) !important;
     display: flex;
   }
   dialog.daimages::backdrop {

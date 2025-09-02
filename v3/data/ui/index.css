@@ -132,6 +132,25 @@ a {
   text-decoration: none;
 }
 
+#states-container {
+  display: grid;
+  grid-template-columns: min-content 1fr;
+  white-space: nowrap;
+  align-items: center;
+  grid-gap: 10px;
+
+  progress {
+    width: 100%;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  #states-container {
+    grid-template-columns: 1fr;
+    grid-gap: 5px;
+  }
+}
+
 .indent {
   padding-left: 10px;
 }
