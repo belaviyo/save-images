@@ -319,6 +319,12 @@ ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
   else if (request.cmd === 'alternative-image-may-work') {
     ui.contentWindow.commands(request);
   }
+  else if (request.cmd === 'reset-badge') {
+    chrome.action.setBadgeText({
+      tabId,
+      text: ''
+    });
+  }
 };
 
 const communication = (request, frameId) => {

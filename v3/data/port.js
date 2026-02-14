@@ -135,6 +135,9 @@
       }
       catch (e) {}
       if (request.remove) {
+        port.postMessage({
+          cmd: 'reset-badge'
+        });
         for (const e of document.querySelectorAll('dialog.daimages')) {
           e.remove();
         }

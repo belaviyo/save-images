@@ -601,6 +601,7 @@ document.addEventListener('click', ({target}) => {
   if (cmd === 'save' || cmd === 'save-dir') {
     document.querySelector('[data-cmd=save]').disabled = true;
     document.querySelector('[data-cmd=save-dir]').disabled = true;
+    document.body.classList.remove('stopped');
 
     const obj = Object.assign(build(), {
       cmd: 'save-images',
