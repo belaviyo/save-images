@@ -140,6 +140,9 @@
   "ui_separate": {
     "message": "Download each image separately (slow)"
   },
+  "ui_parent": {
+    "message": "Include a parent directory when creating the ZIP archive"
+  },
   "ui_accurate": {
     "message": "Confirm mime-types and guess filenames from server (slow) (restart required)"
   },

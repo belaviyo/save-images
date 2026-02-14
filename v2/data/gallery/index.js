@@ -167,6 +167,7 @@ document.addEventListener('click', e => {
         cmd: 'save-images',
         custom: resp.custom,
         filename: resp.filename,
+        parent: resp.parent,
         images,
         saveAs: resp.saveAs,
         zip: resp.zip

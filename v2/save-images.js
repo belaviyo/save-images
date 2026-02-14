@@ -155,7 +155,7 @@ Download.prototype.one = function() {
   }
 };
 Download.prototype.download = function(obj) {
-  const {filename, zip} = this.request;
+  const {filename, zip, parent} = this.request;
   if (zip) {
     return new Promise((resolve, reject) => {
       if (this.abort) {
@@ -216,7 +216,8 @@ Download.prototype.download = function(obj) {
           });
         }
         else {
-          this.zip.add(fix(), new Uint8Array(req.response)).then(() => pause('download')).then(resolve, reject);
+          this.zip.add([parent, fix()], new Uint8Array(req.response))
+            .then(() => pause('download')).then(resolve, reject);
         }
         chrome.declarativeNetRequest.updateDynamicRules({removeRuleIds: [id]});
       };
