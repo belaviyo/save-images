@@ -49,6 +49,7 @@ const elements = {
     dimension: document.getElementById('group-dimension'),
     zip: document.getElementById('group-zip'),
     readme: document.getElementById('add-readme'),
+    parent: document.getElementById('add-parent'),
     accurate: document.getElementById('accurate'),
     calc: document.getElementById('calc'),
     type: document.getElementById('group-type'),
@@ -152,7 +153,7 @@ function build() {
 
   return {
     filename,
-    parent: title,
+    parent: elements.group.parent.checked ? title?.replace(/\//g, '_') : undefined,
     images,
     saveAs: elements.save.dialog.checked,
     get zip() {

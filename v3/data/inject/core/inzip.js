@@ -215,6 +215,8 @@ class InZIP {
     await this.write('dir-data', this.ab(dirRecord));
   }
   async add(path, uint8a) {
+    path = path.filter(Boolean);
+
     // mkdir directories
     for (let n = 0; n < path.length - 1; n += 1) {
       await this.mkdir(path.slice(0, n + 1).join('/'));

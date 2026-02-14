@@ -156,7 +156,7 @@ class ZIP {
   async perform(request) {
     try {
       // Leading directory
-      const parent = request.parent || request.filename.split('/').at(-1).replace('.zip', '');
+      const parent = request.parent;
       const zip = new InZIP();
       await zip.open();
 

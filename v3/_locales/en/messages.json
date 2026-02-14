@@ -158,6 +158,9 @@
   "ui_readme": {
     "message": "Generate README.txt file while downloading"
   },
+  "ui_parent": {
+    "message": "Include a parent directory when creating the ZIP archive"
+  },
   "ui_accurate": {
     "message": "Confirm mime-types and guess filenames from server"
   },
