@@ -52,6 +52,7 @@ class InZIP {
     };
     this.fileOffset = 0;
     this.fileCount = 0;
+    this.dirs = new Set();
   }
   ab(binary) {
     const bytes = new Uint8Array(binary.length);
@@ -174,8 +175,52 @@ class InZIP {
     }
     return crc ^ (-1);
   }
-  async add(filename, uint8a) {
-    filename = this.utf8encode(filename);
+  async mkdir(dirname) {
+    if (!dirname.endsWith('/')) {
+      dirname += '/';
+    }
+    if (this.dirs.has(dirname)) {
+      return;
+    }
+
+    dirname = this.utf8encode(dirname);
+    this.fileCount += 1;
+
+    // Local file header (no compression, zero sizes)
+    const header = '\x0A\x00\x00\x00\x00\x00' +
+      this.decToHex(this.time(), 2) +
+      this.decToHex(this.date(), 2) +
+      '\x00\x00\x00\x00' + // CRC
+      '\x00\x00\x00\x00' + // compressed size
+      '\x00\x00\x00\x00' + // uncompressed size
+      this.decToHex(dirname.length, 2) +
+      '\x00\x00'; // extra length
+
+    const fd = this.ab('\x50\x4b\x03\x04' + header + dirname);
+    await this.write('file-data', fd);
+
+    // Central directory record (46 bytes fixed structure)
+    const dirRecord =
+      '\x50\x4b\x01\x02' + // central file header signature
+      '\x14\x00' + // version made by
+      header + // reuse local header core
+      '\x00\x00' + // file comment length
+      '\x00\x00' + // disk number start
+      '\x00\x00' + // internal file attributes
+      this.decToHex(0x10, 4) + // external file attributes (directory flag)
+      this.decToHex(this.fileOffset, 4) +
+      dirname;
+
+    this.fileOffset += fd.byteLength;
+    await this.write('dir-data', this.ab(dirRecord));
+  }
+  async add(path, uint8a) {
+    // mkdir directories
+    for (let n = 0; n < path.length - 1; n += 1) {
+      await this.mkdir(path.slice(0, n + 1).join('/'));
+    }
+
+    const filename = this.utf8encode(path.join('/'));
 
     this.fileCount += 1;
     const header = '\x0A\x00\x00\x08\x00\x00' +

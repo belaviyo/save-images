@@ -155,6 +155,8 @@ class ZIP {
   }
   async perform(request) {
     try {
+      // Leading directory
+      const parent = request.parent || request.filename.split('/').at(-1).replace('.zip', '');
       const zip = new InZIP();
       await zip.open();
 
@@ -169,7 +171,7 @@ Name, Link
 ----------
 ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
 `;
-        await zip.add('README.txt', new TextEncoder().encode(content));
+        await zip.add([parent, 'README.txt'], new TextEncoder().encode(content));
       }
 
       await perform(request, async (filename, image) => {
@@ -182,7 +184,7 @@ ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
           filename += '.txt';
         }
         const u = new Uint8Array(content);
-        return zip.add(filename, u);
+        return zip.add([parent, filename], u);
       });
 
       await zip.blob().then(blob => {

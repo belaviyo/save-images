@@ -120,7 +120,7 @@ const elements = {
 };
 
 const domain = elements.save.directory.value = new URL(args.get('href')).hostname;
-const title = args.get('title');
+const title = args.get('title') || 'Unknown Page Title';
 
 const images = {};
 let total = 0;
@@ -152,6 +152,7 @@ function build() {
 
   return {
     filename,
+    parent: title,
     images,
     saveAs: elements.save.dialog.checked,
     get zip() {

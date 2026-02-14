@@ -140,6 +140,7 @@ document.addEventListener('click', e => {
       parent.commands({
         cmd: 'save-images',
         custom: resp.custom,
+        parent: resp.parent,
         filename: resp.filename,
         images,
         saveAs: resp.saveAs,
