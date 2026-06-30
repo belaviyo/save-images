@@ -75,7 +75,9 @@ chrome.storage.local.get({
   width: 750,
   height: 650
 }, ({width, height}) => {
+  // use display block to overwrite site's hiding them; https://www.vinted.com/
   window.iframe.setAttribute('style', `
+    display: block !important;
     border: none;
     position: fixed;
     top: 0;
