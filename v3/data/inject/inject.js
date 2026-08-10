@@ -18,12 +18,10 @@ for (const e of document.querySelectorAll('dialog.daimages')) {
 {
   const dialog = document.createElement('dialog');
   dialog.classList.add('daimages');
-  dialog.onclose = dialog.onclick = () => {
-    self.onMessage({
-      cmd: 'stop-collector',
-      remove: true
-    });
-  };
+  dialog.onclose = dialog.onclick = () => chrome.runtime.sendMessage({
+    cmd: 'stop-collector',
+    remove: true
+  });
 
   const iframe = document.createElement('iframe');
   dialog.append(iframe);

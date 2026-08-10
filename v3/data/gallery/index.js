@@ -28,6 +28,20 @@ const progress = document.getElementById('progress');
 
 let resp;
 
+self.progress = value => {
+  progress.value = progress.max - value;
+};
+
+chrome.runtime.onMessage.addListener((request, sender) => {
+  if (sender.tab) {
+    return;
+  }
+
+  if (request.cmd === 'progress') {
+    self.progress(request.value);
+  }
+});
+
 const notify = msg => {
   try {
     parent.toast(msg);
@@ -118,9 +132,7 @@ document.addEventListener('click', e => {
     document.dispatchEvent(new Event('change'));
   }
   else if (cmd === 'download' || cmd === 'copy') {
-    parent.commands({
-      cmd: 'stop'
-    });
+    parent.stopping();
 
     const images = [...document.querySelectorAll('.entry :checked')].map(i => {
       const div = i.closest('label');
@@ -137,7 +149,7 @@ document.addEventListener('click', e => {
       progress.dataset.visible = true;
       progress.max = images.length;
 
-      parent.commands({
+      parent.save({
         cmd: 'save-images',
         custom: resp.custom,
         parent: resp.parent,
@@ -194,15 +206,6 @@ document.addEventListener('change', () => {
 document.addEventListener('input', e => {
   e.target.dataset.modified = e.target.value ? true : false;
 });
-
-window.commands = request => {
-  if (request.cmd === 'progress') {
-    progress.value = progress.max - request.value;
-  }
-  else if (request.cmd === 'close-me') {
-    progress.dataset.visible = false;
-  }
-};
 
 {
   const init = r => {

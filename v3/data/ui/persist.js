@@ -8,7 +8,7 @@
  * GitHub: https://github.com/belaviyo/save-images/
  */
 
-/* global search, accurate, elements, tabId */
+/* global search, accurate, elements, tabId, messenger, button */
 'use strict';
 
 const persist = {};
@@ -120,9 +120,9 @@ document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get({
 
   // install network
   if (elements.group.cors.checked) {
-    chrome.declarativeNetRequest.updateSessionRules({
-      removeRuleIds: [tabId],
-      addRules: [{
+    chrome.runtime.sendMessage({
+      cmd: 'update-session-rules',
+      rules: [{
         'id': tabId,
         'priority': 1,
         'action': {
@@ -141,19 +141,31 @@ document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get({
           'tabIds': [tabId]
         }
       }]
-    }, search);
+    }).then(r => {
+      if (r && r.error) {
+        parent.toast(r.error);
+      }
+      else {
+        search();
+      }
+    });
   }
   else {
     search();
   }
 }));
 
-document.addEventListener('click', ({target}) => {
+document.addEventListener('click', async ({target}) => {
   const cmd = target.dataset.cmd;
   if (cmd === 'reset' && window.confirm('Are you sure you want to reset all the settings to the defaults?')) {
-    chrome.storage.local.remove('persist', () => parent.commands({
-      cmd: 'reload-me'
-    }));
+    await chrome.storage.local.remove('persist');
+    parent.button.badge('');
+    await chrome.runtime.sendMessage({
+      cmd: 'stop-collector',
+      remove: false,
+      response: true
+    });
+    location.reload();
   }
   if (cmd === 'delete-profile') {
     const n = profiles.findIndex(o => o.value === elements.profiles.select.value);

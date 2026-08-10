@@ -40,7 +40,10 @@ chrome.tabs.onRemoved.addListener(tabId => chrome.declarativeNetRequest.updateSe
 }).catch(() => {}));
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
-  if (request.cmd === 'apply-referer') {
+  if (request.cmd === 'notify') {
+    notify(request.message);
+  }
+  else if (request.cmd === 'apply-referer') {
     try {
       const id = Math.floor(Math.random() * 1000000);
       const rule = {
@@ -102,6 +105,166 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 
       return true;
     }
+  }
+  else if (request.cmd === 'set-badge') {
+    chrome.action.setBadgeText({
+      tabId: sender.tab.id,
+      text: request.text
+    });
+  }
+  else if (request.cmd === 'install-collector') {
+    /* collect images */
+    (async () => {
+      // install collector on all frames
+      try {
+        const target = {
+          tabId: sender.tab.id,
+          allFrames: request.allFrames
+        };
+        await chrome.scripting.executeScript({
+          target,
+          injectImmediately: true,
+          files: ['/data/fetch.js']
+        });
+        await chrome.scripting.executeScript({
+          target,
+          injectImmediately: true,
+          files: ['/data/utils.js']
+        });
+        await chrome.scripting.executeScript({
+          target,
+          injectImmediately: true,
+          files: ['/data/collector.js']
+        });
+
+        await chrome.scripting.executeScript({
+          target,
+          injectImmediately: true,
+          files: ['/data/size.js']
+        });
+        await chrome.scripting.executeScript({
+          target,
+          injectImmediately: true,
+          func: (deep, accuracy, regexp, custom, cframe, sframe) => {
+            // do not crawl cross-origin frames
+            if (cframe && parent !== window) {
+              try {
+                parent.location.href;
+              }
+              catch (e) {
+                return;
+              }
+            }
+            if (sframe && parent !== window) {
+              try {
+                parent.location.href;
+                return;
+              }
+              catch (e) {}
+            }
+
+            self.deep = deep;
+            self.accuracy = accuracy || 'partial-accurate';
+            self.custom = custom || 'id';
+
+            try {
+              if (regexp && typeof regexp === 'string') {
+                window.regexp = [new RegExp(regexp)];
+              }
+              if (regexp && Array.isArray(regexp)) {
+                window.regexp = regexp.map(r => new RegExp(r));
+              }
+            }
+            catch (e) {
+              console.warn('cannot use the provided JSON rules', e);
+            }
+
+            self.collector.loop();
+          },
+          args: request.args
+        });
+
+        response(true);
+      }
+      catch (e) {
+        console.warn(e);
+        response({error: e.message});
+      }
+    })();
+    return true;
+  }
+  else if (request.cmd === 'file-picker-available') {
+    chrome.scripting.executeScript({
+      target: {
+        tabId: sender.tab.id
+      },
+      injectImmediately: true,
+      func: () => 'showDirectoryPicker' in window
+    }).then(a => response(a[0].result));
+    return true;
+  }
+  else if (request.cmd === 'remove-session-rules') {
+    chrome.declarativeNetRequest.updateSessionRules({
+      removeRuleIds: [sender.tab.id]
+    }).catch(() => {});
+  }
+  else if (request.cmd === 'update-session-rules') {
+    chrome.declarativeNetRequest.updateSessionRules({
+      removeRuleIds: [sender.tab.id],
+      addRules: [{
+        'id': sender.tab.id,
+        'priority': 1,
+        'action': {
+          type: 'modifyHeaders',
+          responseHeaders: [{
+            'operation': 'set',
+            'header': 'access-control-allow-origin',
+            'value': '*'
+          }, {
+            'operation': 'remove',
+            'header': 'referrer-policy'
+          }]
+        },
+        'condition': {
+          'resourceTypes': ['xmlhttprequest', 'image'],
+          'tabIds': [sender.tab.id]
+        }
+      }]
+    }).then(() => response(true)).catch(e => response({
+      error: e.message
+    }));
+  }
+  else if (request.cmd === 'native-download') {
+    chrome.downloads.download(request.options).catch(e => {
+      request.options.filename = request.filename;
+      return chrome.downloads.download(request.options);
+    }).then(id => response(id)).catch(e => response({
+      error: e.message
+    }));
+
+    return true;
+  }
+  /* send to page */
+  else if ([
+    'progress', 'images', 'links', 'new-frame', 'alternative-image-may-work', 'stop-collector'
+  ].includes(request.cmd)) {
+    chrome.tabs.sendMessage(sender.tab.id, request);
+  }
+  /* send to core */
+  else if (['create-directory', 'image-to-directory'].includes(request.cmd)) {
+    chrome.tabs.sendMessage(sender.tab.id, request, {
+      frameId: 0
+    }).then(response);
+
+    return true;
+  }
+  /* send to frame */
+  else if (['download-image'].includes(request.cmd)) {
+    chrome.tabs.sendMessage(sender.tab.id, request, {
+      frameId: request.frameId
+    }).then(response);
+
+    return true;
   }
 });
 

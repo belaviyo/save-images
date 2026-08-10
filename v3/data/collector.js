@@ -10,7 +10,7 @@
 
 /* eslint no-var: 0 */
 
-/* global type, size, post, utils, sources */
+/* global type, size, utils */
 
 /*
   accuracy: accurate -> force calculate size, width, height
@@ -20,7 +20,7 @@
 
 'use strict';
 
-var collector = {
+var collector = self.collector = {
   'active': true,
   'feeds': { // all kind of detected links (1: images, 2: same origin, 3: misc)
     '1': [],
@@ -33,24 +33,24 @@ var collector = {
   'cache': new Set() // all links that have already been evaluated
 };
 
-var report = () => {
-  post({
-    cmd: 'progress',
-    value: collector.feeds['1'].length + collector.feeds['2'].length + collector.feeds['3'].length +
-      collector['raw-images'].length +
-      collector.docs.length
-  });
-};
+var report = () => chrome.runtime.sendMessage({
+  cmd: 'progress',
+  value: collector.feeds['1'].length + collector.feeds['2'].length + collector.feeds['3'].length +
+    collector['raw-images'].length +
+    collector.docs.length
+});
+
+var sources = new Map();
 
 collector.events = {
   image(o) { // called when new image is listed
-    post({
+    chrome.runtime.sendMessage({
       cmd: 'images',
       images: [o]
     });
   },
   feed(length) { // called when a new link is listed
-    post({
+    chrome.runtime.sendMessage({
       cmd: 'links',
       filters: (window.regexp || []).length,
       length
@@ -90,8 +90,8 @@ collector.meta = async function(o) {
   }
 
   const conds = [
-    (window.accuracy === 'accurate' || window.accuracy === 'partial-accurate') && !o.width, // we will later run width and height detection
-    (window.accuracy !== 'accurate' || o.size)
+    (self.accuracy === 'accurate' || self.accuracy === 'partial-accurate') && !o.width, // we will later run width and height detection
+    (self.accuracy !== 'accurate' || o.size)
   ];
   if (im && conds.some(a => a)) {
     return im;
@@ -149,6 +149,10 @@ collector.inspect = async function(doc, loc, name, policies) {
 
   // find images; part 1/4
   for (const doc of docs) {
+    chrome.runtime.sendMessage({
+      cmd: 'new-frame'
+    });
+
     const images = doc.images || doc.querySelectorAll('img');
     for (const img of [...images]) {
       //  The "data-src" attribute is commonly used for lazy-loading images
@@ -160,9 +164,9 @@ collector.inspect = async function(doc, loc, name, policies) {
         height: img.naturalHeight,
         src,
         alt: img.alt,
-        custom: img.getAttribute(window.custom) || '',
+        custom: img.getAttribute(self.custom) || '',
         // if image is verified, we dont have the image size. on accurate mode set it to false
-        verified: window.accuracy === 'accurate' ? false : true,
+        verified: self.accuracy === 'accurate' ? false : true,
         page: loc.href,
         meta: {
           origin: name + ' - document.images',
@@ -176,9 +180,9 @@ collector.inspect = async function(doc, loc, name, policies) {
         collector.push({
           src: img.src,
           alt: img.alt,
-          custom: img.getAttribute(window.custom) || '',
+          custom: img.getAttribute(self.custom) || '',
           // if image is verified, we dont have the image size. on accurate mode set it to false
-          verified: window.accuracy === 'accurate' ? false : true,
+          verified: self.accuracy === 'accurate' ? false : true,
           page: loc.href,
           meta: {
             origin: name + ' - document.images',
@@ -268,9 +272,9 @@ collector.inspect = async function(doc, loc, name, policies) {
       collector.push({
         src,
         alt: image.alt,
-        custom: image.getAttribute(window.custom) || '',
+        custom: image.getAttribute(self.custom) || '',
         // if image is verified, we dont have the image size. on accurate mode set it to false
-        verified: window.accuracy === 'accurate' ? false : true,
+        verified: self.accuracy === 'accurate' ? false : true,
         page: loc.href,
         meta: {
           origin: name + ' - svg.images',
@@ -320,7 +324,7 @@ collector.inspect = async function(doc, loc, name, policies) {
     }
   }
   // find linked images; part 3
-  if (window.deep > 0 && policies.links) {
+  if (self.deep > 0 && policies.links) {
     for (const doc of docs) {
       [...doc.querySelectorAll('a')].map(a => a.href).forEach(src => collector.push({
         src,
@@ -332,7 +336,7 @@ collector.inspect = async function(doc, loc, name, policies) {
     }
   }
   // find hard-coded links; part 4
-  if (window.deep > 0 && policies.extract) {
+  if (self.deep > 0 && policies.extract) {
     for (const doc of docs) {
       // "textContent" can extract data from input elements
       const content = (doc.documentElement?.innerHTML || '') + '\n\n' + doc.textContent;
@@ -364,7 +368,7 @@ collector.inspect = async function(doc, loc, name, policies) {
             width: 1,
             height: 1,
             src: a.href,
-            custom: a.getAttribute(window.custom) || '',
+            custom: a.getAttribute(self.custom) || '',
             // if image is verified, we dont have the image size. on accurate mode set it to false
             verified: true,
             page: loc.href,
@@ -431,7 +435,7 @@ collector.push = function(o) {
 collector.position = 0;
 
 collector.addImage = function(o) {
-  if (window.accuracy === 'accurate' || window.accuracy === 'partial-accurate') {
+  if (self.accuracy === 'accurate' || self.accuracy === 'partial-accurate') {
     if (!o.width) {
       collector['raw-images'].push(o);
       collector.head();
@@ -489,7 +493,7 @@ collector.head = async function() {
     catch (e) {
       // report resolving by alternative method. The user might need to toggle the "referer" header
       if (e.message === 'STATUS_CODE_403') {
-        post({
+        chrome.runtime.sendMessage({
           cmd: 'alternative-image-may-work'
         });
       }
@@ -589,7 +593,7 @@ collector.document = function(o) {
     return;
   }
   // do not parse sub documents
-  if (window.deep > 1 && o.meta.origin.startsWith('one')) {
+  if (self.deep > 1 && o.meta.origin.startsWith('one')) {
     collector.docs.push(o);
 
     collector.dig();
@@ -628,14 +632,14 @@ collector.dig = async function() {
         base.href = o.src;
         doc.head.appendChild(base);
 
-        post({
+        chrome.runtime.sendMessage({
           cmd: 'new-frame'
         });
 
         await collector.inspect(doc, new URL(o.src), 'two', {
-          bg: window.deep === 3,
-          links: window.deep === 3,
-          extract: window.deep === 3
+          bg: self.deep === 3,
+          links: self.deep === 3,
+          extract: self.deep === 3
         });
 
         collector.validate();
@@ -670,3 +674,138 @@ collector.loop = async function() {
   collector.validate();
   collector.validate();
 };
+
+{
+  const observe = (request, sender, response) => {
+    if (request.cmd === 'stop-collector') {
+      collector.active = false;
+
+      if (request.remove && window.top === window) {
+        chrome.runtime.sendMessage({
+          cmd: 'set-badge',
+          text: ''
+        });
+        for (const e of document.querySelectorAll('dialog.daimages')) {
+          e.remove();
+        }
+        chrome.runtime.onMessage.removeListener(observe);
+      }
+    }
+
+    /* from background only */
+    if (sender.tab) {
+      return;
+    }
+    if (request.cmd === 'create-directory') {
+      window.showDirectoryPicker().then(async d => {
+        self.directory = d;
+        if (request.readme) {
+          const file = await d.getFileHandle(request.name, {
+            create: true
+          });
+          const writable = await file.createWritable();
+          const blob = new Blob([request.content], {
+            type: 'text/plain'
+          });
+          const response = new Response(blob);
+          await response.body.pipeTo(writable);
+        }
+
+        response(true);
+      }).catch(e => response({error: e.message}));
+      return true;
+    }
+    else if (request.cmd === 'image-to-directory') {
+      Promise.all([
+        fetch(request.href),
+        self.directory.getFileHandle(request.filename, {
+          create: true
+        }).then(file => file.createWritable())
+      ]).then(async ([r, writable]) => {
+        await writable.truncate(0);
+        await r.body.pipeTo(writable);
+
+        response(true);
+      }).catch(e => {
+        console.error(e);
+        response({
+          error: e.message
+        });
+      }).finally(() => URL.revokeObjectURL(request.href));
+
+      return true;
+    }
+    else if (request.cmd === 'download-image') {
+      const img = sources.get(request.src);
+
+      // try to find the image on page and download it (it is useful specially if the image src is a dead blob)
+      const capture = () => {
+        const e = img || document.querySelector(`img[src="${request.src}"]`);
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = e.naturalWidth;
+        canvas.height = e.naturalHeight;
+
+        ctx.drawImage(e, 0, 0, e.naturalWidth, e.naturalHeight);
+        return canvas.toDataURL();
+      };
+
+      const props = {
+        headers: {
+          referer: request.referer
+        }
+      };
+      if (img && request.referer) {
+        if (img.referrerPolicy) {
+          if (img.referrerPolicy === 'origin') {
+            try {
+              props.headers.referer = (new URL(request.referer)).origin + '/';
+            }
+            catch (e) {}
+          }
+          else if (img.referrerPolicy === 'no-referrer') {
+            delete props.headers.referer;
+          }
+        }
+      }
+
+      fetch(request.src, props).then(r => {
+        if (!r.ok) {
+          throw Error('STATUS_CODE_' + r.status);
+        }
+        return r.blob();
+      }).catch(e => {
+        // try to include credentials
+        props.credentials = 'include';
+        return fetch(request.src, props).then(r => {
+          if (!r.ok) {
+            throw Error('STATUS_CODE_' + r.status);
+          }
+          return r.blob();
+        });
+      }).then(blob => {
+        if (request.type === 'blob') {
+          response(URL.createObjectURL(blob));
+        }
+        // Security Error: Content at moz-extension://.../core/index.html may not load data from blob:http://...
+        else {
+          const reader = new FileReader();
+          reader.onload = () => response(reader.result);
+          reader.readAsDataURL(blob);
+        }
+      }).catch(e => {
+        // can we get the image from an image element
+        capture().then(response).catch(e => response({
+          error: e.message
+        }));
+      });
+      return true;
+    }
+  };
+  chrome.runtime.onMessage.addListener(observe);
+}
+
+// eslint-disable-next-line semi
+''

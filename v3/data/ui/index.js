@@ -22,6 +22,8 @@
 
 const args = new URLSearchParams(location.search);
 const tabId = Number(args.get('tabId'));
+let frames = 0;
+let errors = 0;
 
 // When confirm is not allowed, return true; https://www.pixiv.net/en/artworks/88641171
 const vconfirm = msg => {
@@ -125,7 +127,6 @@ const title = args.get('title') || 'Unknown Page Title';
 
 const images = {};
 let total = 0;
-let errors = 0;
 
 function build() {
   const custom = elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_');
@@ -361,23 +362,43 @@ function update() {
     elements.counter.save.textContent = filtered().length;
   document.querySelector('[data-cmd=save]').disabled = index === 0;
 
-  chrome.scripting.executeScript({
-    target: {
-      tabId
-    },
-    injectImmediately: true,
-    func: () => 'showDirectoryPicker' in window
-  }).then(a => {
-    document.querySelector('[data-cmd=save-dir]').disabled = a[0].result === false;
+  chrome.runtime.sendMessage({
+    cmd: 'file-picker-available'
+  }).then(b => {
+    document.querySelector('[data-cmd=save-dir]').disabled = !b;
   });
 
   document.querySelector('[data-cmd=copy]').disabled = index === 0;
   document.querySelector('[data-cmd=gallery]').disabled = index === 0;
 }
 
-let frames = 1;
-window.commands = request => {
-  if (request.cmd === 'images') {
+self.progress = value => {
+  elements.counter.progress.dataset.visible = value !== 0;
+  elements.counter.progress.value = elements.counter.progress.max - value;
+};
+self.release = () => {
+  document.querySelector('[data-cmd=save]').disabled = false;
+  document.querySelector('[data-cmd=save-dir]').disabled = false;
+};
+
+chrome.runtime.onMessage.addListener((request, sender, response) => {
+  // open gallery view on a separate window
+  if (request.cmd === 'build') {
+    response(build());
+  }
+
+  if (sender.tab) {
+    return;
+  }
+
+  if (request.cmd === 'progress') { // for downloading
+    self.progress(request.value);
+  }
+  else if (request.cmd === 'new-frame') {
+    frames += 1;
+    elements.counter.frames.textContent = frames;
+  }
+  else if (request.cmd === 'images') {
     request.images.filter(img => img.type.startsWith('image/')).forEach(img => {
       if (images[img.src]) {
         return;
@@ -387,6 +408,9 @@ window.commands = request => {
       }
       catch (e) {}
       img.hostname = img.hostname || 'local';
+
+      // we need to use the same frame to fetch the content later
+      img.frameId = sender.frameId;
 
       const {filename, name} = utils.guess(img, elements.files.mask.value, elements.type.noType.checked);
 
@@ -401,10 +425,6 @@ window.commands = request => {
     });
     update();
   }
-  else if (request.cmd === 'progress') { // for downloading
-    elements.counter.progress.dataset.visible = request.value !== 0;
-    elements.counter.progress.value = elements.counter.progress.max - request.value;
-  }
   else if (request.cmd === 'links') {
     total += request.length;
     elements.counter.total.textContent = total;
@@ -415,21 +435,6 @@ window.commands = request => {
   }
   else if (request.cmd === 'alternative-image-may-work') {
     errors += 1;
-  }
-  else if (request.cmd === 'release') {
-    document.querySelector('[data-cmd=save]').disabled = false;
-    document.querySelector('[data-cmd=save-dir]').disabled = false;
-  }
-  else if (request.cmd === 'new-frame') {
-    frames += 1;
-    elements.counter.frames.textContent = frames;
-  }
-};
-
-chrome.runtime.onMessage.addListener((request, sender, response) => {
-  // open gallery view on a separate window
-  if (request.cmd === 'build') {
-    response(build());
   }
 });
 
@@ -466,7 +471,7 @@ const filename = () => {
 };
 elements.save.format.addEventListener('input', filename);
 
-const search = () => {
+const search = async () => {
   // filename
   filename();
 
@@ -485,105 +490,34 @@ const search = () => {
 
   /* collect images */
   let regexp = '';
-  chrome.storage.local.get({
+  const prefs = await chrome.storage.local.get({
     'json': {}
-  }, async prefs => {
-    for (const r of Object.keys(prefs.json)) {
-      try {
-        if ((new RegExp(r)).test(args.get('href'))) {
-          regexp = prefs.json[r];
-          break;
-        }
-      }
-      catch (e) {}
-    }
-    // install collector on all frames
-    try {
-      const target = {
-        tabId,
-        allFrames: elements.group.cframe.checked && elements.group.sframe.checked ? false : true
-      };
-      await chrome.scripting.executeScript({
-        target,
-        injectImmediately: true,
-        files: ['/data/fetch.js']
-      });
-      await chrome.scripting.executeScript({
-        target,
-        injectImmediately: true,
-        files: ['/data/utils.js']
-      });
-      await chrome.scripting.executeScript({
-        target,
-        injectImmediately: true,
-        files: ['/data/port.js']
-      });
-
-      await chrome.scripting.executeScript({
-        target,
-        injectImmediately: true,
-        files: ['/data/collector.js']
-      });
-
-      await chrome.scripting.executeScript({
-        target,
-        injectImmediately: true,
-        files: ['/data/size.js']
-      });
-
-      await chrome.scripting.executeScript({
-        target,
-        injectImmediately: true,
-        func: (deep, accuracy, regexp, custom, cframe, sframe) => {
-          // do not crawl cross-origin frames
-          if (cframe && parent !== window) {
-            try {
-              parent.location.href;
-            }
-            catch (e) {
-              return;
-            }
-          }
-          if (sframe && parent !== window) {
-            try {
-              parent.location.href;
-              return;
-            }
-            catch (e) {}
-          }
-
-          window.deep = deep;
-          window.accuracy = accuracy || 'partial-accurate';
-          window.custom = custom || 'id';
-
-          try {
-            if (regexp && typeof regexp === 'string') {
-              window.regexp = [new RegExp(regexp)];
-            }
-            if (regexp && Array.isArray(regexp)) {
-              window.regexp = regexp.map(r => new RegExp(r));
-            }
-          }
-          catch (e) {
-            console.warn('cannot use the provided JSON rules', e);
-          }
-          window.collector.loop();
-        },
-        args: [
-          elements.deep.level.valueAsNumber,
-          accuracy,
-          regexp,
-          custom,
-          elements.group.cframe.checked,
-          elements.group.sframe.checked
-        ]
-      });
-    }
-    catch (e) {
-      console.warn(e);
-      alert(e.message);
-    }
   });
+  for (const r of Object.keys(prefs.json)) {
+    try {
+      if ((new RegExp(r)).test(args.get('href'))) {
+        regexp = prefs.json[r];
+        break;
+      }
+    }
+    catch (e) {}
+  }
+
+  const resp = await chrome.runtime.sendMessage({
+    cmd: 'install-collector',
+    allFrames: elements.group.cframe.checked && elements.group.sframe.checked ? false : true,
+    args: [
+      elements.deep.level.valueAsNumber,
+      accuracy,
+      regexp,
+      custom,
+      elements.group.cframe.checked,
+      elements.group.sframe.checked
+    ]
+  });
+  if (resp && resp.error) {
+    parent.toast(resp.error);
+  }
 };
 
 elements.deep.level.addEventListener('change', search);
@@ -593,9 +527,7 @@ document.addEventListener('click', ({target}) => {
   const cmd = target.dataset.cmd;
   if (cmd === 'stop' || cmd === 'save' || cmd === 'save-dir') {
     document.body.classList.add('stopped');
-    parent.commands({
-      cmd: 'stop'
-    });
+    parent.stopping();
     elements.counter.progress.dataset.visible = false;
   }
   //
@@ -616,7 +548,8 @@ document.addEventListener('click', ({target}) => {
     const save = () => {
       elements.counter.progress.value = 0;
       elements.counter.progress.max = len;
-      parent.commands(obj);
+
+      parent.save(obj);
     };
     if (len > elements.prefs.max.valueAsNumber && cmd === 'save') {
       if (vconfirm(`Are you sure you want to download "${len}" images?`)) {

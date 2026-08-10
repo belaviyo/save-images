@@ -127,3 +127,6 @@ size.jpg = uint8a => {
     offset += i + 2;
   }
 };
+
+// eslint-disable-next-line semi
+''
