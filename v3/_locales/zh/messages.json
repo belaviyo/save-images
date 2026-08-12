@@ -23,9 +23,6 @@
     "gallery_rename": {
         "message": "重命名"
     },
-    "gallery_pattern": {
-        "message": "image-[#=1][extension]"
-    },
     "ui_statistics": {
         "message": "统计"
     },

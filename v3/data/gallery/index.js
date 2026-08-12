@@ -251,3 +251,15 @@ document.addEventListener('input', e => {
     init(resp);
   }
 }
+
+// pattern
+{
+  const e = document.getElementById('pattern');
+  chrome.storage.local.get({
+    'gallery-pattern': 'image-[#=1][extension]'
+  }).then(prefs => e.value = prefs['gallery-pattern']);
+
+  e.onchange = () => chrome.storage.local.set({
+    'gallery-pattern': e.value
+  });
+}
