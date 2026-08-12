@@ -844,9 +844,14 @@ collector.observe = (request, sender, response) => {
       }
     }).catch(e => {
       // can we get the image from an image element
-      capture().then(response).catch(e => response({
-        error: e.message
-      }));
+      try {
+        response(capture());
+      }
+      catch (e) {
+        response({
+          error: e.message
+        });
+      }
     });
     return true;
   }

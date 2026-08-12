@@ -44,6 +44,7 @@ const elements = {
     frames: document.getElementById('frames-number'),
     save: document.getElementById('save-number'),
     total: document.getElementById('total-number'),
+    status: document.getElementById('status'),
     progress: document.getElementById('progress')
   },
   group: {
@@ -128,10 +129,6 @@ const title = args.get('title') || 'Unknown Page Title';
 
 const images = {};
 let total = 0;
-let done = false;
-const jobs = {
-  post: [] // run these jobs once after image collection is done
-};
 
 function build() {
   const custom = elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_');
@@ -405,7 +402,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     collectors = collectors + (request.value === 'start' ? 1 : -1);
 
     if (collectors === 0) {
-      console.info('image collection is done!');
+      elements.counter.status.textContent = 'Collection Done';
 
       if (elements.group.autosave.checked) {
         // save without asking
@@ -418,8 +415,6 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
         console.log('saving...');
         document.querySelector('[data-cmd=save]').dispatchEvent(e);
       }
-
-      done = true;
     }
   }
   else if (request.cmd === 'new-frame') {
@@ -500,6 +495,7 @@ const filename = () => {
 elements.save.format.addEventListener('input', filename);
 
 const search = async () => {
+  elements.counter.status.textContent = 'Inspecting';
   // filename
   filename();
 
@@ -531,7 +527,6 @@ const search = async () => {
     catch (e) {}
   }
 
-  done = false;
   const resp = await chrome.runtime.sendMessage({
     cmd: 'install-collector',
     allFrames: elements.group.cframe.checked && elements.group.sframe.checked ? false : true,
@@ -563,6 +558,8 @@ document.addEventListener('click', e => {
   }
   //
   if (cmd === 'save' || cmd === 'save-dir') {
+    elements.counter.status.textContent = 'Saving';
+
     document.querySelector('[data-cmd=save]').disabled = true;
     document.querySelector('[data-cmd=save-dir]').disabled = true;
     document.body.classList.remove('stopped');
@@ -580,7 +577,9 @@ document.addEventListener('click', e => {
       elements.counter.progress.value = 0;
       elements.counter.progress.max = len;
 
-      parent.save(obj, e.isTrusted);
+      parent.save(obj, e.isTrusted).then(() => {
+        elements.counter.status.textContent = 'Saved';
+      });
     };
     if (len > elements.prefs.max.valueAsNumber && cmd === 'save') {
       if (shiftKey) { // do not ask on forced requests

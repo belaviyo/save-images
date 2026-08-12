@@ -257,7 +257,7 @@ document.addEventListener('input', e => {
   const e = document.getElementById('pattern');
   chrome.storage.local.get({
     'gallery-pattern': 'image-[#=1][extension]'
-  }).then(prefs => e.value = prefs['gallery-pattern']);
+  }).then(prefs => e.value = prefs['gallery-pattern'] || 'image-[#=1][extension]');
 
   e.onchange = () => chrome.storage.local.set({
     'gallery-pattern': e.value
