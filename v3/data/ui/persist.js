@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2023 Joe Ertaba
+/* Copyright (C) 2014-2025 Joe Ertaba
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,7 @@
  * GitHub: https://github.com/belaviyo/save-images/
  */
 
-/* global search, accurate, elements, tabId, messenger, button */
+/* global search, accurate, elements, tabId */
 'use strict';
 
 const persist = {};

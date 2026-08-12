@@ -4,6 +4,7 @@
 const args = new URLSearchParams(location.search);
 const ui = document.getElementById('ui');
 const gallery = document.getElementById('gallery');
+self.isFirefox = navigator.userAgent.includes('Firefox');
 
 class ZIP {
   constructor() {
@@ -62,34 +63,50 @@ ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
   }
 }
 
-const notify = e => chrome.runtime.sendMessage({
+const runtime = {
+  sendMessage(message, origin, options) {
+    if (!origin) {
+      throw Error('origin is required');
+    }
+    if (self.isFirefox) {
+      return chrome.runtime.sendMessage(message);
+    }
+    if (origin === 'worker') {
+      return chrome.runtime.sendMessage(message);
+    }
+    return chrome.tabs.sendMessage(runtime.tabId, message, options);
+  }
+};
+runtime.tabId = Number(args.get('tabId'));
+
+const notify = e => runtime.sendMessage({
   cmd: 'notify',
   message: e.message || e
-});
+}, 'worker');
 self.toast = (msg, timeout = 750, type = 'info') => {
   document.getElementById('toast').notify(msg, type, timeout);
 };
 
 const button = self.button = {
   badge(text) {
-    chrome.runtime.sendMessage({
+    runtime.sendMessage({
       cmd: 'set-badge',
       text
-    });
+    }, 'worker');
   }
 };
 
 const closing = (badge, remove = true) => {
   button.badge(badge === 'done' ? '✓' : '');
-  chrome.runtime.sendMessage({
+  runtime.sendMessage({
     cmd: 'stop-collector',
     remove
-  });
+  }, 'page');
 
   if (remove) {
-    chrome.runtime.sendMessage({
+    runtime.sendMessage({
       cmd: 'remove-session-rules'
-    });
+    }, 'worker');
   }
 };
 
@@ -120,11 +137,11 @@ const nd = async (options, filename = 'images.zip') => {
     }
   }
   else {
-    const r = chrome.runtime.sendMessage({
+    const r = runtime.sendMessage({
       cmd: 'native-download',
       options,
       filename
-    });
+    }, 'worker');
     if (r.error) {
       throw Error(r.error);
     }
@@ -134,17 +151,21 @@ const nd = async (options, filename = 'images.zip') => {
 
 /* get content from frame if failed get from extension's context */
 const get = async (o, type = 'ab') => {
-  const href = await chrome.runtime.sendMessage({
-    cmd: 'download-image',
-    frameId: o.frameId,
-    src: o.src,
-    referer: o.page,
-    capture: false,
-    type: navigator.userAgent.includes('Firefox') ? 'datauri' : 'blob' // Firefox does not accept blob://
-  });
+  let href = o.src;
 
-  if (href.error) {
-    throw Error(href.error);
+  // skip datauri
+  if (!href || href.startsWith('data:') === false) {
+    href = await runtime.sendMessage({
+      cmd: 'download-image',
+      frameId: o.frameId,
+      src: o.src,
+      referer: o.page,
+      capture: false,
+      type: navigator.userAgent.includes('Firefox') ? 'datauri' : 'blob' // Firefox does not accept blob://
+    }, 'page', {frameId: o.frameId});
+    if (href.error) {
+      throw Error(href.error);
+    }
   }
 
   if (type === 'ab') {
@@ -212,11 +233,11 @@ const perform = async (request, one) => {
 
 self.stopping = () => {
   button.badge('');
-  chrome.runtime.sendMessage({
+  runtime.sendMessage({
     cmd: 'stop-collector',
     remove: false,
     response: true
-  });
+  }, 'worker');
 };
 
 self.save = async (request, remove = true) => {
@@ -225,7 +246,7 @@ self.save = async (request, remove = true) => {
     // save to directory
     if (request.directory) {
       try {
-        const r = await chrome.runtime.sendMessage({
+        const r = await runtime.sendMessage({
           cmd: 'create-directory',
           name: 'README.txt',
           readme: request.readme,
@@ -238,24 +259,24 @@ Name, Link
 ----------
 ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
     `
-        });
+        }, 'page', {frameId: 0});
         if (r.error) {
           throw Error(r.error);
         }
 
         await perform(request, async (filename, image) => {
           const href = await get(image, false);
-          chrome.runtime.sendMessage({
+          runtime.sendMessage({
             cmd: 'image-to-directory',
             href,
             filename
-          }).then(a => console.log(a));
+          }, 'page', {frameId: 0});
         });
         closing('done', remove);
       }
       catch (e) {
         console.error(e);
-        self.toast(e.message, 2000, 'error');
+        self.toast(e.message, 10000, 'error');
         ui.contentWindow.release();
       }
     }

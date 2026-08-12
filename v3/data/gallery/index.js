@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2023 Joe Ertaba
+/* Copyright (C) 2014-2025 Joe Ertaba
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -33,8 +33,20 @@ self.progress = value => {
 };
 
 chrome.runtime.onMessage.addListener((request, sender) => {
-  if (sender.tab) {
-    return;
+  if (parent.isFirefox) { // on Firefox only accept proxied requests from worker
+    if (sender.tab) {
+      return;
+    }
+  }
+  else { // on Chrome only accept from same tab
+    if (sender.tab) {
+      if (sender.tab.id !== tabId) {
+        return;
+      }
+    }
+    else {
+      return;
+    }
   }
 
   if (request.cmd === 'progress') {

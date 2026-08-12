@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2023 Joe Ertaba
+/* Copyright (C) 2014-2025 Joe Ertaba
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -738,12 +738,8 @@ collector.observe = (request, sender, response) => {
       chrome.runtime.onMessage.removeListener(collector.observe);
     }
   }
-
-  /* from background only */
-  if (sender.tab) {
-    return;
-  }
-  if (request.cmd === 'create-directory') {
+  // For create-directory, we cannot redirect form worker. it is too late and will get "User activation required."
+  else if (request.cmd === 'create-directory') {
     window.showDirectoryPicker().then(async d => {
       self.directory = d;
       if (request.readme) {
@@ -757,9 +753,10 @@ collector.observe = (request, sender, response) => {
         const response = new Response(blob);
         await response.body.pipeTo(writable);
       }
-
       response(true);
-    }).catch(e => response({error: e.message}));
+    }).catch(e => {
+      response({error: e.message});
+    });
     return true;
   }
   else if (request.cmd === 'image-to-directory') {
@@ -788,15 +785,17 @@ collector.observe = (request, sender, response) => {
     // try to find the image on page and download it (it is useful specially if the image src is a dead blob)
     const capture = () => {
       const e = img || document.querySelector(`img[src="${request.src}"]`);
+      if (e) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
 
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+        canvas.width = e.naturalWidth;
+        canvas.height = e.naturalHeight;
 
-      canvas.width = e.naturalWidth;
-      canvas.height = e.naturalHeight;
-
-      ctx.drawImage(e, 0, 0, e.naturalWidth, e.naturalHeight);
-      return canvas.toDataURL();
+        ctx.drawImage(e, 0, 0, e.naturalWidth, e.naturalHeight);
+        return canvas.toDataURL();
+      }
+      throw Error('image not found; capture');
     };
 
     const props = {
@@ -848,12 +847,16 @@ collector.observe = (request, sender, response) => {
         response(capture());
       }
       catch (e) {
+        console.error(1, request, e);
         response({
           error: e.message
         });
       }
     });
     return true;
+  }
+  else if (request.cmd === 'file-picker-available') {
+    response('showDirectoryPicker' in window);
   }
 };
 chrome.runtime.onMessage.addListener(collector.observe);

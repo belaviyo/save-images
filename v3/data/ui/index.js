@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2023 Joe Ertaba
+/* Copyright (C) 2014-2025 Joe Ertaba
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -354,10 +354,6 @@ function filtered() {
   return r;
 }
 
-chrome.runtime.sendMessage({
-  cmd: 'file-picker-available'
-}).then(b => document.querySelector('[data-cmd=save-dir]').disabled = !b);
-
 function update() {
   const count = Object.keys(images).length;
   if (elements.prefs.stop.valueAsNumber > 0 && count >= elements.prefs.stop.valueAsNumber) {
@@ -390,9 +386,20 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     response(build());
   }
 
-  /* only parse requests from background worker */
-  if (sender.tab) {
-    return;
+  if (parent.isFirefox) { // on Firefox only accept proxied requests from worker
+    if (sender.tab) {
+      return;
+    }
+  }
+  else { // on Chrome only accept from same tab
+    if (sender.tab) {
+      if (sender.tab.id !== tabId) {
+        return;
+      }
+    }
+    else {
+      return;
+    }
   }
 
   if (request.cmd === 'progress') { // for downloading
@@ -431,9 +438,6 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       }
       catch (e) {}
       img.hostname = img.hostname || 'local';
-
-      // we need to use the same frame to fetch the content later
-      img.frameId = sender.frameId;
 
       const {filename, name} = utils.guess(img, elements.files.mask.value, elements.type.noType.checked);
 
@@ -541,6 +545,16 @@ const search = async () => {
   });
   if (resp && resp.error) {
     parent.toast(resp.error);
+  }
+  // proxy this request from worker cause "User activation required" error, so we need to use chrome.tabs.sendMessage
+  // to directly call this. This is not available on Firefox
+  if (chrome.tabs && chrome.tabs.sendMessage) {
+    chrome.tabs.sendMessage(tabId, {
+      cmd: 'file-picker-available'
+    }, {frameId: 0}).then(b => document.querySelector('[data-cmd=save-dir]').disabled = !b);
+  }
+  else {
+    document.querySelector('[data-cmd=save-dir]').disabled = true;
   }
 };
 

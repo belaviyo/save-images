@@ -24,8 +24,7 @@ chrome.action.onClicked.addListener(async tab => {
       injectImmediately: true,
       files: ['/data/inject/inject.js']
     });
-
-    if (r && r[0].result === false) {
+    if (r && (r[0] === undefined || r[0].result === false)) {
       throw Error('Cannot attach panel to the document. Is this an HTML page?');
     }
   }
@@ -42,69 +41,6 @@ chrome.tabs.onRemoved.addListener(tabId => chrome.declarativeNetRequest.updateSe
 chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.cmd === 'notify') {
     notify(request.message);
-  }
-  else if (request.cmd === 'apply-referer') {
-    try {
-      const id = Math.floor(Math.random() * 1000000);
-      const rule = {
-        'id': id,
-        'priority': 2,
-        'action': {
-          type: 'modifyHeaders',
-          requestHeaders: [{
-            'operation': 'set',
-            'header': 'referer',
-            'value': request.referer
-          }, {
-            'operation': 'remove',
-            'header': 'origin'
-          }]
-        },
-        'condition': {
-          'urlFilter': request.src,
-          'resourceTypes': ['xmlhttprequest', 'image'],
-          'tabIds': [sender.tab.id]
-        }
-      };
-      if (request.credentials === 'include') {
-        let o = request.referer;
-        try {
-          o = (new URL(request.referer)).origin;
-        }
-        catch (e) {}
-
-        rule.action.responseHeaders = [{
-          'operation': 'set',
-          'header': 'access-control-allow-origin',
-          'value': o
-        }, {
-          'operation': 'set',
-          'header': 'Access-Control-Allow-Credentials',
-          'value': 'true'
-        }];
-      }
-
-      chrome.declarativeNetRequest.updateSessionRules({
-        addRules: [rule]
-      }).then(() => response(id), () => response(-1));
-
-      return true;
-    }
-    catch (e) {
-      response(-1);
-    }
-  }
-  else if (request.cmd === 'revoke-referer') {
-    if (request.id === -1) {
-      response();
-    }
-    else {
-      chrome.declarativeNetRequest.updateSessionRules({
-        removeRuleIds: [request.id]
-      }).then(() => response(), () => response());
-
-      return true;
-    }
   }
   else if (request.cmd === 'set-badge') {
     chrome.action.setBadgeText({
@@ -193,15 +129,68 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     })();
     return true;
   }
-  else if (request.cmd === 'file-picker-available') {
-    chrome.scripting.executeScript({
-      target: {
-        tabId: sender.tab.id
-      },
-      injectImmediately: true,
-      func: () => 'showDirectoryPicker' in window
-    }).then(a => response(a[0].result));
-    return true;
+  else if (request.cmd === 'apply-referer') {
+    try {
+      const id = Math.floor(Math.random() * 1000000);
+      const rule = {
+        'id': id,
+        'priority': 2,
+        'action': {
+          type: 'modifyHeaders',
+          requestHeaders: [{
+            'operation': 'set',
+            'header': 'referer',
+            'value': request.referer
+          }, {
+            'operation': 'remove',
+            'header': 'origin'
+          }]
+        },
+        'condition': {
+          'urlFilter': request.src,
+          'resourceTypes': ['xmlhttprequest', 'image'],
+          'tabIds': [sender.tab.id]
+        }
+      };
+      if (request.credentials === 'include') {
+        let o = request.referer;
+        try {
+          o = (new URL(request.referer)).origin;
+        }
+        catch (e) {}
+
+        rule.action.responseHeaders = [{
+          'operation': 'set',
+          'header': 'access-control-allow-origin',
+          'value': o
+        }, {
+          'operation': 'set',
+          'header': 'Access-Control-Allow-Credentials',
+          'value': 'true'
+        }];
+      }
+
+      chrome.declarativeNetRequest.updateSessionRules({
+        addRules: [rule]
+      }).then(() => response(id), () => response(-1));
+
+      return true;
+    }
+    catch (e) {
+      response(-1);
+    }
+  }
+  else if (request.cmd === 'revoke-referer') {
+    if (request.id === -1) {
+      response();
+    }
+    else {
+      chrome.declarativeNetRequest.updateSessionRules({
+        removeRuleIds: [request.id]
+      }).then(() => response(), () => response());
+
+      return true;
+    }
   }
   else if (request.cmd === 'remove-session-rules') {
     chrome.declarativeNetRequest.updateSessionRules({
@@ -244,27 +233,29 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 
     return true;
   }
-  /* send to page */
-  else if ([
-    'progress', 'images', 'links', 'new-frame', 'alternative-image-may-work', 'stop-collector', 'state'
-  ].includes(request.cmd)) {
+  /* send to collector */
+  else if (request.cmd === 'stop-collector') {
     chrome.tabs.sendMessage(sender.tab.id, request);
   }
-  /* send to core */
-  else if (['create-directory', 'image-to-directory'].includes(request.cmd)) {
-    chrome.tabs.sendMessage(sender.tab.id, request, {
-      frameId: 0
-    }).then(response);
+  /* Firefox Only (from collector to interface) */
+  if (navigator.userAgent.includes('Firefox')) {
+    /* From collector to iframe */
+    if (request.cmd === 'images') {
+      // we need to use the same frame to fetch the content later
+      request.images.forEach(o => o.frameId = sender.frameId);
+      chrome.tabs.sendMessage(sender.tab.id, request);
+    }
+    else if (['progress', 'links', 'new-frame', 'alternative-image-may-work', 'state'].includes(request.cmd)) {
+      chrome.tabs.sendMessage(sender.tab.id, request);
+    }
+    /* send to the provided frame */
+    else if (request.cmd === 'download-image') {
+      chrome.tabs.sendMessage(sender.tab.id, request, {
+        frameId: request.frameId
+      }).then(response);
 
-    return true;
-  }
-  /* send to frame */
-  else if (['download-image'].includes(request.cmd)) {
-    chrome.tabs.sendMessage(sender.tab.id, request, {
-      frameId: request.frameId
-    }).then(response);
-
-    return true;
+      return true;
+    }
   }
 });
 

@@ -82,6 +82,7 @@ select,
 button,
 input {
   outline: none;
+  font-size: 12px;
 }
 select,
 input[type=number],

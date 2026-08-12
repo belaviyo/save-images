@@ -6,6 +6,12 @@ body {
   margin-inline: auto;
   width: min(100vw - 2rem, 70rem);
 }
+h1 {
+  text-align: center;
+  background-color: #e3e3e3;
+  padding: 20px;
+  font-size: initial;
+}
 select,
 button,
 input[type=submit],
@@ -59,4 +65,5 @@ textarea {
 #custom-extensions {
   margin-top: 5px;
   width: 100%;
+  box-sizing: border-box;
 }

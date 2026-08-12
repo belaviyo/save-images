@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2023 Joe Ertaba
+/* Copyright (C) 2014-2025 Joe Ertaba
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -82,6 +82,8 @@ self.utils = {
     if (extension.length == 0 && noType) {
       extension = '.jpg';
     }
+    extension = extension.split('#')[0]; // removes hashes
+
     name = name.slice(0, index);
     if (name.startsWith('%')) {
       name = decodeURIComponent(name);
