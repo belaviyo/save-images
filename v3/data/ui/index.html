@@ -187,54 +187,38 @@
     <div hbox>
       <fieldset flex=1>
         <legend data-i18n="ui_misc"></legend>
-        <table width="100%">
-          <tr>
-            <td><input type="checkbox" id="group-origin"></td>
-            <td><label for="group-origin" data-i18n="ui_same_domain"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="exclude-cors-frames"></td>
-            <td><label for="exclude-cors-frames" data-i18n="ui_exclude_cors_frames"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="exclude-sorg-frames"></td>
-            <td><label for="exclude-sorg-frames" data-i18n="ui_exclude_sorg_frames"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="group-identical" checked="true"></td>
-            <td><label for="group-identical" data-i18n="ui_unique"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="group-zip"></td>
-            <td><label for="group-zip" data-i18n="ui_separate"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="add-readme"></td>
-            <td><label for="add-readme" data-i18n="ui_readme"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="add-parent"  checked="true"></td>
-            <td><label for="add-parent" data-i18n="ui_parent"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="network-cors" checked="true"></td>
-            <td><label for="network-cors" data-i18n="ui_networ_cors"></label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="calc" checked="true"></td>
-            <td><label for="calc">
-              <a data-i18n="ui_calc" data-href="faq18" target="_blank"></a>&nbsp;
-              <span data-i18n="ui_sl_re"></span>
-            </label></td>
-          </tr>
-          <tr>
-            <td><input type="checkbox" id="accurate"></td>
-            <td><label for="accurate">
+        <div class="two">
+          <input type="checkbox" id="group-origin">
+          <label for="group-origin" data-i18n="ui_same_domain"></label>
+          <input type="checkbox" id="exclude-cors-frames">
+          <label for="exclude-cors-frames" data-i18n="ui_exclude_cors_frames"></label>
+          <input type="checkbox" id="exclude-sorg-frames">
+          <label for="exclude-sorg-frames" data-i18n="ui_exclude_sorg_frames"></label>
+          <input type="checkbox" id="group-identical" checked="true">
+          <label for="group-identical" data-i18n="ui_unique"></label>
+          <input type="checkbox" id="group-zip">
+          <label for="group-zip" data-i18n="ui_separate"></label>
+          <input type="checkbox" id="add-readme">
+          <label for="add-readme" data-i18n="ui_readme"></label>
+          <input type="checkbox" id="auto-save">
+          <label for="auto-save" data-i18n="ui_autosave"></label>
+          <input type="checkbox" id="add-parent"  checked="true">
+          <label for="add-parent" data-i18n="ui_parent"></label>
+          <input type="checkbox" id="network-cors" checked="true">
+          <label for="network-cors" data-i18n="ui_networ_cors"></label>
+          <input type="checkbox" id="calc" checked="true">
+          <label for="calc">
+            <a data-i18n="ui_calc" data-href="faq18" target="_blank"></a>&nbsp;
+            <span data-i18n="ui_sl_re"></span>
+          </label>
+          <div class="sub">
+            <input type="checkbox" id="accurate">
+            <label for="accurate">
               <a data-i18n="ui_accurate" data-href="faq19" target="_blank"></a>&nbsp;
               <span data-i18n="ui_sl_re"></span>
-            </label></td>
-          </tr>
-        </table>
+            </label>
+          </div>
+        </div>
       </fieldset>
       <fieldset flex=1>
         <legend data-i18n="ui_mask"></legend>

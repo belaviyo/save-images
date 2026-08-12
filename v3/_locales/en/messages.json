@@ -158,6 +158,9 @@
   "ui_readme": {
     "message": "Generate README.txt file while downloading"
   },
+  "ui_autosave": {
+    "message": "Automatically save all images when inspection is done"
+  },
   "ui_parent": {
     "message": "Include a parent directory when creating the ZIP archive"
   },

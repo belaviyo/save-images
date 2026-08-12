@@ -246,7 +246,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   }
   /* send to page */
   else if ([
-    'progress', 'images', 'links', 'new-frame', 'alternative-image-may-work', 'stop-collector'
+    'progress', 'images', 'links', 'new-frame', 'alternative-image-may-work', 'stop-collector', 'state'
   ].includes(request.cmd)) {
     chrome.tabs.sendMessage(sender.tab.id, request);
   }

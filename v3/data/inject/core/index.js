@@ -53,7 +53,6 @@ ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
         conflictAction: 'uniquify',
         saveAs: request.saveAs
       });
-      closing('done');
       setTimeout(() => URL.revokeObjectURL(url), 10000);
     }
     catch (e) {
@@ -80,16 +79,18 @@ const button = self.button = {
   }
 };
 
-const closing = badge => {
+const closing = (badge, remove = true) => {
   button.badge(badge === 'done' ? '✓' : '');
   chrome.runtime.sendMessage({
     cmd: 'stop-collector',
-    remove: true
+    remove
   });
 
-  chrome.runtime.sendMessage({
-    cmd: 'remove-session-rules'
-  });
+  if (remove) {
+    chrome.runtime.sendMessage({
+      cmd: 'remove-session-rules'
+    });
+  }
 };
 
 window.to = {
@@ -218,7 +219,7 @@ self.stopping = () => {
   });
 };
 
-self.save = async request => {
+self.save = async (request, remove = true) => {
   // Save Images
   if (request.cmd === 'save-images') {
     // save to directory
@@ -250,7 +251,7 @@ ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
             filename
           }).then(a => console.log(a));
         });
-        closing('done');
+        closing('done', remove);
       }
       catch (e) {
         console.error(e);
@@ -262,7 +263,7 @@ ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
     else if (request.zip) {
       const z = new ZIP();
       await z.perform(request);
-      closing('done');
+      closing('done', remove);
     }
     // save using download manager
     else {
@@ -278,7 +279,7 @@ ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
           saveAs: false
         });
       });
-      closing('done');
+      closing('done', remove);
     }
   }
   else {

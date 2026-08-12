@@ -51,6 +51,7 @@ const elements = {
     dimension: document.getElementById('group-dimension'),
     zip: document.getElementById('group-zip'),
     readme: document.getElementById('add-readme'),
+    autosave: document.getElementById('auto-save'),
     parent: document.getElementById('add-parent'),
     accurate: document.getElementById('accurate'),
     calc: document.getElementById('calc'),
@@ -127,6 +128,10 @@ const title = args.get('title') || 'Unknown Page Title';
 
 const images = {};
 let total = 0;
+let done = false;
+const jobs = {
+  post: [] // run these jobs once after image collection is done
+};
 
 function build() {
   const custom = elements.save.directory.value.replace(/[\\\\/:*?"<>|]/g, '_');
@@ -352,6 +357,10 @@ function filtered() {
   return r;
 }
 
+chrome.runtime.sendMessage({
+  cmd: 'file-picker-available'
+}).then(b => document.querySelector('[data-cmd=save-dir]').disabled = !b);
+
 function update() {
   const count = Object.keys(images).length;
   if (elements.prefs.stop.valueAsNumber > 0 && count >= elements.prefs.stop.valueAsNumber) {
@@ -360,13 +369,8 @@ function update() {
   elements.counter.images.textContent = count;
   const index = elements.counter.save.value =
     elements.counter.save.textContent = filtered().length;
-  document.querySelector('[data-cmd=save]').disabled = index === 0;
 
-  chrome.runtime.sendMessage({
-    cmd: 'file-picker-available'
-  }).then(b => {
-    document.querySelector('[data-cmd=save-dir]').disabled = !b;
-  });
+  document.querySelector('[data-cmd=save]').disabled = index === 0;
 
   document.querySelector('[data-cmd=copy]').disabled = index === 0;
   document.querySelector('[data-cmd=gallery]').disabled = index === 0;
@@ -381,18 +385,42 @@ self.release = () => {
   document.querySelector('[data-cmd=save-dir]').disabled = false;
 };
 
+let collectors = 0; // store number of active collectors
+
 chrome.runtime.onMessage.addListener((request, sender, response) => {
   // open gallery view on a separate window
   if (request.cmd === 'build') {
     response(build());
   }
 
+  /* only parse requests from background worker */
   if (sender.tab) {
     return;
   }
 
   if (request.cmd === 'progress') { // for downloading
     self.progress(request.value);
+  }
+  else if (request.cmd === 'state') {
+    collectors = collectors + (request.value === 'start' ? 1 : -1);
+
+    if (collectors === 0) {
+      console.info('image collection is done!');
+
+      if (elements.group.autosave.checked) {
+        // save without asking
+        const e = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          shiftKey: true
+        });
+        console.log('saving...');
+        document.querySelector('[data-cmd=save]').dispatchEvent(e);
+      }
+
+      done = true;
+    }
   }
   else if (request.cmd === 'new-frame') {
     frames += 1;
@@ -503,6 +531,7 @@ const search = async () => {
     catch (e) {}
   }
 
+  done = false;
   const resp = await chrome.runtime.sendMessage({
     cmd: 'install-collector',
     allFrames: elements.group.cframe.checked && elements.group.sframe.checked ? false : true,
@@ -523,7 +552,9 @@ const search = async () => {
 elements.deep.level.addEventListener('change', search);
 
 // commands
-document.addEventListener('click', ({target}) => {
+document.addEventListener('click', e => {
+  const {target, shiftKey} = e;
+
   const cmd = target.dataset.cmd;
   if (cmd === 'stop' || cmd === 'save' || cmd === 'save-dir') {
     document.body.classList.add('stopped');
@@ -549,10 +580,13 @@ document.addEventListener('click', ({target}) => {
       elements.counter.progress.value = 0;
       elements.counter.progress.max = len;
 
-      parent.save(obj);
+      parent.save(obj, e.isTrusted);
     };
     if (len > elements.prefs.max.valueAsNumber && cmd === 'save') {
-      if (vconfirm(`Are you sure you want to download "${len}" images?`)) {
+      if (shiftKey) { // do not ask on forced requests
+        save();
+      }
+      else if (vconfirm(`Are you sure you want to download "${len}" images?`)) {
         save();
       }
       else {
@@ -626,10 +660,10 @@ const accurate = () => {
   if (elements.group.size.checked || elements.group.zip.checked) {
     elements.group.accurate.dataset.checked = elements.group.accurate.checked;
     elements.group.accurate.checked = true;
-    elements.group.accurate.closest('tr').classList.add('disabled');
+    elements.group.accurate.closest('div').classList.add('disabled');
   }
   else {
-    elements.group.accurate.closest('tr').classList.remove('disabled');
+    elements.group.accurate.closest('div').classList.remove('disabled');
     elements.group.accurate.checked = elements.group.accurate.dataset.checked === 'true';
   }
   elements.group.accurate.dispatchEvent(new Event('change', {

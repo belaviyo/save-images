@@ -21,7 +21,6 @@
 'use strict';
 
 var collector = self.collector = {
-  'active': true,
   'feeds': { // all kind of detected links (1: images, 2: same origin, 3: misc)
     '1': [],
     '2': [],
@@ -32,8 +31,28 @@ var collector = self.collector = {
   'docs': [], // all documents in the page
   'cache': new Set() // all links that have already been evaluated
 };
+{
+  let active = true;
+  Object.defineProperty(collector, 'active', {
+    get() {
+      return active;
+    },
+    set(value) {
+      if (active === false) {
+        return;
+      }
+      active = value;
+      if (value === false) {
+        chrome.runtime.sendMessage({
+          cmd: 'state',
+          value: 'done'
+        });
+      }
+    }
+  });
+}
 
-var report = () => chrome.runtime.sendMessage({
+var report = () => collector.active && chrome.runtime.sendMessage({
   cmd: 'progress',
   value: collector.feeds['1'].length + collector.feeds['2'].length + collector.feeds['3'].length +
     collector['raw-images'].length +
@@ -64,6 +83,21 @@ collector.events = {
   },
   raw() { // called when a raw image is listed
     report();
+  },
+  guess: {
+    done() {
+      if (collector.active) {
+        if (
+          collector['raw-images'].length === 0 &&
+          collector.feeds[1].length === 0 &&
+          collector.feeds[2].length === 0 &&
+          collector.feeds[3].length === 0 &&
+          collector.docs.length === 0
+        ) {
+          collector.active = false;
+        }
+      }
+    }
   }
 };
 
@@ -528,6 +562,11 @@ collector.head = async function() {
       collector.head();
     }, prefs['head-delay']);
   }
+  else {
+    if (collector.head.jobs === 0) {
+      collector.events.guess.done();
+    }
+  }
 };
 collector.head.jobs = 0;
 
@@ -584,6 +623,11 @@ collector.validate = async function() {
     chrome.storage.local.get({
       'validate-delay': 100
     }, prefs => setTimeout(() => done(), rm ? prefs['validate-delay'] : 0));
+  }
+  else {
+    if (collector.validate.jobs === 0) {
+      collector.events.guess.done();
+    }
   }
 };
 collector.validate.jobs = 0;
@@ -662,6 +706,10 @@ collector.dig = async function() {
 collector.dig.jobs = 0;
 
 collector.loop = async function() {
+  chrome.runtime.sendMessage({
+    cmd: 'state',
+    value: 'start'
+  });
   await collector.inspect(document, location, 'one', {
     bg: true,
     links: true,
@@ -675,137 +723,135 @@ collector.loop = async function() {
   collector.validate();
 };
 
-{
-  const observe = (request, sender, response) => {
-    if (request.cmd === 'stop-collector') {
-      collector.active = false;
+collector.observe = (request, sender, response) => {
+  if (request.cmd === 'stop-collector') {
+    collector.active = false;
 
-      if (request.remove && window.top === window) {
-        chrome.runtime.sendMessage({
-          cmd: 'set-badge',
-          text: ''
-        });
-        for (const e of document.querySelectorAll('dialog.daimages')) {
-          e.remove();
-        }
-        chrome.runtime.onMessage.removeListener(observe);
+    if (request.remove && window.top === window) {
+      chrome.runtime.sendMessage({
+        cmd: 'set-badge',
+        text: ''
+      });
+      for (const e of document.querySelectorAll('dialog.daimages')) {
+        e.remove();
       }
+      chrome.runtime.onMessage.removeListener(collector.observe);
     }
+  }
 
-    /* from background only */
-    if (sender.tab) {
-      return;
-    }
-    if (request.cmd === 'create-directory') {
-      window.showDirectoryPicker().then(async d => {
-        self.directory = d;
-        if (request.readme) {
-          const file = await d.getFileHandle(request.name, {
-            create: true
-          });
-          const writable = await file.createWritable();
-          const blob = new Blob([request.content], {
-            type: 'text/plain'
-          });
-          const response = new Response(blob);
-          await response.body.pipeTo(writable);
-        }
-
-        response(true);
-      }).catch(e => response({error: e.message}));
-      return true;
-    }
-    else if (request.cmd === 'image-to-directory') {
-      Promise.all([
-        fetch(request.href),
-        self.directory.getFileHandle(request.filename, {
+  /* from background only */
+  if (sender.tab) {
+    return;
+  }
+  if (request.cmd === 'create-directory') {
+    window.showDirectoryPicker().then(async d => {
+      self.directory = d;
+      if (request.readme) {
+        const file = await d.getFileHandle(request.name, {
           create: true
-        }).then(file => file.createWritable())
-      ]).then(async ([r, writable]) => {
-        await writable.truncate(0);
-        await r.body.pipeTo(writable);
-
-        response(true);
-      }).catch(e => {
-        console.error(e);
-        response({
-          error: e.message
         });
-      }).finally(() => URL.revokeObjectURL(request.href));
-
-      return true;
-    }
-    else if (request.cmd === 'download-image') {
-      const img = sources.get(request.src);
-
-      // try to find the image on page and download it (it is useful specially if the image src is a dead blob)
-      const capture = () => {
-        const e = img || document.querySelector(`img[src="${request.src}"]`);
-
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        canvas.width = e.naturalWidth;
-        canvas.height = e.naturalHeight;
-
-        ctx.drawImage(e, 0, 0, e.naturalWidth, e.naturalHeight);
-        return canvas.toDataURL();
-      };
-
-      const props = {
-        headers: {
-          referer: request.referer
-        }
-      };
-      if (img && request.referer) {
-        if (img.referrerPolicy) {
-          if (img.referrerPolicy === 'origin') {
-            try {
-              props.headers.referer = (new URL(request.referer)).origin + '/';
-            }
-            catch (e) {}
-          }
-          else if (img.referrerPolicy === 'no-referrer') {
-            delete props.headers.referer;
-          }
-        }
+        const writable = await file.createWritable();
+        const blob = new Blob([request.content], {
+          type: 'text/plain'
+        });
+        const response = new Response(blob);
+        await response.body.pipeTo(writable);
       }
 
-      fetch(request.src, props).then(r => {
+      response(true);
+    }).catch(e => response({error: e.message}));
+    return true;
+  }
+  else if (request.cmd === 'image-to-directory') {
+    Promise.all([
+      fetch(request.href),
+      self.directory.getFileHandle(request.filename, {
+        create: true
+      }).then(file => file.createWritable())
+    ]).then(async ([r, writable]) => {
+      await writable.truncate(0);
+      await r.body.pipeTo(writable);
+
+      response(true);
+    }).catch(e => {
+      console.error(e);
+      response({
+        error: e.message
+      });
+    }).finally(() => URL.revokeObjectURL(request.href));
+
+    return true;
+  }
+  else if (request.cmd === 'download-image') {
+    const img = sources.get(request.src);
+
+    // try to find the image on page and download it (it is useful specially if the image src is a dead blob)
+    const capture = () => {
+      const e = img || document.querySelector(`img[src="${request.src}"]`);
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      canvas.width = e.naturalWidth;
+      canvas.height = e.naturalHeight;
+
+      ctx.drawImage(e, 0, 0, e.naturalWidth, e.naturalHeight);
+      return canvas.toDataURL();
+    };
+
+    const props = {
+      headers: {
+        referer: request.referer
+      }
+    };
+    if (img && request.referer) {
+      if (img.referrerPolicy) {
+        if (img.referrerPolicy === 'origin') {
+          try {
+            props.headers.referer = (new URL(request.referer)).origin + '/';
+          }
+          catch (e) {}
+        }
+        else if (img.referrerPolicy === 'no-referrer') {
+          delete props.headers.referer;
+        }
+      }
+    }
+
+    fetch(request.src, props).then(r => {
+      if (!r.ok) {
+        throw Error('STATUS_CODE_' + r.status);
+      }
+      return r.blob();
+    }).catch(e => {
+      // try to include credentials
+      props.credentials = 'include';
+      return fetch(request.src, props).then(r => {
         if (!r.ok) {
           throw Error('STATUS_CODE_' + r.status);
         }
         return r.blob();
-      }).catch(e => {
-        // try to include credentials
-        props.credentials = 'include';
-        return fetch(request.src, props).then(r => {
-          if (!r.ok) {
-            throw Error('STATUS_CODE_' + r.status);
-          }
-          return r.blob();
-        });
-      }).then(blob => {
-        if (request.type === 'blob') {
-          response(URL.createObjectURL(blob));
-        }
-        // Security Error: Content at moz-extension://.../core/index.html may not load data from blob:http://...
-        else {
-          const reader = new FileReader();
-          reader.onload = () => response(reader.result);
-          reader.readAsDataURL(blob);
-        }
-      }).catch(e => {
-        // can we get the image from an image element
-        capture().then(response).catch(e => response({
-          error: e.message
-        }));
       });
-      return true;
-    }
-  };
-  chrome.runtime.onMessage.addListener(observe);
-}
+    }).then(blob => {
+      if (request.type === 'blob') {
+        response(URL.createObjectURL(blob));
+      }
+      // Security Error: Content at moz-extension://.../core/index.html may not load data from blob:http://...
+      else {
+        const reader = new FileReader();
+        reader.onload = () => response(reader.result);
+        reader.readAsDataURL(blob);
+      }
+    }).catch(e => {
+      // can we get the image from an image element
+      capture().then(response).catch(e => response({
+        error: e.message
+      }));
+    });
+    return true;
+  }
+};
+chrome.runtime.onMessage.addListener(collector.observe);
 
 // eslint-disable-next-line semi
 ''
