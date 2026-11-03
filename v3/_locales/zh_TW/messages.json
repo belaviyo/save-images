@@ -27,13 +27,19 @@
     "message": "統計資料"
   },
   "ui_debug": {
-    "message": "除錯"
+    "message": "偵錯"
+  },
+  "ui_status": {
+    "message": "狀態："
   },
   "ui_total": {
     "message": "總計："
   },
   "ui_frames": {
     "message": "頁框："
+  },
+  "ui_status_title": {
+    "message": "圖片下載器目前的狀態"
   },
   "ui_total_title": {
     "message": "已解析連結總數（連結可能是也可能不是圖片）"
@@ -45,7 +51,7 @@
     "message": "可用圖片總數"
   },
   "ui_saving_title": {
-    "message": "根據您的篩選條件將儲存的圖片總數"
+    "message": "將根據您的過濾條件儲存的圖片總數"
   },
   "ui_images": {
     "message": "圖片："
@@ -54,7 +60,7 @@
     "message": "儲存："
   },
   "ui_deep_search_title": {
-    "message": "0: 不擷取連結圖片（快速）\n1: 擷取連結圖片（慢）\n2: 擷取連結圖片並解析目標 HTML 文件（圖片）（太慢）\n3: 擷取連結圖片並解析目標 HTML 文件（圖片 + 連結）（太慢；請搭配自訂篩選器使用）"
+    "message": "0: 不擷取連結圖片（快速）\n1: 擷取連結圖片（慢）\n2: 擷取連結圖片並解析目標 HTML 文件（圖片）（太慢）\n 3: 擷取連結圖片並解析目標 HTML 文件（圖片 + 連結）（太慢；請搭配自訂過濾器使用）"
   },
   "ui_deep_search": {
     "message": "深度搜尋"
@@ -132,7 +138,7 @@
     "message": "黑名單關鍵字"
   },
   "ui_blacklist_desc": {
-    "message": "以逗號分隔的關鍵字列表，用於排除（相符的圖片將不會被儲存）"
+    "message": "以逗號分隔的排除關鍵字清單（不會儲存相符的圖片）"
   },
   "ui_misc": {
     "message": "雜項"
@@ -141,10 +147,10 @@
     "message": "僅儲存與選取分頁網址相同網域/伺服器的圖片"
   },
   "ui_exclude_cors_frames": {
-    "message": "不抓取跨來源框架"
+    "message": "不抓取跨來源頁框"
   },
   "ui_exclude_sorg_frames": {
-    "message": "不抓取同來源框架"
+    "message": "不抓取同來源頁框"
   },
   "ui_unique": {
     "message": "嘗試排除重複的圖片"
@@ -153,10 +159,16 @@
     "message": "分別下載每張圖片（慢）"
   },
   "ui_readme": {
-    "message": "下載時生成 README.txt 檔案"
+    "message": "下載時產生 README.txt 檔案"
+  },
+  "ui_autosave": {
+    "message": "檢查完成後自動儲存所有圖片"
+  },
+  "ui_parent": {
+    "message": "建立 ZIP 封存檔時包含上層目錄"
   },
   "ui_accurate": {
-    "message": "確認 MIME 類型並從伺服器猜測檔名"
+    "message": "確認 MIME 類型並從伺服器推測檔名"
   },
   "ui_calc": {
     "message": "找出所有圖片的寬度和高度"
@@ -261,7 +273,7 @@
     "message": "偏好設定"
   },
   "ui_prefs_zip_warning": {
-    "message": "當「分別下載每張圖片」被勾選且圖片總數超過以下值時顯示確認"
+    "message": "勾選「分別下載每張圖片」且圖片總數超過以下值時顯示確認"
   },
   "ui_prefs_stop_after": {
     "message": "一旦偵測到的圖片數量超過以下值時停止搜尋"
@@ -288,10 +300,10 @@
     "message": "固定方向"
   },
   "ui_exchange": {
-    "message": "固定方向：保持寬度和高度在定義的角色。不允許交換。\n彈性方向：允許寬度和高度交換，使長寬比與方向無關。"
+    "message": "固定方向：維持寬度和高度的定義角色，不允許互換。\n彈性方向：允許寬度和高度互換，使長寬比不受方向限制。"
   },
   "ui_profiles_title": {
-    "message": "所有設定都會自動儲存到選取的設定檔。您可以建立新的設定檔並在它們之間切換以調整配置。"
+    "message": "所有設定都會自動儲存到選取的設定檔。您可以建立新的設定檔並在設定檔之間切換以調整設定。"
   },
   "ui_profile": {
     "message": "設定檔"
@@ -324,19 +336,19 @@
     "message": "儲存選項"
   },
   "options_support": {
-    "message": "支持開發"
+    "message": "贊助開發"
   },
   "options_tutorial": {
-    "message": "使用預覽"
+    "message": "使用教學"
   },
   "options_sample": {
     "message": "開啟測試頁面"
   },
   "options_head_delay": {
-    "message": "每次讀取圖片元數據後的延遲（毫秒）"
+    "message": "每次讀取圖片中繼資料後的延遲（毫秒）"
   },
   "options_head_timeout": {
-    "message": "圖片元數據請求逾時時間（秒）"
+    "message": "中斷圖片中繼資料請求的逾時時間（秒）"
   },
   "options_dig_delay": {
     "message": "每次 HTML 文件解析後的延遲（毫秒）"
