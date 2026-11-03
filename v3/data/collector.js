@@ -182,6 +182,7 @@ collector.inspect = async function(doc, loc, name, policies) {
   collector.findRoots(doc, docs);
 
   // find images; part 1/4
+  const loading = []; // incomplete images that we forced to load
   for (const doc of docs) {
     chrome.runtime.sendMessage({
       cmd: 'new-frame'
@@ -189,6 +190,14 @@ collector.inspect = async function(doc, loc, name, policies) {
 
     const images = doc.images || doc.querySelectorAll('img');
     for (const img of [...images]) {
+      // image element is not loaded yet (e.g., loading="lazy"): force it to load
+      // and wait for it so that naturalWidth/naturalHeight are valid
+      if (img.complete === false) {
+        img.loading = 'eager';
+        loading.push(img.decode());
+      }
+      console.log(img);
+
       //  The "data-src" attribute is commonly used for lazy-loading images
       const src = img.currentSrc || img.src || img.dataset.src;
 
@@ -227,6 +236,9 @@ collector.inspect = async function(doc, loc, name, policies) {
       }
     }
   }
+  // wait for all forced images to load; rejects (broken/invalid images) are ignored
+  await Promise.allSettled(loading);
+
   // find images; part 2/4
   for (const doc of docs) {
     for (const source of [...doc.querySelectorAll('source')]) {
@@ -283,6 +295,11 @@ collector.inspect = async function(doc, loc, name, policies) {
           });
         }
         else if (entry.initiatorType === 'img') {
+          // Exclude entries with no response data (most likely not an image)
+          if (entry.transferSize === 0 && entry.encodedBodySize === 0 && entry.decodedBodySize === 0) {
+            continue;
+          }
+
           collector.push({
             src: entry.name,
             type: 'image/unknown',
@@ -484,6 +501,7 @@ collector.addImage = function(o) {
     return;
   }
   collector['processed-images'].push(o);
+
   collector.events.image(o);
 };
 
@@ -533,13 +551,26 @@ collector.head = async function() {
       }
       await new Promise(resolve => {
         const img = new Image();
+
         img.onload = () => {
           o.width = img.naturalWidth;
           o.height = img.naturalHeight;
+          // for data URIs the type is declared in the first part of the URI
+          let fallback = 'image/unknown';
+          if (o.src.startsWith('data:')) {
+            const mediatype = o.src.slice(5, o.src.indexOf(',')).split(';')[0];
+            if (mediatype) {
+              fallback = mediatype;
+            }
+          }
           o.type = utils.type(o, {
-            type: 'image/unknown'
+            type: fallback
           });
           o.meta.size = 'size.img.element';
+          // keep this decoded element around for the capture download path
+          if (sources.has(o.src) === false) {
+            sources.set(o.src, img);
+          }
           resolve();
         };
         img.onerror = () => {
@@ -783,20 +814,43 @@ collector.observe = (request, sender, response) => {
     const img = sources.get(request.src);
 
     // try to find the image on page and download it (it is useful specially if the image src is a dead blob)
-    const capture = () => {
+    const capture = () => new Promise((resolve, reject) => {
       const e = img || document.querySelector(`img[src="${request.src}"]`);
       if (e) {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const next = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
 
-        canvas.width = e.naturalWidth;
-        canvas.height = e.naturalHeight;
+          canvas.width = e.naturalWidth;
+          canvas.height = e.naturalHeight;
 
-        ctx.drawImage(e, 0, 0, e.naturalWidth, e.naturalHeight);
-        return canvas.toDataURL();
+          if (e.naturalWidth === 0 || e.naturalHeight === 0) {
+            reject(Error('image is collapsed; capture'));
+            console.log(e);
+          }
+          ctx.drawImage(e, 0, 0, e.naturalWidth, e.naturalHeight);
+          resolve(canvas.toDataURL());
+        };
+
+        // is image loaded
+        if (e.complete) {
+          return next();
+        }
+        else {
+          chrome.storage.local.get({
+            'capture-timeout': 10 * 1000
+          }).then(prefs => {
+            e.addEventListener('load', () => next(), {once: true});
+            e.addEventListener('error', () => reject(Error('image loading failed; capture')), {once: true});
+            setTimeout(() => reject(Error('image loading timeout; capture')), prefs['capture-timeout']);
+            e.loading = 'eager';
+          });
+        }
       }
-      throw Error('image not found; capture');
-    };
+      else {
+        reject(Error('image not found; capture'));
+      }
+    });
 
     const props = {
       headers: {
@@ -822,7 +876,7 @@ collector.observe = (request, sender, response) => {
         throw Error('STATUS_CODE_' + r.status);
       }
       return r.blob();
-    }).catch(e => {
+    }).catch(() => {
       // try to include credentials
       props.credentials = 'include';
       return fetch(request.src, props).then(r => {
@@ -841,13 +895,15 @@ collector.observe = (request, sender, response) => {
         reader.onload = () => response(reader.result);
         reader.readAsDataURL(blob);
       }
-    }).catch(e => {
+    }).catch(() => {
       // can we get the image from an image element
       try {
-        response(capture());
+        capture().then(response, e => response({
+          error: e.message
+        }));
       }
       catch (e) {
-        console.error(1, request, e);
+        console.error(request, e);
         response({
           error: e.message
         });
