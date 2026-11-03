@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lazy Loading Example</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .spacer {
+            height: 10000px;
+            background: linear-gradient(white, lightgray);
+            padding: 20px;
+        }
+
+        img {
+            width: 500px;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Lazy Loading Demo</h1>
+
+    <p>
+        Scroll down to load the image.
+    </p>
+
+    <!-- Creates space so the image is outside the viewport -->
+    <div class="spacer">
+        Scroll down to see the image...
+    </div>
+
+    <!-- Image loads lazily -->
+    <img
+        src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800"
+        alt="Mountain landscape"
+        loading="lazy"
+    >
+
+    <p>Image loaded!</p>
+
+</body>
+</html>

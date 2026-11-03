@@ -196,7 +196,6 @@ collector.inspect = async function(doc, loc, name, policies) {
         img.loading = 'eager';
         loading.push(img.decode());
       }
-      console.log(img);
 
       //  The "data-src" attribute is commonly used for lazy-loading images
       const src = img.currentSrc || img.src || img.dataset.src;
@@ -826,7 +825,6 @@ collector.observe = (request, sender, response) => {
 
           if (e.naturalWidth === 0 || e.naturalHeight === 0) {
             reject(Error('image is collapsed; capture'));
-            console.log(e);
           }
           ctx.drawImage(e, 0, 0, e.naturalWidth, e.naturalHeight);
           resolve(canvas.toDataURL());
