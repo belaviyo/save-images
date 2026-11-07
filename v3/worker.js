@@ -43,10 +43,13 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     notify(request.message);
   }
   else if (request.cmd === 'set-badge') {
-    chrome.action.setBadgeText({
-      tabId: sender.tab.id,
-      text: request.text
-    });
+    const targetTabId = request.tabId || (sender.tab && sender.tab.id);
+    if (targetTabId) {
+      chrome.action.setBadgeText({
+        tabId: targetTabId,
+        text: request.text
+      });
+    }
   }
   else if (request.cmd === 'install-collector') {
     /* collect images */
@@ -233,9 +236,117 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 
     return true;
   }
+  else if (request.cmd === 'open-gallery') {
+    try {
+      const u = new URL(request.url);
+      const isExtension = /^(moz-extension|chrome-extension):$/.test(u.protocol);
+      if (!isExtension || !u.pathname.includes('/data/gallery/')) {
+        response({error: 'Invalid gallery URL'});
+        return true;
+      }
+      const p = chrome.tabs.create({
+        url: request.url
+      });
+      if (p && typeof p.then === 'function') {
+        p.then(t => response(t && t.id)).catch(e => response({error: e.message}));
+      }
+      else {
+        response(true);
+      }
+    }
+    catch (e) {
+      response({error: e.message});
+    }
+    return true;
+  }
+  else if (request.cmd === 'gallery-build') {
+    if (!request.tabId || isNaN(request.tabId)) {
+      response({error: 'Invalid tabId'});
+      return true;
+    }
+    const p = chrome.tabs.sendMessage(request.tabId, {
+      cmd: 'build'
+    });
+    if (p && typeof p.then === 'function') {
+      p.then(r => response(r)).catch(e => response({error: e.message}));
+    }
+    else {
+      // response will be sent via callback below if not promise-based
+      response({error: 'tabs.sendMessage not available'});
+    }
+    return true;
+  }
+  else if (request.cmd === 'gallery-save') {
+    if (!request.tabId || isNaN(request.tabId)) {
+      response({error: 'Invalid tabId'});
+      return true;
+    }
+    if (!request.request || typeof request.request !== 'object') {
+      response({error: 'Invalid save request'});
+      return true;
+    }
+    const payload = Object.assign({}, request.request, {
+      cmd: 'save-images',
+      tabId: request.tabId
+    });
+    const p = chrome.tabs.sendMessage(request.tabId, payload);
+    if (p && typeof p.then === 'function') {
+      p.then(r => response(r || true)).catch(e => response({error: e.message}));
+    }
+    else {
+      response(true);
+    }
+    return true;
+  }
+  else if (request.cmd === 'gallery-stop') {
+    if (!request.tabId || isNaN(request.tabId)) {
+      response({error: 'Invalid tabId'});
+      return true;
+    }
+    // clear badge for host tab (detached sender has no tab)
+    chrome.action.setBadgeText({
+      tabId: request.tabId,
+      text: ''
+    }).catch(() => {});
+    const p = chrome.tabs.sendMessage(request.tabId, {
+      cmd: 'stop-collector',
+      remove: false,
+      response: true,
+      tabId: request.tabId
+    });
+    if (p && typeof p.then === 'function') {
+      p.then(() => response(true)).catch(() => response(true));
+    }
+    else {
+      response(true);
+    }
+    return true;
+  }
+  else if (request.cmd === 'gallery-meta') {
+    if (!request.tabId || isNaN(request.tabId) || !request.src) {
+      response({error: 'Invalid gallery-meta'});
+      return true;
+    }
+    const p = chrome.tabs.sendMessage(request.tabId, {
+      cmd: 'gallery-meta',
+      src: request.src,
+      width: request.width,
+      height: request.height
+    });
+    if (p && typeof p.then === 'function') {
+      p.then(() => response(true)).catch(() => response(true));
+    }
+    else {
+      response(true);
+    }
+    return true;
+  }
   /* send to collector */
   else if (request.cmd === 'stop-collector') {
-    chrome.tabs.sendMessage(sender.tab.id, request);
+    const targetTabId = request.tabId || (sender.tab && sender.tab.id);
+    if (targetTabId) {
+      chrome.tabs.sendMessage(targetTabId, request);
+    }
   }
   /* Firefox Only (from collector to interface) */
   if (navigator.userAgent.includes('Firefox')) {

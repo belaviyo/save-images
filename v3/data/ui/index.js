@@ -385,6 +385,18 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.cmd === 'build') {
     response(build());
   }
+  // dimensions forwarded from detached gallery
+  if ((request.cmd === 'gallery-meta' || request.cmd === 'meta') && request.src) {
+    if (images[request.src]) {
+      Object.assign(images[request.src], {
+        width: request.width,
+        height: request.height
+      });
+    }
+    if (response) {
+      response(true);
+    }
+  }
 
   if (parent.isFirefox) { // on Firefox only accept proxied requests from worker
     if (sender.tab) {

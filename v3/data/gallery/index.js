@@ -18,6 +18,7 @@
 
 const args = new URLSearchParams(location.search);
 const tabId = Number(args.get('tabId'));
+self.isFirefox = navigator.userAgent.includes('Firefox');
 
 const t = document.getElementById('entry');
 const body = document.getElementById('body');
@@ -33,18 +34,19 @@ self.progress = value => {
 };
 
 chrome.runtime.onMessage.addListener((request, sender) => {
-  if (parent.isFirefox) { // on Firefox only accept proxied requests from worker
-    if (sender.tab) {
+  const isDetached = window.top === window;
+  if (self.isFirefox) { // on Firefox only accept proxied requests from worker
+    if (sender.tab && !(isDetached && request.cmd === 'progress')) {
       return;
     }
   }
   else { // on Chrome only accept from same tab
     if (sender.tab) {
-      if (sender.tab.id !== tabId) {
+      if (sender.tab.id !== tabId && !(isDetached && request.cmd === 'progress')) {
         return;
       }
     }
-    else {
+    else if (!(isDetached && request.cmd === 'progress')) {
       return;
     }
   }
@@ -56,7 +58,11 @@ chrome.runtime.onMessage.addListener((request, sender) => {
 
 const notify = msg => {
   try {
-    parent.toast(msg);
+    if (window.top !== window && parent && typeof parent.toast === 'function') {
+      parent.toast(msg);
+      return;
+    }
+    throw Error('no parent toast');
   }
   catch (e) {
     const t = document.title;
@@ -144,7 +150,39 @@ document.addEventListener('click', e => {
     document.dispatchEvent(new Event('change'));
   }
   else if (cmd === 'download' || cmd === 'copy') {
-    parent.stopping();
+    const isDetached = window.top === window;
+    if (!isDetached && parent && typeof parent.stopping === 'function') {
+      parent.stopping();
+    }
+    else if (isDetached) {
+      // detached: stop collector in host tab via direct or worker proxy
+      if (chrome.tabs && chrome.tabs.sendMessage) {
+        try {
+          const p = chrome.tabs.sendMessage(tabId, {
+            cmd: 'stop-collector',
+            remove: false,
+            response: true,
+            tabId
+          });
+          if (p && typeof p.catch === 'function') {
+            p.catch(() => {});
+          }
+        }
+        catch (e) {}
+      }
+      if (chrome.runtime && chrome.runtime.sendMessage) {
+        try {
+          const p = chrome.runtime.sendMessage({
+            cmd: 'gallery-stop',
+            tabId
+          });
+          if (p && typeof p.catch === 'function') {
+            p.catch(() => {});
+          }
+        }
+        catch (e) {}
+      }
+    }
 
     const images = [...document.querySelectorAll('.entry :checked')].map(i => {
       const div = i.closest('label');
@@ -161,15 +199,79 @@ document.addEventListener('click', e => {
       progress.dataset.visible = true;
       progress.max = images.length;
 
-      parent.save({
+      const payload = {
         cmd: 'save-images',
         custom: resp.custom,
         parent: resp.parent,
         filename: resp.filename,
         images,
         saveAs: resp.saveAs,
-        zip: resp.zip
-      });
+        zip: resp.zip,
+        tabId
+      };
+      if (!isDetached && parent && typeof parent.save === 'function') {
+        parent.save(payload);
+      }
+      else if (isDetached) {
+        // detached: forward to host tab's core.save via direct or worker proxy
+        if (chrome.tabs && chrome.tabs.sendMessage) {
+          try {
+            const p = chrome.tabs.sendMessage(tabId, payload);
+            if (p && typeof p.catch === 'function') {
+              p.catch(async e => {
+                // direct failed - try worker proxy as fallback
+                if (chrome.runtime && chrome.runtime.sendMessage) {
+                  try {
+                    const r = await chrome.runtime.sendMessage({
+                      cmd: 'gallery-save',
+                      tabId,
+                      request: payload
+                    });
+                    if (r && r.error) {
+                      notify(r.error);
+                    }
+                  }
+                  catch (err) {
+                    notify(err.message || String(err));
+                  }
+                }
+                else {
+                  notify(e.message || String(e));
+                }
+              });
+            }
+          }
+          catch (e) {
+            if (chrome.runtime && chrome.runtime.sendMessage) {
+              chrome.runtime.sendMessage({
+                cmd: 'gallery-save',
+                tabId,
+                request: payload
+              }).catch(err => notify(err.message || String(err)));
+            }
+            else {
+              notify(e.message || String(e));
+            }
+          }
+        }
+        else if (chrome.runtime && chrome.runtime.sendMessage) {
+          chrome.runtime.sendMessage({
+            cmd: 'gallery-save',
+            tabId,
+            request: payload
+          }).then(r => {
+            if (r && r.error) {
+              notify(r.error);
+            }
+          }).catch(e => notify(e.message || String(e)));
+        }
+        else {
+          notify('Cannot download from detached view: extension APIs unavailable');
+        }
+      }
+      else {
+        notify('Cannot download: parent not available');
+      }
     }
     else {
       const links = images.map(o => o.src);
@@ -182,15 +284,35 @@ document.addEventListener('click', e => {
     }
   }
   else if (cmd === 'window') {
-    chrome.tabs.create({
-      url: location.href
-    });
+    if (chrome.tabs && chrome.tabs.create) {
+      chrome.tabs.create({
+        url: location.href
+      });
+    }
+    else if (chrome.runtime && chrome.runtime.sendMessage) {
+      // Firefox embedded iframe has no chrome.tabs
+      try {
+        const p = chrome.runtime.sendMessage({
+          cmd: 'open-gallery',
+          url: location.href
+        });
+        if (p && typeof p.catch === 'function') {
+          p.catch(e => notify(e.message || String(e)));
+        }
+      }
+      catch (e) {
+        notify(e.message || String(e));
+      }
+    }
+    else {
+      window.open(location.href, '_blank');
+    }
   }
   else if (cmd === 'close') {
     if (window.top === window) {
       window.close();
     }
-    else {
+    else if (parent && parent.to && typeof parent.to.ui === 'function') {
       parent.to.ui();
     }
   }
@@ -227,10 +349,43 @@ document.addEventListener('input', e => {
         img.onload = () => {
           a.textContent += ' (' + img.naturalWidth + '✕' + img.naturalHeight + ')';
           // set image size for the "ui" view
-          window.parent.ui.contentWindow.meta(obj.src, {
-            width: img.naturalWidth,
-            height: img.naturalHeight
-          });
+          if (window.top !== window && window.parent && window.parent.ui && window.parent.ui.contentWindow && typeof window.parent.ui.contentWindow.meta === 'function') {
+            try {
+              window.parent.ui.contentWindow.meta(obj.src, {
+                width: img.naturalWidth,
+                height: img.naturalHeight
+              });
+            }
+            catch (e) {}
+          }
+          else if (window.top === window) {
+            // detached: forward dimensions to host tab's ui via tabs/runtime proxy
+            const metaPayload = {
+              cmd: 'gallery-meta',
+              tabId,
+              src: obj.src,
+              width: img.naturalWidth,
+              height: img.naturalHeight
+            };
+            if (chrome.tabs && chrome.tabs.sendMessage) {
+              try {
+                const p = chrome.tabs.sendMessage(tabId, metaPayload);
+                if (p && typeof p.catch === 'function') {
+                  p.catch(() => {});
+                }
+              }
+              catch (e) {}
+            }
+            if (chrome.runtime && chrome.runtime.sendMessage) {
+              try {
+                const p = chrome.runtime.sendMessage(metaPayload);
+                if (p && typeof p.catch === 'function') {
+                  p.catch(() => {});
+                }
+              }
+              catch (e) {}
+            }
+          }
         };
       }
       a.textContent = title;
@@ -243,9 +398,42 @@ document.addEventListener('input', e => {
   if (window.top === window) {
     document.body.dataset.top = true;
 
-    chrome.tabs.sendMessage(tabId, {
-      cmd: 'build'
-    }, init);
+    if (chrome.tabs && chrome.tabs.sendMessage) {
+      try {
+        chrome.tabs.sendMessage(tabId, {
+          cmd: 'build'
+        }, init);
+      }
+      catch (e) {
+        // fallback to worker proxy if tabs API is unavailable or throws
+        if (chrome.runtime && chrome.runtime.sendMessage) {
+          chrome.runtime.sendMessage({
+            cmd: 'gallery-build',
+            tabId
+          }).then(r => {
+            if (r && r.error) {
+              notify(r.error);
+            }
+            else if (r) {
+              init(r);
+            }
+          }).catch(err => notify(err.message || String(err)));
+        }
+      }
+    }
+    else if (chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({
+        cmd: 'gallery-build',
+        tabId
+      }).then(r => {
+        if (r && r.error) {
+          notify(r.error);
+        }
+        else if (r) {
+          init(r);
+        }
+      }).catch(err => notify(err.message || String(err)));
+    }
   }
   else {
     const resp = window.parent.ui.contentWindow.build();

@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "name": "Download All Images",
   "description": "__MSG_app_description__",
   "default_locale": "en",
@@ -17,7 +17,7 @@
     "<all_urls>"
   ],
   "background": {
-    "scripts": ["worker.js"]
+    "service_worker": "worker.js"
   },
   "action": {},
   "icons": {
@@ -42,16 +42,8 @@
     "open_in_tab": true,
     "page": "data/options/index.html"
   },
+  "incognito": "split",
   "commands": {
     "_execute_action": {}
-  },
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "{32af1358-428a-446d-873e-5f8eb5f2a72e}",
-      "strict_min_version": "148.0",
-      "data_collection_permissions": {
-        "required": ["none"]
-      }
-    }
   }
 }
