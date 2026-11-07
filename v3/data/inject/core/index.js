@@ -308,6 +308,33 @@ ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
   }
 };
 
+// handle save-images forwarded from detached gallery tab
+chrome.runtime.onMessage.addListener((request, sender, response) => {
+  // only handle 'save-images' delivered via tabs.sendMessage (direct from detached gallery
+  // or forwarded by worker from 'gallery-save'). Ignore 'gallery-save' runtime messages here
+  // to avoid double-saving when both worker and core receive the runtime message.
+  if (request.cmd !== 'save-images') {
+    return;
+  }
+  const payload = request;
+  // only accept if targeting this host tab
+  if (request.tabId && request.tabId !== runtime.tabId) {
+    return;
+  }
+  // prevent random page scripts from triggering saves:
+  // tabs.sendMessage from extension pages has sender.url starting with extension scheme,
+  // while page origin would have http(s) url; accept extension-originated or worker-proxied messages.
+  const senderUrl = sender.url || (sender.tab && sender.tab.url) || '';
+  // If sender has no url property (worker proxy), accept.
+  // If senderUrl exists and is not extension scheme, ignore to avoid abuse from web pages.
+  if (senderUrl && !/^(moz-extension|chrome-extension):/.test(senderUrl)) {
+    return;
+  }
+  self.stopping();
+  self.save(payload).then(() => response && response(true)).catch(e => response && response({error: e.message}));
+  return true;
+});
+
 ui.addEventListener('load', () => {
   ui.dataset.loading = false;
   // Load gallery when UI is ready
