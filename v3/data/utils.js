@@ -149,6 +149,47 @@ self.utils = {
     // prefer type from URL, rather than type that is returned by server.
     // Some servers return "application/..." for image types
     return img.type || response.type || '';
+  },
+  /* copy text to the clipboard (fallback to execCommand when the async Clipboard API is unavailable or rejects) */
+  async copy(text) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      throw Error('Clipboard API is not available');
+    }
+    catch (e) {
+      const active = document.activeElement;
+      let ta;
+      try {
+        ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.left = '0';
+        ta.style.opacity = '0';
+        document.body.append(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, text.length);
+        if (typeof document.execCommand !== 'function' || document.execCommand('copy') === false) {
+          throw e;
+        }
+      }
+      finally {
+        if (ta) {
+          ta.remove();
+        }
+        if (active && active !== document.body && typeof active.focus === 'function') {
+          try {
+            active.focus();
+          }
+          catch (err) {}
+        }
+      }
+    }
   }
 };
 

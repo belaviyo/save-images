@@ -173,23 +173,12 @@ document.addEventListener('click', e => {
     }
     else {
       const links = images.map(o => o.src);
-      const copy = links => {
-        navigator.clipboard.writeText(links.join('\n')).catch(e => alert(e.message));
-      };
-
-
-      if (window.top === window) {
-        copy(links);
-      }
-      else {
-        chrome.scripting.executeScript({
-          target: {tabId},
-          injectImmediately: true,
-          func: copy,
-          args: [links]
-        });
-      }
-      notify(links.length + ` link${links.length === 1 ? '' : 's'} copied to the clipboard`);
+      const message = links.length + ` link${links.length === 1 ? '' : 's'} copied to the clipboard`;
+      utils.copy(links.join('\n')).then(() => {
+        notify(message);
+      }, e => {
+        notify(e.message || String(e));
+      });
     }
   }
   else if (cmd === 'window') {

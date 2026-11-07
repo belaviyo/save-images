@@ -613,15 +613,12 @@ document.addEventListener('click', e => {
   }
   else if (cmd === 'copy') {
     const links = build().images.map(s => s.src);
-    chrome.scripting.executeScript({
-      target: {tabId},
-      injectImmediately: true,
-      func: links => {
-        navigator.clipboard.writeText(links.join('\n')).catch(e => alert(e.message));
-      },
-      args: [links]
+    const message = links.length + ` link${links.length === 1 ? '' : 's'} copied to the clipboard`;
+    utils.copy(links.join('\n')).then(() => {
+      parent.toast(message);
+    }, e => {
+      parent.toast(e.message || String(e), 5000, 'error');
     });
-    parent.toast(links.length + ` link${links.length === 1 ? '' : 's'} copied to the clipboard`);
   }
   else if (cmd === 'restart') {
     window.location.reload();

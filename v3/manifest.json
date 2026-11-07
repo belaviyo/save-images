@@ -17,7 +17,6 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "worker.js",
     "scripts": ["worker.js"]
   },
   "action": {},
@@ -43,7 +42,6 @@
     "open_in_tab": true,
     "page": "data/options/index.html"
   },
-  "incognito": "split",
   "commands": {
     "_execute_action": {}
   },
