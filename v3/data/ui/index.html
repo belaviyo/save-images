@@ -30,7 +30,7 @@
       <label>
         <span data-i18n="ui_level"></span>&nbsp;
         <progress id="deep-progress" value="0" max="100" data-visible=false></progress>&nbsp;
-        <input type="number" value="1" id="deep-level" min="0" max="3">
+        <input autocomplete="off" type="number" value="1" id="deep-level" min="0" max="3">
       </label>
     </fieldset>
   </header>
@@ -38,16 +38,16 @@
     <p id="notify"></p>
     <div hbox>
       <fieldset flex=1>
-        <legend><label><input type="checkbox" id="group-size"> <span data-i18n="ui_file_size"></span></label></legend>
+        <legend><label><input autocomplete="off" type="checkbox" id="group-size"> <span data-i18n="ui_file_size"></span></label></legend>
         <table>
           <tr>
             <td data-i18n="ui_min"></td>
-            <td><input type="number" value="4000" id="size-min"></td>
+            <td><input autocomplete="off" type="number" value="4000" id="size-min"></td>
             <td data-i18n="ui_bytes"></td>
           </tr>
           <tr>
             <td data-i18n="ui_max"></td>
-            <td><input type="number" value="0" id="size-max"></td>
+            <td><input autocomplete="off" type="number" value="0" id="size-max"></td>
             <td data-i18n="ui_bytes"></td>
           </tr>
         </table>
@@ -56,11 +56,11 @@
           <legend data-i18n="ui_unkown"></legend>
           <table>
             <tr>
-              <td><input type="radio" name="size" id="unknown-size-skip"></td>
+              <td><input autocomplete="off" type="radio" name="size" id="unknown-size-skip"></td>
               <td><label for="unknown-size-skip" data-i18n="ui_skip"></label></td>
             </tr>
             <tr>
-              <td><input type="radio" name="size" id="unknown-size-save" checked="true"></td>
+              <td><input autocomplete="off" type="radio" name="size" id="unknown-size-save" checked="true"></td>
               <td><label for="unknown-size-save" data-i18n="ui_save"></label></td>
             </tr>
           </table>
@@ -68,23 +68,23 @@
       </fieldset>
 
       <fieldset flex=1>
-        <legend><label><input type="checkbox" id="group-dimension"><span data-i18n="ui_dimension"></span></label></legend>
+        <legend><label><input autocomplete="off" type="checkbox" id="group-dimension"><span data-i18n="ui_dimension"></span></label></legend>
         <table>
           <tr>
             <td data-i18n="ui_min_width" class="nowrap"></td>
-            <td><input type="number" value="200" id="dimension-width-min"></td>
+            <td><input autocomplete="off" type="number" value="200" id="dimension-width-min"></td>
           </tr>
           <tr>
             <td data-i18n="ui_max_width" class="nowrap"></td>
-            <td><input type="number" value="0" id="dimension-width-max"></td>
+            <td><input autocomplete="off" type="number" value="0" id="dimension-width-max"></td>
           </tr>
           <tr>
             <td colspan="2" style="text-align: end;">
-              <select id="dimension-exchange" data-i18n="ui_exchange@title">
+              <select autocomplete="off" id="dimension-exchange" data-i18n="ui_exchange@title">
                 <option value="allow" data-i18n="ui_allow_exchange"></option>
                 <option value="deny" data-i18n="ui_deny_exchange"></option>
               </select>
-              <select id="dimension-operation"  data-i18n="ui_operation@title">
+              <select autocomplete="off" id="dimension-operation"  data-i18n="ui_operation@title">
                 <option value="and" data-i18n="ui_and"></option>
                 <option value="or" data-i18n="ui_or"></option>
               </select>
@@ -92,11 +92,11 @@
           </tr>
           <tr>
             <td data-i18n="ui_min_height" class="nowrap"></td>
-            <td><input type="number" value="200" id="dimension-height-min"></td>
+            <td><input autocomplete="off" type="number" value="200" id="dimension-height-min"></td>
           </tr>
           <tr>
             <td data-i18n="ui_max_height" class="nowrap"></td>
-            <td><input type="number" value="0" id="dimension-height-max"></td>
+            <td><input autocomplete="off" type="number" value="0" id="dimension-height-max"></td>
           </tr>
         </table>
 
@@ -104,11 +104,11 @@
           <legend data-i18n="ui_unkown"></legend>
           <table>
             <tr>
-              <td><input type="radio" name="dimension" id="unknown-dimension-skip"></td>
+              <td><input autocomplete="off" type="radio" name="dimension" id="unknown-dimension-skip"></td>
               <td><label for="unknown-dimension-skip" data-i18n="ui_skip"></label></td>
             </tr>
             <tr>
-              <td><input type="radio" name="dimension" id="unknown-dimension-save" checked=true></td>
+              <td><input autocomplete="off" type="radio" name="dimension" id="unknown-dimension-save" checked=true></td>
               <td><label for="unknown-dimension-save" data-i18n="ui_save"></label></td>
             </tr>
           </table>
@@ -116,42 +116,42 @@
       </fieldset>
 
       <fieldset flex=1>
-        <legend><label><input type="checkbox" id="group-type" checked="true"><span data-i18n="ui_image_types"></span></label></legend>
+        <legend><label><input autocomplete="off" type="checkbox" id="group-type" checked="true"><span data-i18n="ui_image_types"></span></label></legend>
         <table>
           <tr>
-            <td><input type="radio" name="type" id="type-all" checked=true></td>
+            <td><input autocomplete="off" type="radio" name="type" id="type-all" checked=true></td>
             <td><label for="type-all" data-i18n="ui_all_images"></label></td>
           </tr>
           <tr>
-            <td><input type="radio" name="type" id="type-selection"></td>
+            <td><input autocomplete="off" type="radio" name="type" id="type-selection"></td>
             <td><label for="type-selection" data-i18n="ui_Selection"></label></td>
           </tr>
         </table>
         <table class="indent" id="image-types">
           <tr>
-            <td><input type="checkbox" id="type-jpeg"></td>
+            <td><input autocomplete="off" type="checkbox" id="type-jpeg"></td>
             <td><label for="type-jpeg" data-i18n="ui_jpg_images"></label></td>
           </tr>
           <tr>
-            <td><input type="checkbox" id="type-png"></td>
+            <td><input autocomplete="off" type="checkbox" id="type-png"></td>
             <td><label for="type-png" data-i18n="ui_png_images"></label></td>
           </tr>
           <tr>
-            <td><input type="checkbox" id="type-gif"></td>
+            <td><input autocomplete="off" type="checkbox" id="type-gif"></td>
             <td><label for="type-gif" data-i18n="ui_gif_images"></label></td>
           </tr>
           <tr>
-            <td><input type="checkbox" id="type-bmp"></td>
+            <td><input autocomplete="off" type="checkbox" id="type-bmp"></td>
             <td><label for="type-bmp" data-i18n="ui_bmp_images"></label></td>
           </tr>
           <tr>
-            <td><input type="checkbox" id="type-webp"></td>
+            <td><input autocomplete="off" type="checkbox" id="type-webp"></td>
             <td><label for="type-webp" data-i18n="ui_webp_images"></label></td>
           </tr>
         </table>
         <table>
           <tr>
-            <td><input type="checkbox" id="no-type" checked="true"></td>
+            <td><input autocomplete="off" type="checkbox" id="no-type" checked="true"></td>
             <td><label for="no-type" data-i18n="ui_no_extension"></label></td>
           </tr>
         </table>
@@ -163,12 +163,12 @@
         <legend data-i18n="ui_regexp"></legend>
         <table width="100%">
           <tr>
-            <td><input type="checkbox" id="group-regexp"></td>
+            <td><input autocomplete="off" type="checkbox" id="group-regexp"></td>
             <td><label for="group-regexp" data-i18n="ui_regexp_desc"></label></td>
           </tr>
           <tr>
             <td></td>
-            <td hbox><input type="text" id="regexp-input" flex=1 placeholder="e.g.: .*"></td>
+            <td hbox><input autocomplete="off" type="text" id="regexp-input" flex=1 placeholder="e.g.: .*"></td>
           </tr>
         </table>
       </fieldset>
@@ -176,12 +176,12 @@
         <legend data-i18n="ui_blacklist"></legend>
         <table width="100%">
           <tr>
-            <td><input type="checkbox" id="group-blacklist"></td>
+            <td><input autocomplete="off" type="checkbox" id="group-blacklist"></td>
             <td><label for="group-blacklist" data-i18n="ui_blacklist_desc"></label></td>
           </tr>
           <tr>
             <td></td>
-            <td hbox><input type="text" id="blacklist-input" flex=1 placeholder="e.g.: word1, word2"></td>
+            <td hbox><input autocomplete="off" type="text" id="blacklist-input" flex=1 placeholder="e.g.: word1, word2"></td>
           </tr>
         </table>
       </fieldset>
@@ -190,31 +190,31 @@
       <fieldset flex=1>
         <legend data-i18n="ui_misc"></legend>
         <div class="two">
-          <input type="checkbox" id="group-origin">
+          <input autocomplete="off" type="checkbox" id="group-origin">
           <label for="group-origin" data-i18n="ui_same_domain"></label>
-          <input type="checkbox" id="exclude-cors-frames">
+          <input autocomplete="off" type="checkbox" id="exclude-cors-frames">
           <label for="exclude-cors-frames" data-i18n="ui_exclude_cors_frames"></label>
-          <input type="checkbox" id="exclude-sorg-frames">
+          <input autocomplete="off" type="checkbox" id="exclude-sorg-frames">
           <label for="exclude-sorg-frames" data-i18n="ui_exclude_sorg_frames"></label>
-          <input type="checkbox" id="group-identical" checked="true">
+          <input autocomplete="off" type="checkbox" id="group-identical" checked="true">
           <label for="group-identical" data-i18n="ui_unique"></label>
-          <input type="checkbox" id="group-zip">
+          <input autocomplete="off" type="checkbox" id="group-zip">
           <label for="group-zip" data-i18n="ui_separate"></label>
-          <input type="checkbox" id="add-readme">
+          <input autocomplete="off" type="checkbox" id="add-readme">
           <label for="add-readme" data-i18n="ui_readme"></label>
-          <input type="checkbox" id="auto-save">
+          <input autocomplete="off" type="checkbox" id="auto-save">
           <label for="auto-save" data-i18n="ui_autosave"></label>
-          <input type="checkbox" id="add-parent"  checked="true">
+          <input autocomplete="off" type="checkbox" id="add-parent"  checked="true">
           <label for="add-parent" data-i18n="ui_parent"></label>
-          <input type="checkbox" id="network-cors" checked="true">
+          <input autocomplete="off" type="checkbox" id="network-cors" checked="true">
           <label for="network-cors" data-i18n="ui_networ_cors"></label>
-          <input type="checkbox" id="calc" checked="true">
+          <input autocomplete="off" type="checkbox" id="calc" checked="true">
           <label for="calc">
             <a data-i18n="ui_calc" data-href="faq18" target="_blank"></a>&nbsp;
             <span data-i18n="ui_sl_re"></span>
           </label>
           <div class="sub">
-            <input type="checkbox" id="accurate">
+            <input autocomplete="off" type="checkbox" id="accurate">
             <label for="accurate">
               <a data-i18n="ui_accurate" data-href="faq19" target="_blank"></a>&nbsp;
               <span data-i18n="ui_sl_re"></span>
@@ -226,7 +226,7 @@
         <legend data-i18n="ui_mask"></legend>
         <span data-i18n="ui_mask_desc"></span>
         <div hbox style="margin-top: 10px;">
-          <input type="text" id="file-mask" value="" placeholder="[name][extension]" flex="1"  data-i18n="ui_mask_keywords@title">
+          <input autocomplete="off" type="text" id="file-mask" value="" placeholder="[name][extension]" flex="1"  data-i18n="ui_mask_keywords@title">
           <div class="list" hbox align=center>
             <span data-i18n="ui_keywords"></span>
             <ul>
@@ -268,7 +268,7 @@
             <td data-i18n="ui_format"></td>
             <td>
               <div hbox>
-                <input type="text" id="format" value="[title] - [date] [time].zip" placeholder="[title] - [date] [time].zip" flex="1">
+                <input autocomplete="off" type="text" id="format" value="[title] - [date] [time].zip" placeholder="[title] - [date] [time].zip" flex="1">
                 <div class="list" hbox align=center>
                   <span data-i18n="ui_keywords"></span>
                   <ul>
@@ -292,13 +292,13 @@
           </tr>
           <tr data-i18n="ui_dialog@title">
             <td><label for="open-save-dialog" data-i18n="ui_save_dialog"></label></td>
-            <td><input type="checkbox" id="open-save-dialog"></td>
+            <td><input autocomplete="off" type="checkbox" id="open-save-dialog"></td>
           </tr>
           <tr>
             <td data-i18n="ui_zip"></td>
             <td>
               <div hbox>
-                <input type="text" id="filename" placeholder="Filename" flex="1">
+                <input autocomplete="off" type="text" id="filename" placeholder="Filename" flex="1">
               </div>
             </td>
           </tr>
@@ -306,7 +306,7 @@
             <td data-i18n="ui_directory"></td>
             <td>
               <div hbox>
-                <input type="text" id="custom-directory" data-i18n="ui_relative@placeholder" flex="1">
+                <input autocomplete="off" type="text" id="custom-directory" data-i18n="ui_relative@placeholder" flex="1">
               </div>
             </td>
           </tr>
@@ -323,15 +323,15 @@
         <tbody>
           <tr>
             <td data-i18n="ui_prefs_stop_after"></td>
-            <td align="right"><input type="number" min="5" id="prefs-stop-after" value="0"></td>
+            <td align="right"><input autocomplete="off" type="number" min="5" id="prefs-stop-after" value="0"></td>
           </tr>
           <tr>
             <td data-i18n="ui_prefs_max_warning"></td>
-            <td align="right"><input type="number" min="5" id="prefs-max-warning" value="30"></td>
+            <td align="right"><input autocomplete="off" type="number" min="5" id="prefs-max-warning" value="30"></td>
           </tr>
           <tr>
             <td data-i18n="ui_prefs_zip_warning"></td>
-            <td align="right"><input type="number" min="3" id="prefs-zip-warning" value="15"></td>
+            <td align="right"><input autocomplete="off" type="number" min="3" id="prefs-zip-warning" value="15"></td>
           </tr>
         </tbody>
       </table>
@@ -341,7 +341,7 @@
     <div id="profiles-container" data-i18n="ui_profiles_title@title">
       <div>
         <span data-i18n="ui_profile"></span>
-        <select id="profiles"></select>
+        <select autocomplete="off" id="profiles"></select>
       </div>
       <button data-cmd="delete-profile" disabled>Delete</button>
       <button data-cmd="add-profile">Add New</button>
