@@ -48,18 +48,30 @@ ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
       this.indices = {};
 
       const url = URL.createObjectURL(blob);
-      await nd({
+      const id = await nd({
         url,
         filename: request.filename,
         conflictAction: 'uniquify',
         saveAs: request.saveAs
       });
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+      // the caller keeps the blob URL alive until the download is over
+      return {id, url, size: blob.size};
     }
     catch (e) {
+      diagnostics.add({
+        mode: 'zip',
+        error: e.message || String(e)
+      });
       notify(e);
+      return null;
     }
-    zip.delete();
+    finally {
+      try {
+        zip.delete();
+      }
+      catch (e) {}
+    }
   }
 }
 
@@ -122,6 +134,40 @@ window.to = {
   }
 };
 
+/* save diagnostics; only recorded when "debug-save" is enabled in the options page */
+let report = null;
+const diagnostics = {
+  start: request => {
+    report = {
+      version: chrome.runtime.getManifest().version,
+      userAgent: navigator.userAgent,
+      date: new Date().toISOString(),
+      mode: request.directory ? 'directory' : (request.zip ? 'zip' : 'separate'),
+      images: request.images.length,
+      filenames: request.images.map(o => o.filename),
+      frameIds: request.images.map(o => o.frameId),
+      downloads: []
+    };
+  },
+  add: entry => {
+    if (report) {
+      report.downloads.push(entry);
+    }
+  },
+  save: () => new Promise(resolve => {
+    if (report === null) {
+      return resolve();
+    }
+    try {
+      console.info('[save-images] last save', report);
+      chrome.storage.local.set({'save-diagnostics': report}, resolve);
+    }
+    catch (e) {
+      resolve();
+    }
+  })
+};
+
 /* native download */
 const nd = async (options, filename = 'images.zip') => {
   if (chrome.downloads) {
@@ -137,15 +183,93 @@ const nd = async (options, filename = 'images.zip') => {
     }
   }
   else {
-    const r = runtime.sendMessage({
+    const r = await runtime.sendMessage({
       cmd: 'native-download',
       options,
       filename
     }, 'worker');
-    if (r.error) {
+    if (r && r.error) {
       throw Error(r.error);
     }
     return r;
+  }
+};
+
+/* search a download item; the callback form works on both Chrome and Firefox */
+const search = id => new Promise(resolve => {
+  try {
+    chrome.downloads.search({id}, items => resolve(items && items[0]));
+  }
+  catch (e) {
+    resolve();
+  }
+});
+
+/* wait for a download to reach a terminal state (complete or interrupted) */
+const waitOne = id => new Promise(resolve => {
+  let done = false;
+  let interval;
+  let timeout;
+
+  const finish = item => {
+    if (done) {
+      return;
+    }
+    done = true;
+    clearInterval(interval);
+    clearTimeout(timeout);
+    if (chrome.downloads && chrome.downloads.onChanged) {
+      try {
+        chrome.downloads.onChanged.removeListener(onChanged);
+      }
+      catch (e) {}
+    }
+    resolve(item || {id, state: 'unknown'});
+  };
+
+  const poll = () => search(id).then(item => {
+    if (!item || item.state !== 'in_progress') {
+      finish(item);
+    }
+  });
+
+  const onChanged = delta => {
+    if (delta.id === id && delta.state && delta.state.current !== 'in_progress') {
+      poll();
+    }
+  };
+
+  interval = setInterval(poll, 1000);
+  // safety net for downloads that never report a terminal state
+  timeout = setTimeout(() => finish(), 10 * 60 * 1000);
+
+  if (chrome.downloads && chrome.downloads.onChanged) {
+    try {
+      chrome.downloads.onChanged.addListener(onChanged);
+    }
+    catch (e) {}
+  }
+  poll();
+});
+
+/* downloads are created by the worker when the downloads API is not available in this frame */
+const waitForDownloads = async ids => {
+  ids = (ids || []).filter(id => typeof id === 'number' && isNaN(id) === false);
+  if (ids.length === 0) {
+    return [];
+  }
+  if (chrome.downloads && chrome.downloads.onChanged) {
+    return Promise.all(ids.map(waitOne));
+  }
+  try {
+    const r = await runtime.sendMessage({
+      cmd: 'wait-downloads',
+      ids
+    }, 'worker');
+    return (r && r.results) || [];
+  }
+  catch (e) {
+    return [];
   }
 };
 
@@ -155,6 +279,7 @@ const get = async (o, type = 'ab') => {
 
   // skip datauri
   if (!href || href.startsWith('data:') === false) {
+    const options = typeof o.frameId === 'number' ? {frameId: o.frameId} : undefined;
     href = await runtime.sendMessage({
       cmd: 'download-image',
       frameId: o.frameId,
@@ -162,7 +287,7 @@ const get = async (o, type = 'ab') => {
       referer: o.page,
       capture: false,
       type: navigator.userAgent.includes('Firefox') ? 'datauri' : 'blob' // Firefox does not accept blob://
-    }, 'page', {frameId: o.frameId});
+    }, 'page', options);
     if (href.error) {
       throw Error(href.error);
     }
@@ -195,6 +320,7 @@ const progress = value => {
 
 const perform = async (request, one) => {
   const indices = {};
+  const results = [];
 
   const prefs = await chrome.storage.local.get({
     'download-delay': 100,
@@ -205,7 +331,7 @@ const perform = async (request, one) => {
     button.badge((n / request.images.length * 100).toFixed(0) + '%');
     progress(request.images.length - n);
 
-    await Promise.all([...new Array(prefs['download-number'])].map(async (d, i) => {
+    const settled = await Promise.allSettled([...new Array(prefs['download-number'])].map(async (d, i) => {
       const image = request.images[i + n];
       if (!image) {
         return;
@@ -222,13 +348,38 @@ const perform = async (request, one) => {
           filename += ` (${indices[filename] - 1})`;
         }
       }
-      await one(filename, image);
+      try {
+        return await one(filename, image);
+      }
+      catch (e) {
+        const error = e instanceof Error ? e : Error(e && e.message ? e.message : String(e));
+        error.filename = error.filename || filename;
+        throw error;
+      }
     }));
+
+    for (const r of settled) {
+      if (r.status === 'fulfilled') {
+        if (r.value !== undefined) {
+          results.push(r.value);
+        }
+      }
+      // one broken image must not cancel the remaining downloads
+      else {
+        console.warn('Download failed', r.reason);
+        diagnostics.add({
+          filename: r.reason && r.reason.filename,
+          error: r.reason && (r.reason.message || String(r.reason))
+        });
+      }
+    }
 
     await new Promise(resolve => setTimeout(resolve, prefs['download-delay']));
   }
   progress(0);
   button.badge('');
+
+  return results;
 };
 
 self.stopping = () => {
@@ -242,7 +393,28 @@ self.stopping = () => {
 
 self.save = async (request, remove = true) => {
   // Save Images
-  if (request.cmd === 'save-images') {
+  if (request.cmd !== 'save-images') {
+    console.error('unknown command');
+    return;
+  }
+
+  let debug = false;
+  report = null;
+  try {
+    const prefs = await chrome.storage.local.get({
+      'debug-save': false
+    });
+    debug = prefs['debug-save'] === true;
+  }
+  catch (e) {}
+  if (debug) {
+    try {
+      diagnostics.start(request);
+    }
+    catch (e) {}
+  }
+
+  try {
     // save to directory
     if (request.directory) {
       try {
@@ -283,28 +455,49 @@ ${request.images.map(e => e.filename + ', ' + e.src).join('\n')}
     // save to IndexedDB
     else if (request.zip) {
       const z = new ZIP();
-      await z.perform(request);
+      const r = await z.perform(request);
+      if (r) {
+        // keep the panel and the blob URL alive until the archive is written
+        const items = await waitForDownloads([r.id]);
+        if (debug) {
+          items.forEach(item => diagnostics.add(Object.assign({
+            size: r.size
+          }, item)));
+        }
+        URL.revokeObjectURL(r.url);
+      }
       closing('done', remove);
     }
     // save using download manager
     else {
-      await perform(request, (filename, image) => {
+      const downloads = (await perform(request, async (filename, image) => {
         const path = request.filename.split('/');
         path.pop();
-        path.push(image.filename);
+        path.push(filename);
 
-        return nd({
+        const id = await nd({
           url: image.src,
           filename: path.join('/'),
           conflictAction: 'uniquify',
           saveAs: false
-        });
-      });
+        }, filename);
+
+        return {id, filename};
+      })).filter(o => o && typeof o.id === 'number');
+
+      const items = await waitForDownloads(downloads.map(o => o.id));
+      if (debug) {
+        items.forEach((item, i) => diagnostics.add(Object.assign({
+          filename: downloads[i] && downloads[i].filename
+        }, item)));
+      }
       closing('done', remove);
     }
   }
-  else {
-    console.error('unknown command');
+  finally {
+    if (debug) {
+      await diagnostics.save();
+    }
   }
 };
 
@@ -331,7 +524,21 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     return;
   }
   self.stopping();
-  self.save(payload).then(() => response && response(true)).catch(e => response && response({error: e.message}));
+  self.save(payload).then(() => {
+    try {
+      if (response) {
+        response(true);
+      }
+    }
+    catch (e) {}
+  }).catch(e => {
+    try {
+      if (response) {
+        response({error: e.message});
+      }
+    }
+    catch (err) {}
+  });
   return true;
 });
 

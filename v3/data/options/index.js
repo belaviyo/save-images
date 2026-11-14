@@ -28,7 +28,8 @@ function restore() {
     'head-timeout': 30 * 1000,
     'head-delay': 100,
     'dig-delay': 100,
-    'dig-timeout': 30 * 1000
+    'dig-timeout': 30 * 1000,
+    'debug-save': false
   }, prefs => {
     document.getElementById('json').value = JSON.stringify(prefs.json, null, 2);
     delete prefs.json;
@@ -61,6 +62,7 @@ function save() {
     'dig-timeout': Math.max(5, Number(document.getElementById('dig-timeout').value)) * 1000,
     'head-delay': Math.max(0, Number(document.getElementById('head-delay').value)),
     'dig-delay': Math.max(0, Number(document.getElementById('dig-delay').value)),
+    'debug-save': document.getElementById('debug-save').checked,
     json
   };
 
@@ -99,6 +101,24 @@ document.getElementById('reset').addEventListener('click', e => {
 document.getElementById('support').addEventListener('click', () => chrome.tabs.create({
   url: chrome.runtime.getManifest().homepage_url + '?rd=donate'
 }));
+
+document.getElementById('diagnostics').addEventListener('click', () => {
+  chrome.storage.local.get({
+    'save-diagnostics': null
+  }, prefs => {
+    if (prefs['save-diagnostics'] === null) {
+      toast.textContent = 'No diagnostics recorded. Enable "Save diagnostics of the last download" and save images again.';
+    }
+    else {
+      navigator.clipboard.writeText(JSON.stringify(prefs['save-diagnostics'], null, 2)).then(() => {
+        toast.textContent = 'Diagnostics copied to the clipboard.';
+      }, e => {
+        toast.textContent = e.message || 'Cannot copy to the clipboard.';
+      });
+    }
+    setTimeout(() => toast.textContent = '', 3000);
+  });
+});
 
 if (navigator.userAgent.indexOf('Firefox') !== -1) {
   document.getElementById('rate').href =

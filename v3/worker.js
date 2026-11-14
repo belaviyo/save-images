@@ -7,6 +7,57 @@ const notify = message => chrome.storage.local.get({
   iconUrl: '/data/icons/48.png'
 }, id => setTimeout(chrome.notifications.clear, 3000, id)));
 
+/* wait for a download to reach a terminal state (complete or interrupted) */
+const waitForDownload = id => new Promise(resolve => {
+  let done = false;
+  let interval;
+  let timeout;
+
+  const finish = item => {
+    if (done) {
+      return;
+    }
+    done = true;
+    clearInterval(interval);
+    clearTimeout(timeout);
+    try {
+      chrome.downloads.onChanged.removeListener(onChanged);
+    }
+    catch (e) {}
+    resolve(item || {id, state: 'unknown'});
+  };
+
+  const poll = () => {
+    try {
+      chrome.downloads.search({id}, items => {
+        const item = items && items[0];
+        if (!item || item.state !== 'in_progress') {
+          finish(item);
+        }
+      });
+    }
+    catch (e) {
+      finish();
+    }
+  };
+
+  const onChanged = delta => {
+    if (delta.id === id && delta.state && delta.state.current !== 'in_progress') {
+      poll();
+    }
+  };
+
+  interval = setInterval(poll, 1000);
+  // safety net for downloads that never report a terminal state
+  timeout = setTimeout(() => finish(), 10 * 60 * 1000);
+
+  try {
+    chrome.downloads.onChanged.addListener(onChanged);
+  }
+  catch (e) {}
+  poll();
+});
+
 chrome.action.onClicked.addListener(async tab => {
   try {
     await chrome.scripting.executeScript({
@@ -232,6 +283,16 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       return chrome.downloads.download(request.options);
     }).then(id => response(id)).catch(e => response({
       error: e.message
+    }));
+
+    return true;
+  }
+  else if (request.cmd === 'wait-downloads') {
+    const ids = Array.isArray(request.ids) ? request.ids.filter(id => typeof id === 'number' && isNaN(id) === false) : [];
+    Promise.all(ids.map(waitForDownload)).then(results => response({
+      results
+    })).catch(() => response({
+      results: []
     }));
 
     return true;

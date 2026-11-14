@@ -442,6 +442,10 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   }
   else if (request.cmd === 'images') {
     request.images.filter(img => img.type.startsWith('image/')).forEach(img => {
+      // the worker tags images on Firefox; direct collector messages carry the frame id in "sender" on Chrome
+      if (img.frameId === undefined && sender && typeof sender.frameId === 'number') {
+        img.frameId = sender.frameId;
+      }
       if (images[img.src]) {
         return;
       }
@@ -605,6 +609,9 @@ document.addEventListener('click', e => {
 
       parent.save(obj, e.isTrusted).then(() => {
         elements.counter.status.textContent = 'Saved';
+      }, err => {
+        elements.counter.status.textContent = 'Failed';
+        parent.toast(err.message || String(err), 10000, 'error');
       });
     };
     if (len > elements.prefs.max.valueAsNumber && cmd === 'save') {
@@ -637,6 +644,19 @@ document.addEventListener('click', e => {
   }
   else if (cmd === 'gallery') {
     window.parent.to.gallery();
+  }
+  else if (cmd === 'diagnostics') {
+    chrome.storage.local.get({
+      'save-diagnostics': null
+    }, prefs => {
+      if (prefs['save-diagnostics'] === null) {
+        parent.toast('No diagnostics recorded. Enable "Save diagnostics" on the options page and save again.');
+        return;
+      }
+      utils.copy(JSON.stringify(prefs['save-diagnostics'], null, 2)).then(() => {
+        parent.toast('Diagnostics of the last save copied to the clipboard');
+      }, e => parent.toast(e.message || String(e), 5000, 'error'));
+    });
   }
   else if (cmd === 'insert') {
     const input = target.closest('.list').parentNode.querySelector('input');

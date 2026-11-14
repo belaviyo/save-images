@@ -53,6 +53,7 @@ class InZIP {
     this.fileOffset = 0;
     this.fileCount = 0;
     this.dirs = new Set();
+    this.queue = Promise.resolve();
   }
   ab(binary) {
     const bytes = new Uint8Array(binary.length);
@@ -182,6 +183,9 @@ class InZIP {
     if (this.dirs.has(dirname)) {
       return;
     }
+    // reserve the directory before the first await, otherwise concurrent
+    // callers will all write a directory entry for the same path
+    this.dirs.add(dirname);
 
     dirname = this.utf8encode(dirname);
     this.fileCount += 1;
@@ -214,7 +218,14 @@ class InZIP {
     this.fileOffset += fd.byteLength;
     await this.write('dir-data', this.ab(dirRecord));
   }
-  async add(path, uint8a) {
+  add(path, uint8a) {
+    // serialize writes so "fileOffset" can only be mutated by one job at a time
+    const job = this.queue.then(() => this._add(path, uint8a));
+    // keep the queue alive even when a previous write failed
+    this.queue = job.then(() => {}, () => {});
+    return job;
+  }
+  async _add(path, uint8a) {
     path = path.filter(Boolean);
 
     // mkdir directories
