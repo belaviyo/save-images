@@ -221,6 +221,12 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
           'operation': 'set',
           'header': 'Access-Control-Allow-Credentials',
           'value': 'true'
+        }, {
+          // "content-disposition" is not CORS-safelisted, so it must be
+          // explicitly exposed for utils.guess to read the server filename
+          'operation': 'set',
+          'header': 'access-control-expose-headers',
+          'value': 'content-disposition'
         }];
       }
 
@@ -263,6 +269,12 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
             'operation': 'set',
             'header': 'access-control-allow-origin',
             'value': '*'
+          }, {
+            // "content-disposition" is not CORS-safelisted, so it must be
+            // explicitly exposed for utils.guess to read the server filename
+            'operation': 'set',
+            'header': 'access-control-expose-headers',
+            'value': 'content-disposition'
           }, {
             'operation': 'remove',
             'header': 'referrer-policy'

@@ -15,6 +15,40 @@ self.utils = {
       .replace(/[`~!@#$%^&*()|+=?;:'",.<>{}[\]]/gi, '-')
       .replace(/[\\/]/gi, '_');
   },
+  /* true when the URL embeds another URL in its path (image proxy) */
+  proxied(src) {
+    try {
+      const name = decodeURIComponent(new URL(src).pathname.split('/').pop() || '');
+      return /^https?:\/\//i.test(name);
+    }
+    catch (e) {
+      return false;
+    }
+  },
+  /* extract a readable file name from a (possibly proxied) URL */
+  basename(src) {
+    try {
+      const url = new URL(src);
+      let name = url.pathname.split('/').pop() || url.hostname;
+      try {
+        name = decodeURIComponent(name);
+      }
+      catch (e) {}
+      // image proxies put the original URL in the path, e.g.
+      // /plain/https%3A%2F%2Fhost%2Fpath%2Ffile.jpeg@webp
+      if (/^https?:\/\//i.test(name)) {
+        try {
+          const inner = new URL(name);
+          name = decodeURIComponent(inner.pathname.split('/').pop() || name);
+        }
+        catch (e) {}
+      }
+      return name || 'image';
+    }
+    catch (e) {
+      return '';
+    }
+  },
   /* guess file-name */
   guess(img, mask, noType = true) {
     const indices = {};
@@ -53,14 +87,14 @@ self.utils = {
         const tmp = /(title|filename)=([^&]+)/.exec(url);
         if (tmp && tmp.length) {
           name = tmp[2];
+          try {
+            name = decodeURIComponent(name.split('?')[0].split('&')[0]) || 'image';
+          }
+          catch (e) {}
         }
         else {
-          name = url.substring(url.lastIndexOf('/') + 1);
+          name = self.utils.basename(url) || 'image';
         }
-        try {
-          name = decodeURIComponent(name.split('?')[0].split('&')[0]) || 'image';
-        }
-        catch (e) {}
       }
       else { // data-url
         name = 'image';
@@ -83,6 +117,20 @@ self.utils = {
       extension = '.jpg';
     }
     extension = extension.split('#')[0]; // removes hashes
+    // transform suffixes such as ".jpeg@webp" are not real extensions
+    if (/^\.[a-z0-9]{1,5}$/i.test(extension) === false) {
+      const transform = /@(webp|avif|jpeg|jpg|png|gif|heic|heif|bmp|tiff|ico|svg)$/i.exec(extension);
+      if (transform) {
+        // imgproxy-style "@webp" requests the output format
+        extension = '.' + transform[1];
+      }
+      else if (type && type !== 'image/unknown') {
+        extension = '.' + type.split('/').pop().split(/[+;]/).shift();
+      }
+      else {
+        extension = noType ? '.jpg' : '';
+      }
+    }
 
     name = name.slice(0, index);
     if (name.startsWith('%')) {
@@ -202,22 +250,26 @@ self.utils = {
       const controller = new AbortController();
       setTimeout(() => controller.abort(), prefs[timeout]);
 
-      fetch(o.src, {
+      const props = {
         signal: controller.signal,
         headers: {
-          'referer': o.page
+          'referer': o.page || location.href
         }
-      }).then(r => {
+      };
+      const attempt = credentials => fetch(o.src, credentials ? Object.assign({}, props, {
+        credentials
+      }) : props).then(r => {
         if (r.ok) {
-          resolve({
+          return {
             response: r,
             controller
-          });
+          };
         }
-        else {
-          throw Error('STATUS_CODE_' + r.status);
-        }
-      }).catch(reject);
+        throw Error('STATUS_CODE_' + r.status);
+      });
+      // content scripts are subject to CORS; the retry lets the "apply-referer"
+      // DNR rule add the CORS response headers so the headers stay readable
+      attempt().catch(() => attempt('include')).then(resolve, reject);
     });
   });
   response.text = o => response(o, 'dig-timeout')

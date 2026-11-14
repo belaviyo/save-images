@@ -105,11 +105,14 @@ collector.events = {
 collector.meta = async function(o) {
   // try to use this fast method when we are going to fetch the image later to get width and height
   let im;
+  // image proxies hide the real URL in their path; always ask the server for
+  // its content-disposition instead of trusting the extensions inside that URL
+  const proxied = utils.proxied(o.src);
 
   for (const [ext, type] of Object.entries(utils.EXTENSIONS)) {
     if (
       o.src.toLowerCase().endsWith('.' + ext) ||
-      (o.width && o.src.toLowerCase().indexOf('.' + ext) !== -1) || // e.g. http:../3522.jpg/0
+      (proxied === false && o.width && o.src.toLowerCase().indexOf('.' + ext) !== -1) || // e.g. http:../3522.jpg/0
       o.src.toLowerCase().indexOf('.' + ext + '?') !== -1 ||
       o.src.startsWith('data:image/' + ext)
     ) {
