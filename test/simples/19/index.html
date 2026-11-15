@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>16 images with identical basenames</title>
+</head>
+<body>
+  <!--
+    Regression test for https://github.com/belaviyo/save-images/issues (empty ZIP /
+    only the last file saved). The query strings make every "src" unique, but
+    utils.guess() resolves the very same basename ("image.svg") for all of them.
+  -->
+  <img src="../18/image.svg?i=1">
+  <img src="../18/image.svg?i=2">
+  <img src="../18/image.svg?i=3">
+  <img src="../18/image.svg?i=4">
+  <img src="../18/image.svg?i=5">
+  <img src="../18/image.svg?i=6">
+  <img src="../18/image.svg?i=7">
+  <img src="../18/image.svg?i=8">
+  <img src="../18/image.svg?i=9">
+  <img src="../18/image.svg?i=10">
+  <img src="../18/image.svg?i=11">
+  <img src="../18/image.svg?i=12">
+  <img src="../18/image.svg?i=13">
+  <img src="../18/image.svg?i=14">
+  <img src="../18/image.svg?i=15">
+  <img src="../18/image.svg?i=16">
+</body>
+</html>

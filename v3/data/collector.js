@@ -29,7 +29,7 @@ var collector = self.collector = {
   'processed-images': [], // all links that are image and are processed
   'raw-images': [], // all images that need to be parsed for metadata
   'docs': [], // all documents in the page
-  'cache': new Set() // all links that have already been evaluated
+  'cache': new Map() // normalized src -> pending candidate; null once evaluated
 };
 {
   let active = true;
@@ -184,6 +184,71 @@ collector.findRoots = function(doc, list = []) {
   }
 };
 
+/* parse a "srcset" value into candidate URLs and their size descriptors */
+collector.parseSrcset = function(value) {
+  const candidates = [];
+  // data URIs may contain commas, so do not split on every comma
+  const parts = (value || '').match(/(?:data:[^,]+,)?[^\s,]+(?:\s+\d+(?:\.\d+)?[wx])?/gi) || [];
+
+  for (const part of parts) {
+    const [src, descriptor = ''] = part.trim().split(/\s+/);
+    if (!src || src.startsWith('#') || /^javascript:/i.test(src)) {
+      continue;
+    }
+    // a comma inside a normal URL can leave a fragment such as "2" behind
+    if (/[/.?]/.test(src) === false && /^(?:https?|blob|file):/i.test(src) === false) {
+      continue;
+    }
+
+    const d = /^(\d+(?:\.\d+)?)(w|x)$/i.exec(descriptor);
+
+    candidates.push({
+      src,
+      width: d && d[2].toLowerCase() === 'w' ? Number(d[1]) : 0,
+      density: d && d[2].toLowerCase() === 'x' ? Number(d[1]) : 0
+    });
+  }
+
+  return candidates;
+};
+
+/* common lazy-loading attributes that point at the real image */
+collector.lazy = function(img) {
+  const names = [
+    'data-src',
+    'data-original',
+    'data-lazy',
+    'data-lazy-src',
+    'data-original-src',
+    'data-large',
+    'data-large-src',
+    'data-full',
+    'data-full-src',
+    'data-image',
+    'data-url',
+    'data-zoom',
+    'data-zoom-image',
+    'data-zoom-src',
+    'data-hi-res',
+    'data-highres'
+  ];
+  const values = [];
+
+  for (const name of names) {
+    const value = img.getAttribute(name);
+    if (
+      value && value.trim() &&
+      value.startsWith('#') === false &&
+      /^javascript:/i.test(value) === false &&
+      /^\d+$/.test(value) === false
+    ) {
+      values.push(value.trim());
+    }
+  }
+
+  return values;
+};
+
 /* collect images */
 collector.inspect = async function(doc, loc, name, policies) {
   const prefs = await chrome.storage.local.get({
@@ -245,6 +310,49 @@ collector.inspect = async function(doc, loc, name, policies) {
           }
         });
       }
+
+      // lazy-loading attributes often hold the real (larger) image
+      for (const candidate of collector.lazy(img)) {
+        sources.set(candidate, img);
+        collector.push({
+          src: candidate,
+          alt: img.alt,
+          custom: img.getAttribute(self.custom) || '',
+          verified: self.accuracy === 'accurate' ? false : true,
+          page: loc.href,
+          meta: {
+            origin: name + ' - document.images',
+            size: 'img.element',
+            type: 'skipped'
+          }
+        });
+      }
+
+      // every responsive candidate, including larger variants that are not currentSrc
+      for (const value of [
+        img.getAttribute('srcset'),
+        img.getAttribute('data-srcset'),
+        img.getAttribute('data-lazy-srcset'),
+        img.getAttribute('data-original-srcset')
+      ]) {
+        for (const candidate of collector.parseSrcset(value)) {
+          sources.set(candidate.src, img);
+          collector.push({
+            src: candidate.src,
+            alt: img.alt,
+            custom: img.getAttribute(self.custom) || '',
+            verified: self.accuracy === 'accurate' ? false : true,
+            page: loc.href,
+            srcsetWidth: candidate.width || undefined,
+            srcsetDensity: candidate.density || undefined,
+            meta: {
+              origin: name + ' - document.images',
+              size: 'img.element',
+              type: 'skipped'
+            }
+          });
+        }
+      }
     }
   }
   // wait for all forced images to load; rejects (broken/invalid images) are ignored
@@ -253,17 +361,25 @@ collector.inspect = async function(doc, loc, name, policies) {
   // find images; part 2/4
   for (const doc of docs) {
     for (const source of [...doc.querySelectorAll('source')]) {
-      if (source.srcset) {
-        const src = source.srcset.split(' ')[0];
-        sources.set(src, source);
-        collector.push({
-          src,
-          type: source.type,
-          page: loc.href,
-          meta: {
-            origin: name + ' - source.element'
-          }
-        });
+      for (const value of [
+        source.getAttribute('srcset'),
+        source.getAttribute('data-srcset'),
+        source.getAttribute('data-lazy-srcset'),
+        source.getAttribute('data-original-srcset')
+      ]) {
+        for (const candidate of collector.parseSrcset(value)) {
+          sources.set(candidate.src, source);
+          collector.push({
+            src: candidate.src,
+            type: source.type,
+            page: loc.href,
+            srcsetWidth: candidate.width || undefined,
+            srcsetDensity: candidate.density || undefined,
+            meta: {
+              origin: name + ' - source.element'
+            }
+          });
+        }
       }
     }
   }
@@ -388,13 +504,15 @@ collector.inspect = async function(doc, loc, name, policies) {
   // find linked images; part 3
   if (self.deep > 0 && policies.links) {
     for (const doc of docs) {
-      [...doc.querySelectorAll('a')].map(a => a.href).forEach(src => collector.push({
-        src,
-        page: loc.href,
-        meta: {
-          origin: name + ' - link.href'
-        }
-      }));
+      for (const a of doc.querySelectorAll('a')) {
+        collector.push({
+          src: a.href,
+          page: loc.href,
+          meta: {
+            origin: name + ' - link.href'
+          }
+        }, collector.context(a));
+      }
     }
   }
   // find hard-coded links; part 4
@@ -447,7 +565,260 @@ collector.inspect = async function(doc, loc, name, policies) {
   }
 };
 
-collector.push = function(o) {
+/* collect the small amount of element context that helps scoring a link;
+   only plain data is stored, never the DOM node itself */
+collector.context = function(a) {
+  const text = ((a.getAttribute('title') || '') + ' ' + (a.textContent || '')).trim();
+  const img = a.querySelector('img, image');
+  let media = false;
+
+  if (img) {
+    const src = (img.currentSrc || img.src || img.getAttribute('href') || '').toLowerCase();
+    const size = Math.max(img.naturalWidth || 0, img.naturalHeight || 0);
+    const badge = /(?:^|[/_.\-])(logo|logos|icon|icons|avatar|avatars|sprite|sprites|badge|emoji|favicon)(?=[/_.\-?&#]|$)/i.test(src);
+
+    // a thumbnail link rather than an inline icon or a text link with a badge
+    media = badge === false && text.length < 100 && (size === 0 || size >= 100);
+  }
+
+  return {
+    media,
+    download: a.hasAttribute('download'),
+    lightbox: /lightbox|gallery|zoom|fancybox|photoswipe|magnific|highslide/i.test(
+      (a.getAttribute('class') || '') + ' ' + (a.getAttribute('rel') || '')
+    ),
+    text: text.slice(0, 200)
+  };
+};
+
+/* Score how likely a candidate is a high-resolution image. The score drives
+   the processing order through collector.next(); it never filters candidates. */
+{
+  const HIGH = /(?:^|[/_.\-])(original|originals|orig|fullsize|full-size|fullimage|full-image|full|largeimage|large-image|large|big|hires|hi-res|highres|high-res|highresolution|high-resolution|master|raw|source|download|wallpaper|retina|uhd|4k|5k|8k)(?=[/_.\-?&#]|$)/i;
+  const LOW = /(?:^|[/_.\-])(thumb|thumbs|thumbnail|thumbnails|small|tiny|mini|icon|icons|favicon|avatar|avatars|logo|logos|sprite|sprites|placeholder|preview|prev|blur|lowres|low-res|compressed|resize|resized|emoji|badge|button|banner|spinner|loading|grey|gray)(?=[/_.\-?&#]|$)/i;
+  const WH = /(?:^|[^\d])(\d{2,5})\s*[x×]\s*(\d{2,5})(?:[^\d]|$)/i;
+  const DENSITY = /(?:@|%40)(\d(?:\.\d)?)x(?=[/_.\-?&#]|$)/i;
+  const CLOUDINARY = /(?:^|[/_,.\-])[wh][_=](\d{2,5})(?=[/_,.\-]|$)/gi;
+  const TEXT_HIGH = /original|full[ -]?size|fullsize|high[ -]?res|highest resolution|download|\b(?:4k|8k|uhd|raw)\b|原图|原圖|大图|大圖|高清|オリジナル|高画質|고화질/i;
+
+  const dimension = n => {
+    if (n >= 2000) {
+      return 120;
+    }
+    if (n >= 1200) {
+      return 80;
+    }
+    if (n >= 800) {
+      return 40;
+    }
+    if (n > 0 && n <= 400) {
+      return -100;
+    }
+    return 0;
+  };
+
+  const evaluate = (o, context, reasons) => {
+    if (typeof o === 'string') {
+      o = {src: o};
+    }
+
+    let score = 0;
+    const add = (value, reason) => {
+      if (value) {
+        score += value;
+        if (reasons) {
+          reasons.push((value > 0 ? '+' : '') + value + ': ' + reason);
+        }
+      }
+    };
+
+    const src = o.src || '';
+    const data = src.startsWith('data:');
+
+    // file type
+    const ext = utils.extension(src);
+    if (ext.startsWith('image/')) {
+      if (['image/svg', 'image/ico', 'image/icns', 'image/cur'].includes(ext)) {
+        add(-30, 'vector or icon type');
+      }
+      else {
+        add(40, 'raster image extension');
+      }
+    }
+
+    // size of an image that is already rendered on the page
+    const fake = o.meta && o.meta.size === 'custom.extensions';
+    if (!fake && (o.width || o.height)) {
+      add(dimension(Math.max(o.width || 0, o.height || 0)), 'element dimension');
+    }
+
+    // width declared by a srcset descriptor, e.g. "photo.jpg 2400w"
+    if (o.srcsetWidth) {
+      add(dimension(o.srcsetWidth), 'srcset width');
+    }
+    if (o.srcsetDensity >= 3) {
+      add(90, 'srcset density ' + o.srcsetDensity + 'x');
+    }
+    else if (o.srcsetDensity >= 2) {
+      add(60, 'srcset density ' + o.srcsetDensity + 'x');
+    }
+
+    let path = '';
+    if (data === false) {
+      try {
+        const url = new URL(src);
+        path = url.pathname + url.search + url.hash;
+
+        // query-based dimensions, e.g. ?w=2400 or ?width=1920
+        let max = 0;
+        for (const key of ['w', 'width', 'h', 'height', 'size', 'res', 'resolution', 'dimension', 'dimensions']) {
+          const n = Number(url.searchParams.get(key));
+          if (n > max) {
+            max = n;
+          }
+        }
+        if (max) {
+          add(dimension(max), 'query dimension');
+        }
+
+        // pixel density, e.g. ?dpr=2 or ?scale=3
+        let density = 0;
+        for (const key of ['dpr', 'scale', 'density', 'pixelratio']) {
+          const n = Number(url.searchParams.get(key));
+          if (n > density) {
+            density = n;
+          }
+        }
+        if (density >= 3) {
+          add(90, 'density ' + density + 'x');
+        }
+        else if (density >= 2) {
+          add(60, 'density ' + density + 'x');
+        }
+      }
+      catch (e) {}
+    }
+
+    // path tokens; blob UUIDs and base64 do not carry meaningful names
+    if (data === false && src.startsWith('blob:') === false) {
+      if (HIGH.test(path)) {
+        add(100, 'high-resolution token');
+      }
+      if (LOW.test(path)) {
+        add(-100, 'thumbnail/icon token');
+      }
+
+      const wh = WH.exec(path);
+      if (wh) {
+        const n = Math.max(Number(wh[1]), Number(wh[2]));
+        add(dimension(n), 'dimension token ' + wh[1] + 'x' + wh[2]);
+      }
+
+      const density = DENSITY.exec(path);
+      if (density) {
+        const n = Number(density[1]);
+        if (n >= 3) {
+          add(90, 'density ' + n + 'x');
+        }
+        else if (n >= 2) {
+          add(60, 'density ' + n + 'x');
+        }
+      }
+
+      // image-service style dimensions, e.g. /w_1920,h_1080/ or /w=2400/
+      let max = 0;
+      let m;
+      CLOUDINARY.lastIndex = 0;
+      while ((m = CLOUDINARY.exec(path)) !== null) {
+        const n = Number(m[1]);
+        if (n > max) {
+          max = n;
+        }
+      }
+      if (max) {
+        add(dimension(max), 'image-service dimension');
+      }
+    }
+
+    // data URIs carry their size inline
+    if (data) {
+      if (src.length >= 700 * 1024) {
+        add(60, 'large data URI');
+      }
+      else if (src.length <= 5 * 1024) {
+        add(-30, 'small data URI');
+      }
+    }
+
+    // where the candidate was discovered
+    const origin = (o.meta && o.meta.origin) || '';
+    if (origin.includes('custom.extensions')) {
+      add(50, 'user-defined extension');
+    }
+    else if (origin.includes('img.performance')) {
+      add(40, 'loaded image resource');
+    }
+    else if (origin.includes('source.element')) {
+      add(20, 'responsive source');
+    }
+    else if (origin.includes('css.performance')) {
+      add(10, 'stylesheet resource');
+    }
+    else if (origin.includes('svg.')) {
+      add(-20, 'inline svg');
+    }
+
+    if (o.verified) {
+      add(20, 'verified image');
+    }
+
+    // the link itself points at something likely to be larger
+    if (context) {
+      if (context.media) {
+        add(80, 'anchor wraps media');
+      }
+      if (context.download) {
+        add(100, 'download attribute');
+      }
+      if (context.lightbox) {
+        add(80, 'lightbox marker');
+      }
+      if (context.text && TEXT_HIGH.test(context.text)) {
+        add(60, 'anchor text');
+      }
+    }
+
+    // byte size when it is already known
+    if (o.size) {
+      if (o.size >= 1024 * 1024) {
+        add(120, 'size above 1MB');
+      }
+      else if (o.size >= 500 * 1024) {
+        add(80, 'size above 500KB');
+      }
+      else if (o.size >= 100 * 1024) {
+        add(30, 'size above 100KB');
+      }
+      else if (o.size <= 5 * 1024) {
+        add(-60, 'size below 5KB');
+      }
+    }
+
+    return score;
+  };
+
+  collector.score = (o, context) => evaluate(o, context);
+  collector.score.explain = (o, context) => {
+    const reasons = [];
+
+    return {
+      score: evaluate(o, context, reasons),
+      reasons
+    };
+  };
+}
+
+collector.push = function(o, context) {
   if (o.src) {
     if (window.regexp && window.regexp.some(r => r.test(o.src)) === false) {
       return;
@@ -467,10 +838,35 @@ collector.push = function(o) {
 
       // o.src = o.src.split('#')[0]; // dont use this
 
-      if (collector.cache.has(o.src) === false) {
-        collector.cache.add(o.src);
+      const existing = collector.cache.get(o.src);
 
-        // try to place important requests on top of the list
+      if (collector.cache.has(o.src)) {
+        // promote a pending candidate when it is rediscovered with a stronger
+        // signal (e.g., the same URL as a thumbnail and as a full-size link)
+        if (existing) {
+          try {
+            const score = collector.score(o, context);
+            if (score > (existing.score || 0)) {
+              existing.score = score;
+            }
+          }
+          catch (e) {
+            console.warn('cannot score candidate', o.src, e);
+          }
+        }
+      }
+      else {
+        collector.cache.set(o.src, o);
+
+        // annotate the candidate; this does not affect the feed it is placed in
+        try {
+          o.score = collector.score(o, context);
+        }
+        catch (e) {
+          console.warn('cannot score candidate', o.src, e);
+        }
+
+        // bucket the candidate; collector.next() decides the processing order
         if (o.width) {
           collector.feeds['1'].push(o);
         }
@@ -494,6 +890,13 @@ collector.push = function(o) {
 };
 collector.position = 0;
 
+/* release the pending reference; the key stays for deduplication */
+collector.done = function(o) {
+  if (o && o.src && collector.cache.has(o.src)) {
+    collector.cache.set(o.src, null);
+  }
+};
+
 collector.addImage = function(o) {
   if (self.accuracy === 'accurate' || self.accuracy === 'partial-accurate') {
     if (!o.width) {
@@ -510,6 +913,7 @@ collector.addImage = function(o) {
     return;
   }
   collector['processed-images'].push(o);
+  collector.done(o);
 
   collector.events.image(o);
 };
@@ -525,7 +929,7 @@ collector.head = async function() {
     'head-delay': 100
   }, resolve));
 
-  const o = collector['raw-images'].shift();
+  const o = collector.next(collector['raw-images']);
   if (o) {
     collector.head.jobs += 1;
 
@@ -602,6 +1006,12 @@ collector.head = async function() {
       collector.events.image(o);
     }
 
+    // an HTML document queued by collector.document() is still pending;
+    // every other outcome is final
+    if (o.type.startsWith('text/html') === false) {
+      collector.done(o);
+    }
+
     // lazy done
     setTimeout(() => {
       collector.head.jobs -= 1;
@@ -617,15 +1027,49 @@ collector.head = async function() {
 };
 collector.head.jobs = 0;
 
+/* pick the highest scored item from one or more queues; equal scores keep
+   the global discovery order (position) */
+collector.next = function(...queues) {
+  if (queues.length === 0) {
+    queues = [collector.feeds['1'], collector.feeds['2'], collector.feeds['3']];
+  }
+
+  let best = null;
+  let index = -1;
+  let queue = null;
+
+  for (const q of queues) {
+    for (let i = 0; i < q.length; i += 1) {
+      const o = q[i];
+      const score = o.score || 0;
+      const bestScore = best ? best.score || 0 : 0;
+
+      if (
+        best === null ||
+        score > bestScore ||
+        (score === bestScore && (o.position || 0) < (best.position || 0))
+      ) {
+        best = o;
+        index = i;
+        queue = q;
+      }
+    }
+  }
+
+  if (best) {
+    queue.splice(index, 1);
+  }
+
+  return best;
+};
+
 /* validate if a feed is an image or a document or must be dropped */
 collector.validate = async function() {
   if (collector.validate.jobs > 5 || collector.active === false) {
     return;
   }
 
-  const o = collector.feeds['1'].length ? collector.feeds['1'].shift() : (
-    collector.feeds['2'].length ? collector.feeds['2'].shift() : collector.feeds['3'].shift()
-  );
+  const o = collector.next();
 
   let rm = false; // true if we have a remote request and need to slow down
   if (o) {
@@ -653,11 +1097,18 @@ collector.validate = async function() {
             collector.document(o);
             rm = true;
           }
+          else {
+            collector.done(o);
+          }
+        }
+        else {
+          collector.done(o);
         }
       }
     }
     catch (e) {
       console.warn('cannot validate', o, e);
+      collector.done(o);
     }
 
     const done = () => {
@@ -681,7 +1132,8 @@ collector.validate.jobs = 0;
 
 collector.document = function(o) {
   if (collector.active === false) {
-    return;
+    collector.done(o);
+    return false;
   }
 
   // do not parse sub documents
@@ -693,7 +1145,12 @@ collector.document = function(o) {
     collector.dig();
     collector.dig();
     collector.dig();
+
+    return true;
   }
+
+  collector.done(o);
+  return false;
 };
 
 collector.dig = async function() {
@@ -709,7 +1166,7 @@ collector.dig = async function() {
     'dig-timeout': 30 * 1000
   }, resolve));
 
-  const o = collector.docs.shift();
+  const o = collector.next(collector.docs);
   if (o && o.src) {
     collector.dig.jobs += 1;
 
@@ -743,6 +1200,8 @@ collector.dig = async function() {
     }
     catch (e) {}
 
+    collector.done(o);
+
     // lazy done
     setTimeout(() => {
       collector.dig.jobs -= 1;
@@ -751,6 +1210,9 @@ collector.dig = async function() {
       // a finished document (with or without images) must re-evaluate completion
       collector.events.guess.done();
     }, prefs['dig-delay']);
+  }
+  else if (o) {
+    collector.done(o);
   }
 };
 collector.dig.jobs = 0;
