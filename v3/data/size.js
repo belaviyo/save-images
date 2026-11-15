@@ -18,9 +18,12 @@ type.png = uint8a => {
 };
 size.png = uint8a => {
   const b = String.fromCharCode(...uint8a.slice(0, 40));
-  const view = new DataView(uint8a.buffer);
+  const view = new DataView(uint8a.buffer, uint8a.byteOffset, uint8a.byteLength);
 
   if (b.slice(12, 16) === 'CgBI') {
+    if (uint8a.byteLength < 40) {
+      return;
+    }
     return {
       type: 'image/png',
       width: view.getUint32(36, false),
@@ -28,6 +31,9 @@ size.png = uint8a => {
     };
   }
   else {
+    if (uint8a.byteLength < 24) {
+      return;
+    }
     return {
       type: 'image/png',
       width: view.getUint32(16, false),
@@ -43,7 +49,10 @@ type.gif = uint8a => {
   return /^GIF8[79]a/.test(b);
 };
 size.gif = uint8a => {
-  const view = new DataView(uint8a.buffer);
+  if (uint8a.byteLength < 10) {
+    return;
+  }
+  const view = new DataView(uint8a.buffer, uint8a.byteOffset, uint8a.byteLength);
   return {
     type: 'image/gif',
     width: view.getUint16(6, true),
@@ -57,7 +66,10 @@ type.bmp = uint8a => {
   return b === 'BM';
 };
 size.bmp = uint8a => {
-  const view = new DataView(uint8a.buffer);
+  if (uint8a.byteLength < 26) {
+    return;
+  }
+  const view = new DataView(uint8a.buffer, uint8a.byteOffset, uint8a.byteLength);
   return {
     type: 'image/bmp',
     height: Math.abs(view.getUint32(22, true)),
@@ -75,24 +87,34 @@ type.webp = uint8a => {
   return (riffHeader && webpHeader && vp8Header);
 };
 size.webp = uint8a => {
-  const view = new DataView(uint8a.buffer.slice(20, 30));
+  // every supported variant needs the first 30 bytes
+  if (uint8a.byteLength < 30) {
+    return;
+  }
   const chunkHeader = String.fromCharCode(...uint8a.slice(12, 16));
 
-  // Extended webp stream signature
+  // Extended webp stream signature; the canvas size is stored as two
+  // 24-bit little-endian values minus one in the VP8X chunk
   if (chunkHeader === 'VP8X') {
-    console.warn('VP8X is not yet supported');
-  }
-  // Lossless webp stream signature
-  if (chunkHeader === 'VP8 ' && uint8a[0] !== 0x2f) {
     return {
       type: 'image/webp',
-      height: view.getInt16(8, true) & 0x3fff,
-      width: view.getInt32(6, true) & 0x3fff
+      width: 1 + (uint8a[24] | (uint8a[25] << 8) | (uint8a[26] << 16)),
+      height: 1 + (uint8a[27] | (uint8a[28] << 8) | (uint8a[29] << 16))
     };
   }
+
+  const view = new DataView(uint8a.buffer, uint8a.byteOffset, uint8a.byteLength);
+
   // Lossy webp stream signature
-  const signature = String.fromCharCode(...uint8a.slice(3, 6));
-  if (chunkHeader === 'VP8L' && signature !== '9d012a') {
+  if (chunkHeader === 'VP8 ' && hex(uint8a, 23, 26) === '9d012a') {
+    return {
+      type: 'image/webp',
+      height: view.getInt16(28, true) & 0x3fff,
+      width: view.getInt32(26, true) & 0x3fff
+    };
+  }
+  // Lossless webp stream signature
+  if (chunkHeader === 'VP8L') {
     return {
       type: 'image/webp',
       height: 1 + (((uint8a[24] & 0xF) << 10) | (uint8a[23] << 2) | ((uint8a[22] & 0xC0) >> 6)),
@@ -107,20 +129,22 @@ type.jpg = uint8a => {
   return SOIMarker === 'ffd8';
 };
 size.jpg = uint8a => {
-  const view = new DataView(uint8a.buffer);
-  for (let offset = 4; offset < uint8a.byteLength;) {
+  const view = new DataView(uint8a.buffer, uint8a.byteOffset, uint8a.byteLength);
+  for (let offset = 4; offset + 2 <= uint8a.byteLength;) {
     // read length of the next block
     const i = view.getUint16(offset, false);
 
-
     const next = uint8a[offset + i + 1];
     if (next === 0xC0 || next === 0xC1 || next === 0xC2) {
-      const view = new DataView(uint8a.buffer.slice(offset + i + 5));
-
+      // the block needs to carry both height and width
+      const start = offset + i + 5;
+      if (start + 4 > uint8a.byteLength) {
+        return;
+      }
       return {
         type: 'image/jpeg',
-        height: view.getUint16(0, false),
-        width: view.getUint16(2, false)
+        height: view.getUint16(start, false),
+        width: view.getUint16(start + 2, false)
       };
     }
     // move to the next block

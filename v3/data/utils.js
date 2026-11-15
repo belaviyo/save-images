@@ -287,7 +287,25 @@ self.utils = {
     .then(({response}) => response.text())
     .catch(() => '');
   response.segment = o => response(o, 'head-timeout').then(async o => {
-    const segment = (await o.response.body.getReader().read()).value;
+    const reader = o.response.body.getReader();
+    let segment = new Uint8Array(0);
+
+    // the image parsers need up to 40 bytes (the extended WebP header needs 30);
+    // some servers deliver the body in smaller chunks, so keep reading
+    while (segment.byteLength < 64) {
+      const {value, done} = await reader.read();
+      if (done) {
+        break;
+      }
+      if (value) {
+        const merged = new Uint8Array(segment.byteLength + value.byteLength);
+        merged.set(segment);
+        merged.set(value, segment.byteLength);
+        segment = merged;
+      }
+    }
+    // release the rest of the body; the response is aborted below anyway
+    reader.cancel().catch(() => {});
 
     setTimeout(() => o.controller.abort());
     return {
