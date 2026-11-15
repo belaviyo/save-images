@@ -92,7 +92,12 @@ collector.events = {
           collector.feeds[1].length === 0 &&
           collector.feeds[2].length === 0 &&
           collector.feeds[3].length === 0 &&
-          collector.docs.length === 0
+          collector.docs.length === 0 &&
+          // a document is shifted out of "docs" before it is parsed; without
+          // these checks the collector stops while a worker is still busy
+          collector.head.jobs === 0 &&
+          collector.validate.jobs === 0 &&
+          collector.dig.jobs === 0
         ) {
           collector.active = false;
         }
@@ -108,22 +113,26 @@ collector.meta = async function(o) {
   // image proxies hide the real URL in their path; always ask the server for
   // its content-disposition instead of trusting the extensions inside that URL
   const proxied = utils.proxied(o.src);
+  const type = proxied ? '' : utils.extension(o.src);
 
-  for (const [ext, type] of Object.entries(utils.EXTENSIONS)) {
-    if (
-      o.src.toLowerCase().endsWith('.' + ext) ||
-      (proxied === false && o.width && o.src.toLowerCase().indexOf('.' + ext) !== -1) || // e.g. http:../3522.jpg/0
-      o.src.toLowerCase().indexOf('.' + ext + '?') !== -1 ||
-      o.src.startsWith('data:image/' + ext)
-    ) {
-      im = {
-        meta: {
-          type
-        },
-        origin: 'guess'
-      };
-      break;
-    }
+  if (type) {
+    im = {
+      meta: {
+        type
+      },
+      origin: 'guess'
+    };
+  }
+
+  // a rendered <img> (naturalWidth > 0) is an image even when its URL ends with
+  // a video/audio extension, e.g. screenshots named "clip.mp4.0007.jpg"
+  if (im && im.meta.type.startsWith('image/') === false && o.width) {
+    im = {
+      meta: {
+        type: 'image/unknown'
+      },
+      origin: 'guess'
+    };
   }
 
   const conds = [
@@ -465,9 +474,7 @@ collector.push = function(o) {
         if (o.width) {
           collector.feeds['1'].push(o);
         }
-        else if (['bmp', 'png', 'gif', 'webp', 'jpg', 'svg', 'ico'].some(n => {
-          return o.src.indexOf('.' + n) !== -1 || o.src.startsWith('data:image/' + n);
-        })) {
+        else if ((utils.extension(o.src) || '').startsWith('image/')) {
           collector.feeds['1'].push(o);
         }
         else if (loc.origin === location.origin) { // same origins
@@ -529,19 +536,26 @@ collector.head = async function() {
       o.type = utils.type(o, r);
       o.disposition = r.disposition;
 
-      // detect type
-      for (const name of ['bmp', 'png', 'gif', 'webp', 'jpg']) {
-        if (type[name](r.segment)) {
-          const meta = size[name](r.segment);
-          if (meta) {
-            Object.assign(o, meta);
-            o.meta.size = 'size.js';
-            break;
+      // an HTML page behind an image-like URL; crawl it for embedded images
+      // instead of dropping it (collector.document ignores the deep level 1)
+      if (o.type.startsWith('text/html')) {
+        collector.document(o);
+      }
+      else {
+        // detect type
+        for (const name of ['bmp', 'png', 'gif', 'webp', 'jpg']) {
+          if (type[name](r.segment)) {
+            const meta = size[name](r.segment);
+            if (meta) {
+              Object.assign(o, meta);
+              o.meta.size = 'size.js';
+              break;
+            }
           }
         }
-      }
-      if (!o.width) {
-        throw Error('size detection failed' + o.src);
+        if (!o.width) {
+          throw Error('size detection failed' + o.src);
+        }
       }
     }
     catch (e) {
@@ -669,6 +683,7 @@ collector.document = function(o) {
   if (collector.active === false) {
     return;
   }
+
   // do not parse sub documents
   if (self.deep > 1 && o.meta.origin.startsWith('one')) {
     collector.docs.push(o);
@@ -733,6 +748,8 @@ collector.dig = async function() {
       collector.dig.jobs -= 1;
       collector.events.document();
       collector.dig();
+      // a finished document (with or without images) must re-evaluate completion
+      collector.events.guess.done();
     }, prefs['dig-delay']);
   }
 };

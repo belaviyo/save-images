@@ -196,7 +196,18 @@ self.utils = {
 
     // prefer type from URL, rather than type that is returned by server.
     // Some servers return "application/..." for image types
-    return img.type || response.type || '';
+    const guess = img.type || '';
+    const actual = response.type || '';
+
+    // a non-image guess (e.g. "video/mp4" from "clip.mp4.0007.jpg") must not
+    // override an image type that the server reports
+    if (guess.startsWith('image/')) {
+      return guess;
+    }
+    if (actual.startsWith('image/')) {
+      return actual;
+    }
+    return guess || actual;
   },
   /* copy text to the clipboard (fallback to execCommand when the async Clipboard API is unavailable or rejects) */
   async copy(text) {
@@ -332,3 +343,37 @@ self.utils.EXTENSIONS = {
   'tiff': 'image/tiff',
   'webp': 'image/webp'
 };
+
+{
+  // a known extension only counts when it ends at a URL boundary; "clip.mp4.0007.jpg"
+  // must resolve to "jpg", not "mp4". The rightmost match wins.
+  const re = new RegExp('\\.(' + Object.keys(self.utils.EXTENSIONS).join('|') + ')(?=[/?#&@]|$)', 'gi');
+
+  self.utils.extension = src => {
+    if (src.startsWith('data:')) {
+      const mediatype = src.slice(5, src.indexOf(',')).split(';')[0].toLowerCase();
+
+      return mediatype.startsWith('image/') ? mediatype : '';
+    }
+
+    // the file name lives in the path; only fall back to the query/hash when the
+    // path does not name a known type (e.g. "/image.php?file=photo.jpg")
+    const end = src.search(/[?#]/);
+    re.lastIndex = 0;
+    let type = '';
+    let path = '';
+    let m;
+
+    while ((m = re.exec(src)) !== null) {
+      const found = self.utils.EXTENSIONS[m[1].toLowerCase()] || '';
+      if (found) {
+        type = found;
+        if (end === -1 || m.index < end) {
+          path = found;
+        }
+      }
+    }
+
+    return path || type;
+  };
+}

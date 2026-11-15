@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HTML page behind an image-like URL</title>
+</head>
+<body>
+  <!--
+    Regression test for an HTML page whose URL looks like an image.
+    "page.jpg/" is a directory, so a static server answers with "index.html"
+    and "Content-Type: text/html", but the URL ends at a ".jpg" boundary.
+
+    Expected (serve this folder with `python3 -m http.server`):
+      - deep level 1: only "real.jpg" is listed
+      - deep level 2 or 3: "real.jpg" and "page.jpg/embedded.jpg" are listed;
+        "page.jpg/" itself must NOT be listed as an image
+      - the status must switch to "Collection Done" only AFTER
+        "page.jpg/embedded.jpg" appears (the document is fetched and parsed
+        before the collector is allowed to become inactive)
+  -->
+  <a href="page.jpg/">page.jpg/ is an HTML page</a>
+  <img src="real.jpg">
+</body>
+</html>

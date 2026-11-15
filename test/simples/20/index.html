@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3 images with video/other extensions inside the file name</title>
+</head>
+<body>
+  <!--
+    Regression test for images whose file name contains a known non-image extension,
+    e.g. video screenshots named "clip.mp4.0007.jpg". The extension detection must
+    use the rightmost extension that ends at a URL boundary ("jpg"), otherwise the
+    image is typed as "video/mp4" and dropped from the panel.
+
+    Expected: 3 images listed. The "clip.mp4" link must NOT be listed.
+  -->
+  <img src="clip.mp4.0007.jpg">
+  <img src="photo.png.jpg">
+  <img src="plain.jpg">
+
+  <a href="clip.mp4">not an image</a>
+</body>
+</html>
