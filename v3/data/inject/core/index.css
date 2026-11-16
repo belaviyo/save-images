@@ -1,6 +1,9 @@
 html {
   height: 100vh;
 }
+body[data-guard] {
+  visibility: hidden;
+}
 body {
   margin: 0;
   padding: 0;

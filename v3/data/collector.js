@@ -1244,7 +1244,7 @@ collector.observe = (request, sender, response) => {
         cmd: 'set-badge',
         text: ''
       });
-      for (const e of document.querySelectorAll('dialog.daimages')) {
+      for (const e of document.querySelectorAll('div.daimages-host, dialog.daimages')) {
         e.remove();
       }
       chrome.runtime.onMessage.removeListener(collector.observe);

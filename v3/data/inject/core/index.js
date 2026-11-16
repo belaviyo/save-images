@@ -89,7 +89,8 @@ const runtime = {
     return chrome.tabs.sendMessage(runtime.tabId, message, options);
   }
 };
-runtime.tabId = Number(args.get('tabId'));
+/* set by guard.js after the worker verifies this frame */
+runtime.tabId = Number(self.verifiedTabId);
 
 const notify = e => runtime.sendMessage({
   cmd: 'notify',
@@ -549,10 +550,18 @@ ui.addEventListener('load', () => {
 });
 gallery.addEventListener('load', () => gallery.dataset.loading = false);
 
-addEventListener('load', () => {
+const start = () => {
   button.badge('');
   document.body.dataset.loading = false;
   setTimeout(() => {
     ui.src = '/data/ui/index.html' + location.search;
   }, 100);
-});
+};
+
+// scripts are loaded after validation, so the load event may already have fired
+if (document.readyState === 'complete') {
+  start();
+}
+else {
+  addEventListener('load', start, {once: true});
+}

@@ -66,10 +66,6 @@ chrome.action.onClicked.addListener(async tab => {
       func: tabId => window.tabId = tabId,
       args: [tab.id]
     });
-    await chrome.scripting.insertCSS({
-      target: {tabId: tab.id},
-      files: ['/data/inject/inject.css']
-    });
     const r = await chrome.scripting.executeScript({
       target: {tabId: tab.id},
       injectImmediately: true,
@@ -90,6 +86,34 @@ chrome.tabs.onRemoved.addListener(tabId => chrome.declarativeNetRequest.updateSe
 }).catch(() => {}));
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
+  if (request.cmd === 'verify-core') {
+    const token = request.token;
+    const tabId = sender.tab && sender.tab.id;
+    if (typeof tabId !== 'number' || typeof token !== 'string' || !token) {
+      response({error: 'Invalid core verification'});
+      return true;
+    }
+    // read the live token from the extension's isolated world in the top frame
+    try {
+      chrome.scripting.executeScript({
+        target: {tabId},
+        world: 'ISOLATED',
+        func: () => globalThis.token
+      }).then(results => {
+        const live = results && results[0] && results[0].result;
+        if (typeof live === 'string' && live === token) {
+          response({ok: true, tabId});
+        }
+        else {
+          response({error: 'Not authorized'});
+        }
+      }, e => response({error: e.message || String(e)}));
+    }
+    catch (e) {
+      response({error: e.message || String(e)});
+    }
+    return true;
+  }
   if (request.cmd === 'notify') {
     notify(request.message);
   }
