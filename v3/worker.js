@@ -275,20 +275,16 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       // the global CORS rule uses the tab id; per-request rules must not collide
       const id = 1000000 + Math.floor(Math.random() * 1000000);
       const referer = typeof request.referer === 'string' && /^https?:/i.test(request.referer) ? request.referer : '';
+      /* content scripts are subject to CORS with the origin of the page they
+         are injected into. The CORS check compares that page origin with the
+         response header, not the referer we send to the server, so never use
+         the referer's origin here (it can be a different site, e.g. an image
+         host viewer page reached by deep search) */
       let origin = '';
-
-      if (referer) {
-        try {
-          origin = (new URL(referer)).origin;
-        }
-        catch (e) {}
+      try {
+        origin = sender.origin || (new URL(sender.url)).origin;
       }
-      if (!origin) {
-        try {
-          origin = sender.origin || (new URL(sender.url)).origin;
-        }
-        catch (e) {}
-      }
+      catch (e) {}
 
       /* content scripts are subject to CORS; every collector fetch needs
          readable response headers, even when no referer is sent */

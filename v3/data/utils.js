@@ -25,6 +25,17 @@ self.utils = {
       return false;
     }
   },
+  /* an HTTPS document cannot fetch HTTP content (mixed content); the browser
+     upgrades image elements, so mirror that behavior for our own requests */
+  upgrade(src) {
+    try {
+      if (location.protocol === 'https:' && /^http:\/\//i.test(src)) {
+        return src.replace(/^http:\/\//i, 'https://');
+      }
+    }
+    catch (e) {}
+    return src;
+  },
   /* extract a readable file name from a (possibly proxied) URL */
   basename(src) {
     try {
@@ -263,11 +274,16 @@ self.utils = {
 
       const props = {
         signal: controller.signal,
+        // the referer is supplied explicitly by the per-request DNR rule; the
+        // page referer is never wanted (Firefox trims it to the page origin,
+        // which image hosts like ImageTwist reject as a hotlink)
+        referrerPolicy: 'no-referrer',
         headers: {
           'referer': o.page || location.href
         }
       };
-      const attempt = credentials => fetch(o.src, credentials ? Object.assign({}, props, {
+      const src = self.utils.upgrade(o.src);
+      const attempt = credentials => fetch(src, credentials ? Object.assign({}, props, {
         credentials
       }) : props).then(r => {
         if (r.ok) {

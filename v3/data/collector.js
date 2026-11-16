@@ -971,6 +971,9 @@ collector.head = async function() {
       }
       await new Promise(resolve => {
         const img = new Image();
+        // the page referer is trimmed to its origin on cross-site requests and
+        // then rejected by hotlink-protected hosts (e.g. ImageTwist originals)
+        img.referrerPolicy = 'no-referrer';
 
         img.onload = () => {
           o.width = img.naturalWidth;
@@ -987,14 +990,20 @@ collector.head = async function() {
             type: fallback
           });
           o.meta.size = 'size.img.element';
-          // keep this decoded element around for the capture download path
-          if (sources.has(o.src) === false) {
+          // keep this decoded element around for the capture download path.
+          // An earlier entry may be an inert element from a parsed document
+          // (deep search), which can never be drawn to a canvas
+          const current = sources.get(o.src);
+          if (!current || !current.naturalWidth) {
             sources.set(o.src, img);
           }
           resolve();
         };
         img.onerror = () => {
           o.meta.size = 'error';
+          // neither the network probe nor the image element could decode this
+          // candidate; it is not an image (e.g. a viewer page behind a .jpg URL)
+          o.type = '';
           resolve();
         };
         img.src = o.src;
@@ -1296,43 +1305,54 @@ collector.observe = (request, sender, response) => {
 
     // try to find the image on page and download it (it is useful specially if the image src is a dead blob)
     const capture = () => new Promise((resolve, reject) => {
-      const e = img || document.querySelector(`img[src="${request.src}"]`);
-      if (e) {
-        const next = () => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
+      let e = img || document.querySelector(`img[src="${request.src}"]`);
+      if (!e) {
+        reject(Error('image not found; capture'));
+        return;
+      }
+      // an element from a parsed document (deep search) or a <source>/<image>
+      // never decodes; request the pixels again with a real image element
+      if (!('naturalWidth' in e) || (e.complete && e.naturalWidth === 0)) {
+        e = new Image();
+        // do not send the page referer; it is trimmed to the page origin and
+        // rejected by hotlink-protected image hosts
+        e.referrerPolicy = 'no-referrer';
+        e.src = utils.upgrade(request.src);
+      }
+      const next = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
 
-          canvas.width = e.naturalWidth;
-          canvas.height = e.naturalHeight;
+        canvas.width = e.naturalWidth;
+        canvas.height = e.naturalHeight;
 
-          if (e.naturalWidth === 0 || e.naturalHeight === 0) {
-            reject(Error('image is collapsed; capture'));
-          }
-          ctx.drawImage(e, 0, 0, e.naturalWidth, e.naturalHeight);
-          resolve(canvas.toDataURL());
-        };
-
-        // is image loaded
-        if (e.complete) {
-          return next();
+        if (e.naturalWidth === 0 || e.naturalHeight === 0) {
+          reject(Error('image is collapsed; capture'));
         }
-        else {
-          chrome.storage.local.get({
-            'capture-timeout': 10 * 1000
-          }).then(prefs => {
-            e.addEventListener('load', () => next(), {once: true});
-            e.addEventListener('error', () => reject(Error('image loading failed; capture')), {once: true});
-            setTimeout(() => reject(Error('image loading timeout; capture')), prefs['capture-timeout']);
-            e.loading = 'eager';
-          });
-        }
+        ctx.drawImage(e, 0, 0, e.naturalWidth, e.naturalHeight);
+        resolve(canvas.toDataURL());
+      };
+
+      // is image loaded
+      if (e.complete) {
+        return next();
       }
       else {
-        reject(Error('image not found; capture'));
+        chrome.storage.local.get({
+          'capture-timeout': 10 * 1000
+        }).then(prefs => {
+          e.addEventListener('load', () => next(), {once: true});
+          e.addEventListener('error', () => reject(Error('image loading failed; capture')), {once: true});
+          setTimeout(() => reject(Error('image loading timeout; capture')), prefs['capture-timeout']);
+          e.loading = 'eager';
+        });
       }
     });
 
     const props = {
+      // the DNR rule supplies the referer where the browser honors it; never
+      // let the page's own (trimmed) referer leak to the image host
+      referrerPolicy: 'no-referrer',
       headers: {
         referer: request.referer
       }
@@ -1351,7 +1371,7 @@ collector.observe = (request, sender, response) => {
       }
     }
 
-    fetch(request.src, props).then(r => {
+    fetch(utils.upgrade(request.src), props).then(r => {
       if (!r.ok) {
         throw Error('STATUS_CODE_' + r.status);
       }
@@ -1359,7 +1379,7 @@ collector.observe = (request, sender, response) => {
     }).catch(() => {
       // try to include credentials
       props.credentials = 'include';
-      return fetch(request.src, props).then(r => {
+      return fetch(utils.upgrade(request.src), props).then(r => {
         if (!r.ok) {
           throw Error('STATUS_CODE_' + r.status);
         }
