@@ -92,6 +92,20 @@ const runtime = {
 /* set by guard.js after the worker verifies this frame */
 runtime.tabId = Number(self.verifiedTabId);
 
+/* the host page can remove or reparent this frame; it must not leave the
+   tab-wide rule behind */
+addEventListener('pagehide', e => {
+  if (e.persisted === false) {
+    try {
+      chrome.runtime.sendMessage({
+        cmd: 'remove-session-rules',
+        token: location.hash.slice(1)
+      }, () => void chrome.runtime.lastError);
+    }
+    catch (err) {}
+  }
+});
+
 const notify = e => runtime.sendMessage({
   cmd: 'notify',
   message: e.message || e
@@ -118,7 +132,8 @@ const closing = (badge, remove = true) => {
 
   if (remove) {
     runtime.sendMessage({
-      cmd: 'remove-session-rules'
+      cmd: 'remove-session-rules',
+      token: location.hash.slice(1)
     }, 'worker');
   }
 };

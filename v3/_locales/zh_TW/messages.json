@@ -282,7 +282,7 @@
     "message": "當圖片總數超過以下值時顯示確認"
   },
   "ui_networ_cors": {
-    "message": "搜尋時繞過網路 CORS（需要重新啟動）"
+    "message": "搜尋時繞過網路 CORS"
   },
   "ui_and": {
     "message": "且"

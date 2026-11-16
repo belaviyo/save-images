@@ -12,16 +12,45 @@
 (() => {
   'use strict';
 
-  // remove the old panel
+  const removeRules = () => {
+    try {
+      chrome.runtime.sendMessage({
+        cmd: 'remove-session-rules'
+      }, () => void chrome.runtime.lastError);
+    }
+    catch (e) {}
+  };
+
+  // stop the previous panel's host watcher before intentionally removing it
+  if (self.__daimagesHostWatch) {
+    self.__daimagesHostWatch();
+    self.__daimagesHostWatch = null;
+  }
+
+  // a previous panel must not survive this injection
   for (const e of document.querySelectorAll('div.daimages-host, dialog.daimages')) {
     e.remove();
   }
+
   // invalidate the previous token even if this injection fails below
   self.token = null;
 
   /* a fresh secret per injection; the worker reads it from this isolated world */
   const token = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
   self.token = token;
+
+  /* a top-level navigation destroys this document before the worker can see it */
+  if (self.__daimagesPageHide) {
+    removeEventListener('pagehide', self.__daimagesPageHide);
+  }
+  const onPageHide = e => {
+    if (e.persisted === false) {
+      self.token = null;
+      removeRules();
+    }
+  };
+  self.__daimagesPageHide = onPageHide;
+  addEventListener('pagehide', onPageHide);
 
   /* the panel lives in a closed shadow root so page scripts cannot read the iframe URL or token */
   const css = `
@@ -80,6 +109,7 @@
   dialog.classList.add('daimages');
   dialog.onclose = dialog.onclick = () => {
     self.token = null;
+    removeRules();
     chrome.runtime.sendMessage({
       cmd: 'stop-collector',
       remove: true
@@ -104,8 +134,32 @@
         '&href=' + encodeURIComponent(location.href) +
         '#' + token);
 
-      (document.body || document.documentElement).append(host);
+      const parent = document.body || document.documentElement;
+      parent.append(host);
       dialog.showModal();
+
+      /* the page can remove the host element at any time; that destroys the
+         panel without firing dialog.close, so clean the rules explicitly */
+      let observer;
+      let interval;
+      const stopWatching = () => {
+        clearInterval(interval);
+        if (observer) {
+          observer.disconnect();
+        }
+      };
+      const lost = () => host.isConnected === false;
+      const onLost = () => {
+        if (lost()) {
+          self.token = null;
+          stopWatching();
+          removeRules();
+        }
+      };
+      interval = setInterval(onLost, 1000);
+      observer = new MutationObserver(onLost);
+      observer.observe(parent, {childList: true});
+      self.__daimagesHostWatch = stopWatching;
     });
   }
 

@@ -270,7 +270,7 @@
         "message": "当图片总数超过以下值时显示确认提示"
     },
     "ui_networ_cors": {
-        "message": "搜索时绕过网络CORS（需重启）"
+        "message": "搜索时绕过网络CORS"
     },
     "ui_and": {
         "message": "且"

@@ -278,8 +278,8 @@ self.utils = {
         }
         throw Error('STATUS_CODE_' + r.status);
       });
-      // content scripts are subject to CORS; the retry lets the "apply-referer"
-      // DNR rule add the CORS response headers so the headers stay readable
+      // content scripts are subject to CORS; the per-request DNR rule adds
+      // the CORS response headers, and the retry includes credentials
       attempt().catch(() => attempt('include')).then(resolve, reject);
     });
   });

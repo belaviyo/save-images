@@ -640,7 +640,9 @@ document.addEventListener('click', e => {
     });
   }
   else if (cmd === 'restart') {
-    window.location.reload();
+    chrome.runtime.sendMessage({
+      cmd: 'remove-session-rules'
+    }).catch(() => {}).then(() => window.location.reload());
   }
   else if (cmd === 'gallery') {
     window.parent.to.gallery();

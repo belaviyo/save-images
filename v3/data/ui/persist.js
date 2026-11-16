@@ -8,7 +8,7 @@
  * GitHub: https://github.com/belaviyo/save-images/
  */
 
-/* global search, accurate, elements, tabId */
+/* global search, accurate, elements */
 'use strict';
 
 const persist = {};
@@ -32,6 +32,21 @@ const fill = () => {
   elements.group.accurate.dataset.checked = elements.group.accurate.checked;
 };
 
+/* keep the global session rule in sync with the selected profile/setting */
+const applyNetworkRule = () => {
+  if (!elements.group || !elements.group.cors) {
+    return Promise.resolve();
+  }
+  return chrome.runtime.sendMessage({
+    cmd: elements.group.cors.checked ? 'update-session-rules' : 'remove-session-rules'
+  }).then(r => {
+    if (r && r.error) {
+      parent.toast(r.error);
+    }
+    return r;
+  }, () => undefined);
+};
+
 const change = key => {
   const n = profiles.findIndex(o => o.value === elements.profiles.select.value);
 
@@ -43,6 +58,7 @@ const change = key => {
 
       fill();
       elements.profiles.select.dispatchEvent(new Event('change', {bubbles: true}));
+      applyNetworkRule();
     });
 
     return;
@@ -95,6 +111,10 @@ document.addEventListener('change', e => {
       persist,
       [key]: persist
     });
+
+    if (id === 'network-cors') {
+      applyNetworkRule();
+    }
   }
 });
 
@@ -118,41 +138,8 @@ document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get({
   fill();
   accurate();
 
-  // install network
-  if (elements.group.cors.checked) {
-    chrome.runtime.sendMessage({
-      cmd: 'update-session-rules',
-      rules: [{
-        'id': tabId,
-        'priority': 1,
-        'action': {
-          type: 'modifyHeaders',
-          responseHeaders: [{
-            'operation': 'set',
-            'header': 'access-control-allow-origin',
-            'value': '*'
-          }, {
-            'operation': 'remove',
-            'header': 'referrer-policy'
-          }]
-        },
-        'condition': {
-          'resourceTypes': ['xmlhttprequest', 'image'],
-          'tabIds': [tabId]
-        }
-      }]
-    }).then(r => {
-      if (r && r.error) {
-        parent.toast(r.error);
-      }
-      else {
-        search();
-      }
-    });
-  }
-  else {
-    search();
-  }
+  // install or clear the global network rule before searching
+  applyNetworkRule().then(search, search);
 }));
 
 document.addEventListener('click', async ({target}) => {
@@ -164,7 +151,10 @@ document.addEventListener('click', async ({target}) => {
       cmd: 'stop-collector',
       remove: false,
       response: true
-    });
+    }).catch(() => {});
+    await chrome.runtime.sendMessage({
+      cmd: 'remove-session-rules'
+    }).catch(() => {});
     location.reload();
   }
   if (cmd === 'delete-profile') {

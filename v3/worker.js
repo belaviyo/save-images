@@ -7,6 +7,51 @@ const notify = message => chrome.storage.local.get({
   iconUrl: '/data/icons/48.png'
 }, id => setTimeout(chrome.notifications.clear, 3000, id)));
 
+/* remove every session rule scoped to a tab (the global CORS rule and any
+   in-flight per-request rules created by "apply-referer") */
+const clearTabRules = async tabId => {
+  try {
+    const rules = await chrome.declarativeNetRequest.getSessionRules();
+    const ids = rules.filter(rule => {
+      const tabIds = rule.condition && rule.condition.tabIds;
+      return Array.isArray(tabIds) && tabIds.includes(tabId);
+    }).map(rule => rule.id);
+
+    if (ids.length) {
+      await chrome.declarativeNetRequest.updateSessionRules({
+        removeRuleIds: ids
+      });
+    }
+  }
+  catch (e) {
+    // fallback for browsers that do not expose the session-rule list
+    try {
+      await chrome.declarativeNetRequest.updateSessionRules({
+        removeRuleIds: [tabId]
+      });
+    }
+    catch (err) {}
+  }
+};
+
+/* guards an in-flight "update" from re-adding the rule after the panel closed */
+const ruleGenerations = new Map();
+const bumpRuleGeneration = tabId => {
+  const generation = (ruleGenerations.get(tabId) || 0) + 1;
+  ruleGenerations.set(tabId, generation);
+  return generation;
+};
+
+/* the top-frame content script holds the per-panel token; null means closed */
+const getLiveToken = tabId => chrome.scripting.executeScript({
+  target: {tabId},
+  world: 'ISOLATED',
+  func: () => globalThis.token
+}).then(results => {
+  const live = results && results[0] && results[0].result;
+  return typeof live === 'string' && live ? live : null;
+}, () => null);
+
 /* wait for a download to reach a terminal state (complete or interrupted) */
 const waitForDownload = id => new Promise(resolve => {
   let done = false;
@@ -81,9 +126,19 @@ chrome.action.onClicked.addListener(async tab => {
   }
 });
 
-chrome.tabs.onRemoved.addListener(tabId => chrome.declarativeNetRequest.updateSessionRules({
-  removeRuleIds: [tabId]
-}).catch(() => {}));
+chrome.tabs.onRemoved.addListener(tabId => {
+  ruleGenerations.delete(tabId);
+  clearTabRules(tabId);
+});
+
+/* a top-level URL change destroys the panel, so its session rules must go;
+   "url" filters out iframe loads, which also toggle the tab status */
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.status === 'loading' && changeInfo.url) {
+    bumpRuleGeneration(tabId);
+    clearTabRules(tabId);
+  }
+});
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (request.cmd === 'verify-core') {
@@ -102,7 +157,10 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       }).then(results => {
         const live = results && results[0] && results[0].result;
         if (typeof live === 'string' && live === token) {
-          response({ok: true, tabId});
+          // a fresh panel starts from a clean rule state; persist.js re-adds
+          // the global rule after the UI loads
+          bumpRuleGeneration(tabId);
+          clearTabRules(tabId).then(() => response({ok: true, tabId}));
         }
         else {
           response({error: 'Not authorized'});
@@ -210,49 +268,71 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   else if (request.cmd === 'apply-referer') {
     try {
       const id = Math.floor(Math.random() * 1000000);
-      const rule = {
-        'id': id,
-        'priority': 2,
-        'action': {
-          type: 'modifyHeaders',
-          requestHeaders: [{
-            'operation': 'set',
-            'header': 'referer',
-            'value': request.referer
-          }, {
-            'operation': 'remove',
-            'header': 'origin'
-          }]
-        },
-        'condition': {
-          'urlFilter': request.src,
-          'resourceTypes': ['xmlhttprequest', 'image'],
-          'tabIds': [sender.tab.id]
-        }
-      };
-      if (request.credentials === 'include') {
-        let o = request.referer;
+      const referer = typeof request.referer === 'string' && /^https?:/i.test(request.referer) ? request.referer : '';
+      let origin = '';
+
+      if (referer) {
         try {
-          o = (new URL(request.referer)).origin;
+          origin = (new URL(referer)).origin;
         }
         catch (e) {}
+      }
+      if (!origin) {
+        try {
+          origin = sender.origin || (new URL(sender.url)).origin;
+        }
+        catch (e) {}
+      }
 
-        rule.action.responseHeaders = [{
-          'operation': 'set',
-          'header': 'access-control-allow-origin',
-          'value': o
-        }, {
+      /* content scripts are subject to CORS; every collector fetch needs
+         readable response headers, even when no referer is sent */
+      const responseHeaders = [{
+        'operation': 'set',
+        'header': 'access-control-allow-origin',
+        'value': origin || '*'
+      }, {
+        // "content-disposition" is not CORS-safelisted, so it must be
+        // explicitly exposed for utils.guess to read the server filename
+        'operation': 'set',
+        'header': 'access-control-expose-headers',
+        'value': 'content-disposition'
+      }];
+
+      if (request.credentials === 'include') {
+        responseHeaders.push({
           'operation': 'set',
           'header': 'Access-Control-Allow-Credentials',
           'value': 'true'
-        }, {
-          // "content-disposition" is not CORS-safelisted, so it must be
-          // explicitly exposed for utils.guess to read the server filename
+        });
+      }
+
+      const action = {
+        type: 'modifyHeaders',
+        responseHeaders
+      };
+
+      if (referer) {
+        action.requestHeaders = [{
           'operation': 'set',
-          'header': 'access-control-expose-headers',
-          'value': 'content-disposition'
+          'header': 'referer',
+          'value': referer
+        }, {
+          'operation': 'remove',
+          'header': 'origin'
         }];
       }
+
+      const rule = {
+        'id': id,
+        'priority': 2,
+        'action': action,
+        'condition': {
+          // fetch strips URL fragments before sending the request
+          'urlFilter': typeof request.src === 'string' ? request.src.split('#')[0] : request.src,
+          'resourceTypes': ['xmlhttprequest'],
+          'tabIds': [sender.tab.id]
+        }
+      };
 
       chrome.declarativeNetRequest.updateSessionRules({
         addRules: [rule]
@@ -277,41 +357,106 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     }
   }
   else if (request.cmd === 'remove-session-rules') {
-    chrome.declarativeNetRequest.updateSessionRules({
-      removeRuleIds: [sender.tab.id]
-    }).catch(() => {});
+    const tabId = sender.tab && sender.tab.id;
+    if (typeof tabId !== 'number') {
+      response(false);
+      return true;
+    }
+
+    const clear = () => {
+      const generation = bumpRuleGeneration(tabId);
+      clearTabRules(tabId).then(() => {
+        response(true);
+        // catch a per-request rule whose add message was already in flight
+        setTimeout(async () => {
+          if ((ruleGenerations.get(tabId) || 0) === generation) {
+            await clearTabRules(tabId);
+          }
+        }, 1000);
+      }, () => response(false));
+    };
+
+    /* the core frame passes its token so an old frame cannot clear the rule
+       of a replacement panel */
+    if (typeof request.token === 'string' && request.token) {
+      getLiveToken(tabId).then(live => {
+        if (live === request.token) {
+          clear();
+        }
+        else {
+          response(false);
+        }
+      });
+    }
+    else {
+      clear();
+    }
+    return true;
   }
   else if (request.cmd === 'update-session-rules') {
-    chrome.declarativeNetRequest.updateSessionRules({
-      removeRuleIds: [sender.tab.id],
-      addRules: [{
-        'id': sender.tab.id,
-        'priority': 1,
-        'action': {
-          type: 'modifyHeaders',
-          responseHeaders: [{
-            'operation': 'set',
-            'header': 'access-control-allow-origin',
-            'value': '*'
-          }, {
-            // "content-disposition" is not CORS-safelisted, so it must be
-            // explicitly exposed for utils.guess to read the server filename
-            'operation': 'set',
-            'header': 'access-control-expose-headers',
-            'value': 'content-disposition'
-          }, {
-            'operation': 'remove',
-            'header': 'referrer-policy'
-          }]
-        },
-        'condition': {
-          'resourceTypes': ['xmlhttprequest', 'image'],
-          'tabIds': [sender.tab.id]
+    const tabId = sender.tab && sender.tab.id;
+    if (typeof tabId !== 'number') {
+      response({error: 'Invalid tab'});
+      return true;
+    }
+
+    (async () => {
+      try {
+        // a concurrent close/navigation invalidates this update
+        const generation = bumpRuleGeneration(tabId);
+        // start from a clean state so stale per-request rules cannot survive
+        await clearTabRules(tabId);
+        if ((ruleGenerations.get(tabId) || 0) !== generation) {
+          response(false);
+          return;
         }
-      }]
-    }).then(() => response(true)).catch(e => response({
-      error: e.message
-    }));
+        // do not re-add after the panel/host has disappeared
+        if (await getLiveToken(tabId) === null) {
+          response(false);
+          return;
+        }
+        if ((ruleGenerations.get(tabId) || 0) !== generation) {
+          response(false);
+          return;
+        }
+        await chrome.declarativeNetRequest.updateSessionRules({
+          addRules: [{
+            'id': tabId,
+            'priority': 1,
+            'action': {
+              type: 'modifyHeaders',
+              responseHeaders: [{
+                'operation': 'set',
+                'header': 'access-control-allow-origin',
+                'value': '*'
+              }, {
+                // "content-disposition" is not CORS-safelisted, so it must be
+                // explicitly exposed for utils.guess to read the server filename
+                'operation': 'set',
+                'header': 'access-control-expose-headers',
+                'value': 'content-disposition'
+              }]
+            },
+            'condition': {
+              'resourceTypes': ['xmlhttprequest'],
+              'tabIds': [tabId]
+            }
+          }]
+        });
+        if ((ruleGenerations.get(tabId) || 0) !== generation) {
+          // a close/navigation happened while the rule was being added
+          await clearTabRules(tabId);
+          response(false);
+          return;
+        }
+        response(true);
+      }
+      catch (e) {
+        response({error: e.message});
+      }
+    })();
+
+    return true;
   }
   else if (request.cmd === 'native-download') {
     chrome.downloads.download(request.options).catch(e => {
@@ -477,6 +622,23 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   };
   chrome.runtime.onStartup.addListener(once);
   chrome.runtime.onInstalled.addListener(once);
+}
+
+/* drop stale session rules from a previous browser session or extension version */
+{
+  const clear = async () => {
+    try {
+      const rules = await chrome.declarativeNetRequest.getSessionRules();
+      if (rules.length) {
+        await chrome.declarativeNetRequest.updateSessionRules({
+          removeRuleIds: rules.map(rule => rule.id)
+        });
+      }
+    }
+    catch (e) {}
+  };
+  chrome.runtime.onStartup.addListener(clear);
+  chrome.runtime.onInstalled.addListener(clear);
 }
 
 /* FAQs & Feedback */

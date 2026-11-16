@@ -1,41 +1,83 @@
 {
-  const ap = (src, referer, credentials) => new Promise(resolve => {
-    chrome.runtime.sendMessage({
-      cmd: 'apply-referer',
-      src,
-      referer,
-      credentials
-    }, resolve);
-    setTimeout(resolve, 1000, -1);
-  });
-  const re = id => new Promise(resolve => {
-    chrome.runtime.sendMessage({
-      cmd: 'revoke-referer',
-      id
-    }, resolve);
-    setTimeout(resolve, 1000, -1);
-  });
-  self.fetch = new Proxy(self.fetch, {
-    apply(target, self, args) {
-      const [src, props] = args;
-      if (src && src.startsWith('http') && props && props.headers?.referer) {
-        const referer = props.headers.referer;
-        if (referer.startsWith('http')) {
-          return ap(src, referer, props.credentials).then(id => {
-            return Reflect.apply(target, self, args).then(r => {
-              re(id);
-              return r;
-            }).catch(e => {
-              re(id);
-
-              throw e;
-            });
-          });
+  const requestRule = (src, referer, credentials) => new Promise(resolve => {
+    let settled = false;
+    const done = id => {
+      const ruleId = Number.isInteger(id) ? id : -1;
+      if (settled) {
+        // a late worker response can still create a rule; revoke it
+        if (ruleId !== -1) {
+          revokeRule(ruleId);
         }
+        return;
       }
-      return Reflect.apply(target, self, args);
+      settled = true;
+      resolve(ruleId);
+    };
+
+    try {
+      chrome.runtime.sendMessage({
+        cmd: 'apply-referer',
+        src,
+        referer,
+        credentials
+      }, done);
     }
+    catch (e) {
+      done(-1);
+    }
+    setTimeout(done, 1000, -1);
   });
+  const revokeRule = id => {
+    if (id === -1) {
+      return;
+    }
+    try {
+      chrome.runtime.sendMessage({
+        cmd: 'revoke-referer',
+        id
+      }, () => void chrome.runtime.lastError);
+    }
+    catch (e) {}
+  };
+
+  if (self.__daimagesFetchProxy !== true) {
+    self.__daimagesFetchProxy = true;
+
+    self.fetch = new Proxy(self.fetch, {
+      apply(target, self, args) {
+        const [src, props] = args;
+
+        if (typeof src !== 'string' || /^https?:/i.test(src) === false) {
+          return Reflect.apply(target, self, args);
+        }
+
+        const referer = props && props.headers && props.headers.referer;
+        const useReferer = typeof referer === 'string' && /^https?:/i.test(referer) ? referer : '';
+
+        return requestRule(src, useReferer, props && props.credentials).then(id => {
+          let timer;
+
+          const done = () => {
+            clearTimeout(timer);
+            revokeRule(id);
+          };
+
+          if (id !== -1) {
+            // safety net for requests that never settle
+            timer = setTimeout(done, 60 * 1000);
+          }
+
+          return Reflect.apply(target, self, args).then(r => {
+            done();
+            return r;
+          }, e => {
+            done();
+            throw e;
+          });
+        });
+      }
+    });
+  }
 }
 
 // eslint-disable-next-line semi
