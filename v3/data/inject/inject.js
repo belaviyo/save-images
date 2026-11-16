@@ -44,6 +44,5 @@ for (const e of document.querySelectorAll('dialog.daimages')) {
     });
   }
 
-  // eslint-disable-next-line semi
   Boolean(dialog.style)
 }

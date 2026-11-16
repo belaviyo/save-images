@@ -395,3 +395,6 @@ self.utils.EXTENSIONS = {
     return path || type;
   };
 }
+
+// eslint-disable-next-line semi
+''
