@@ -12,6 +12,17 @@
 (() => {
   'use strict';
 
+  /* a fresh secret per injection; the worker reads it from this isolated world */
+  const token = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
+
+  /* a panel only owns the tab rules while its own token is the live one */
+  const invalidate = () => {
+    if (self.token === token) {
+      self.token = null;
+      return true;
+    }
+    return false;
+  };
   const removeRules = () => {
     try {
       chrome.runtime.sendMessage({
@@ -19,6 +30,11 @@
       }, () => void chrome.runtime.lastError);
     }
     catch (e) {}
+  };
+  const release = () => {
+    if (invalidate()) {
+      removeRules();
+    }
   };
 
   // stop the previous panel's host watcher before intentionally removing it
@@ -32,11 +48,7 @@
     e.remove();
   }
 
-  // invalidate the previous token even if this injection fails below
-  self.token = null;
-
-  /* a fresh secret per injection; the worker reads it from this isolated world */
-  const token = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
+  /* the replaced panel loses ownership; this injection takes over */
   self.token = token;
 
   /* a top-level navigation destroys this document before the worker can see it */
@@ -45,8 +57,7 @@
   }
   const onPageHide = e => {
     if (e.persisted === false) {
-      self.token = null;
-      removeRules();
+      release();
     }
   };
   self.__daimagesPageHide = onPageHide;
@@ -108,8 +119,7 @@
   const dialog = document.createElement('dialog');
   dialog.classList.add('daimages');
   dialog.onclose = dialog.onclick = () => {
-    self.token = null;
-    removeRules();
+    release();
     chrome.runtime.sendMessage({
       cmd: 'stop-collector',
       remove: true
@@ -151,9 +161,8 @@
       const lost = () => host.isConnected === false;
       const onLost = () => {
         if (lost()) {
-          self.token = null;
           stopWatching();
-          removeRules();
+          release();
         }
       };
       interval = setInterval(onLost, 1000);
@@ -163,5 +172,6 @@
     });
   }
 
-  Boolean(dialog.style)
+  /* tells the worker whether the panel could be attached at all */
+  return Boolean(dialog.style);
 })();

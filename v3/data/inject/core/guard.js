@@ -5,8 +5,8 @@
  * the top frame's isolated world; a page-created frame cannot present it. */
 {
   const token = location.hash.slice(1);
-  let settled = false;
   let loaded = false;
+  let authorizing = false;
 
   const sources = [
     'data/inject/core/components/notification-view/notification-view.js',
@@ -14,18 +14,24 @@
     'data/inject/core/index.js'
   ];
 
-  const blocked = () => {
-    if (loaded) {
+  /* the timeout only shows a hint; a late verification can still win, so a
+     slow worker must not leave the panel permanently broken */
+  const showMessage = () => {
+    if (loaded || authorizing || document.getElementById('guard-message')) {
       return;
     }
-    settled = true;
-    clearTimeout(timer);
     document.body.removeAttribute('data-guard');
-    document.body.textContent = '';
 
     const p = document.createElement('p');
+    p.id = 'guard-message';
     p.textContent = 'This interface is only available inside the extension.';
     document.body.append(p);
+  };
+  const hideMessage = () => {
+    const p = document.getElementById('guard-message');
+    if (p) {
+      p.remove();
+    }
   };
 
   const load = src => new Promise((resolve, reject) => {
@@ -47,17 +53,18 @@
     });
   };
 
-  const timer = setTimeout(blocked, 5000);
+  const timer = setTimeout(showMessage, 5000);
 
-  Promise.resolve().then(verify).then(result => {
-    if (settled) {
+  const start = result => {
+    if (loaded || authorizing) {
       return;
     }
     if (!result || result.ok !== true || Number.isInteger(result.tabId) === false) {
       throw Error('not authorized');
     }
-    settled = true;
+    authorizing = true;
     clearTimeout(timer);
+    hideMessage();
     self.verifiedTabId = result.tabId;
 
     (async () => {
@@ -68,13 +75,17 @@
       document.body.removeAttribute('data-guard');
     })().catch(e => {
       console.error(e);
-      blocked();
+      authorizing = false;
+      showMessage();
     });
-  }).catch(e => {
-    if (settled) {
+  };
+
+  Promise.resolve().then(verify).then(start).catch(e => {
+    if (loaded || authorizing) {
       return;
     }
+    clearTimeout(timer);
     console.warn('core verification failed:', e);
-    blocked();
+    showMessage();
   });
 }

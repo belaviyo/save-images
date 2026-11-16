@@ -43,6 +43,11 @@ const applyNetworkRule = () => {
     if (r && r.error) {
       parent.toast(r.error);
     }
+    // false means the worker refused because the panel is gone; the search still
+    // runs, but without the CORS bypass, so make that diagnosable
+    else if (r === false && elements.group.cors.checked) {
+      console.warn('CORS bypass rule was not installed');
+    }
     return r;
   }, () => undefined);
 };
@@ -118,29 +123,39 @@ document.addEventListener('change', e => {
   }
 });
 
-document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get({
-  persist,
-  profiles
-}, prefs => {
-  Object.assign(persist, prefs.persist);
-  Object.assign(profiles, prefs.profiles);
-
-  // profiles
-  for (const o of prefs.profiles) {
-    const option = document.createElement('option');
-    option.value = o.value;
-    option.textContent = o.title;
-
-    elements.profiles.select.append(option);
+/* the guard replays DOMContentLoaded after loading these scripts, which can race
+   the real event; initialize only once so "search" does not run twice */
+let initialized = false;
+document.addEventListener('DOMContentLoaded', () => {
+  if (initialized) {
+    return;
   }
-  elements.profiles.delete.disabled = prefs.profiles.length < 2;
+  initialized = true;
 
-  fill();
-  accurate();
+  chrome.storage.local.get({
+    persist,
+    profiles
+  }, prefs => {
+    Object.assign(persist, prefs.persist);
+    Object.assign(profiles, prefs.profiles);
 
-  // install or clear the global network rule before searching
-  applyNetworkRule().then(search, search);
-}));
+    // profiles
+    for (const o of prefs.profiles) {
+      const option = document.createElement('option');
+      option.value = o.value;
+      option.textContent = o.title;
+
+      elements.profiles.select.append(option);
+    }
+    elements.profiles.delete.disabled = prefs.profiles.length < 2;
+
+    fill();
+    accurate();
+
+    // install or clear the global network rule before searching
+    applyNetworkRule().then(search, search);
+  });
+});
 
 document.addEventListener('click', async ({target}) => {
   const cmd = target.dataset.cmd;

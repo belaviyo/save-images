@@ -7,14 +7,19 @@ const notify = message => chrome.storage.local.get({
   iconUrl: '/data/icons/48.png'
 }, id => setTimeout(chrome.notifications.clear, 3000, id)));
 
-/* remove every session rule scoped to a tab (the global CORS rule and any
-   in-flight per-request rules created by "apply-referer") */
-const clearTabRules = async tabId => {
+/* remove the session rules scoped to a tab. The global CORS rule uses the tab
+   id, while "apply-referer" rules live in a higher id range; unless "all" is
+   true, only the global rule is dropped so in-flight image requests keep
+   their CORS headers (e.g. when the profile changes during a search) */
+const clearTabRules = async (tabId, all = true) => {
   try {
     const rules = await chrome.declarativeNetRequest.getSessionRules();
     const ids = rules.filter(rule => {
       const tabIds = rule.condition && rule.condition.tabIds;
-      return Array.isArray(tabIds) && tabIds.includes(tabId);
+      if (Array.isArray(tabIds) === false || tabIds.includes(tabId) === false) {
+        return false;
+      }
+      return all || rule.id === tabId;
     }).map(rule => rule.id);
 
     if (ids.length) {
@@ -267,7 +272,8 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   }
   else if (request.cmd === 'apply-referer') {
     try {
-      const id = Math.floor(Math.random() * 1000000);
+      // the global CORS rule uses the tab id; per-request rules must not collide
+      const id = 1000000 + Math.floor(Math.random() * 1000000);
       const referer = typeof request.referer === 'string' && /^https?:/i.test(request.referer) ? request.referer : '';
       let origin = '';
 
@@ -404,8 +410,9 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       try {
         // a concurrent close/navigation invalidates this update
         const generation = bumpRuleGeneration(tabId);
-        // start from a clean state so stale per-request rules cannot survive
-        await clearTabRules(tabId);
+        // drop the previous global rule but keep in-flight per-request rules,
+        // so a toggle during a search does not strip them from running fetches
+        await clearTabRules(tabId, false);
         if ((ruleGenerations.get(tabId) || 0) !== generation) {
           response(false);
           return;
