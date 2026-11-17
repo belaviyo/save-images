@@ -452,3 +452,23 @@ document.addEventListener('input', e => {
     'gallery-pattern': e.value
   });
 }
+
+// solid preview background for transparent images
+{
+  const e = document.getElementById('background');
+  const values = ['transparent', 'white', 'black', 'gray'];
+  chrome.storage.local.get({
+    'gallery-background': 'transparent'
+  }).then(prefs => {
+    const value = values.includes(prefs['gallery-background']) ? prefs['gallery-background'] : 'transparent';
+    e.value = value;
+    document.body.dataset.bg = value;
+  });
+
+  e.onchange = () => {
+    document.body.dataset.bg = e.value;
+    chrome.storage.local.set({
+      'gallery-background': e.value
+    });
+  };
+}

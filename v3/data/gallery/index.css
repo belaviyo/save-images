@@ -30,7 +30,7 @@ body > span {
 #toolbar {
   padding: 5px;
   display: grid;
-  grid-template-columns: repeat(6, min-content) 1fr min-content;
+  grid-template-columns: repeat(7, min-content) 1fr min-content;
   grid-column-gap: 2px;
   grid-row-gap: 2px;
 }
@@ -40,7 +40,7 @@ body > span {
     grid-template-columns: repeat(5, 1fr);
   }
   #pattern {
-    grid-column-start: 2;
+    grid-column-start: 3;
     grid-column-end: 5;
   }
 }
@@ -48,6 +48,10 @@ body > span {
 @media screen and (max-width: 400px) {
   #toolbar {
     grid-template-columns: repeat(2, 1fr);
+  }
+  #background {
+    grid-column-start: 1;
+    grid-column-end: 3;
   }
   #pattern {
     grid-column-end: 3;
@@ -58,13 +62,17 @@ body > span {
     grid-column-start: 2;
   }
 }
-#toolbar input {
+#toolbar input,
+#toolbar select {
   box-sizing: border-box;
   color: #3e3e3e;
   border: none;
   background-color: #e4e4e4;
   padding: 10px;
   outline: none;
+}
+#toolbar select {
+  font-size: 11px;
 }
 button:active,
 input[type=button]:active {
@@ -136,6 +144,25 @@ input[type=button]:active {
   width: 100%;
   height: calc(100% - 80px);
   background-image: url(grid.png);
+}
+
+/* solid preview background for transparent images */
+body[data-bg=white] .entry {
+  background-image: none;
+  background-color: #fff;
+}
+body[data-bg=black] .entry {
+  background-image: none;
+  background-color: #000;
+}
+body[data-bg=gray] .entry {
+  background-image: none;
+  background-color: #808080;
+}
+body[data-bg=white] .entry img::after,
+body[data-bg=black] .entry img::after,
+body[data-bg=gray] .entry img::after {
+  background-image: none;
 }
 
 [data-visible=false] {

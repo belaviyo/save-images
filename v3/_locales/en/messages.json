@@ -23,6 +23,21 @@
   "gallery_rename": {
     "message": "Rename"
   },
+  "gallery_bg_title": {
+    "message": "Preview background for transparent images"
+  },
+  "gallery_bg_transparent": {
+    "message": "Transparent"
+  },
+  "gallery_bg_white": {
+    "message": "White"
+  },
+  "gallery_bg_black": {
+    "message": "Black"
+  },
+  "gallery_bg_gray": {
+    "message": "Gray"
+  },
   "ui_statistics": {
     "message": "Statistics"
   },
